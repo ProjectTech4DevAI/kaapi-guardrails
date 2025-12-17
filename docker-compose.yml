@@ -61,8 +61,6 @@ services:
       db:
         condition: service_healthy
         restart: true
-      prestart:
-        condition: service_completed_successfully
     env_file:
       - .env
     environment:

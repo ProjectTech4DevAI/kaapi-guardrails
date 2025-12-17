@@ -1,7 +1,8 @@
 from collections.abc import Generator
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session
 
 # from app.core import security
@@ -13,17 +14,21 @@ def get_db() -> Generator[Session, None, None]:
         yield session
 
 SessionDep = Annotated[Session, Depends(get_db)]
+security = HTTPBearer(auto_error=False)
 
 def verify_bearer_token(
-    authorization: Annotated[str | None, Header()] = None,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Security(security),
+    ]
 ):
-    if not authorization or not authorization.startswith("Bearer "):
+    if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing Authorization header",
         )
 
-    token = authorization.removeprefix("Bearer ").strip()
+    token = credentials.credentials
 
     if token != settings.AUTH_TOKEN:
         raise HTTPException(
