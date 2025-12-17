@@ -1,11 +1,9 @@
 import os
 import secrets
 import warnings
-from typing import Annotated, Any, Literal
+from typing import Any, Literal
 
 from pydantic import (
-    AnyUrl,
-    BeforeValidator,
     EmailStr,
     HttpUrl,
     PostgresDsn,
@@ -26,8 +24,7 @@ def parse_cors(v: Any) -> list[str] | str:
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        # Use top level .env file (one level above ./backend/)
-        env_file="../.env",
+        # env_file="../.env",
         env_ignore_empty=True,
         extra="ignore",
     )
@@ -36,7 +33,7 @@ class Settings(BaseSettings):
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
-
+    AUTH_TOKEN: str
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
     POSTGRES_SERVER: str
@@ -56,6 +53,9 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             path=self.POSTGRES_DB,
         )
+
+    FIRST_SUPERUSER: EmailStr
+    FIRST_SUPERUSER_PASSWORD: str
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
