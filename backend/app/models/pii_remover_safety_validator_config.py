@@ -11,4 +11,11 @@ class PIIRemoverSafetyValidatorConfig(BaseValidatorConfig):
     threshold: float = 0.5
     language: str = "en"
     language_detector: Optional[LanguageDetector] = None
-    validator_cls: ClassVar = PIIRemover
+
+    def build(self):
+        return PIIRemover(
+            entity_types=self.entity_types,
+            threshold=self.threshold,
+            language=self.language,
+            language_detector=self.language_detector
+        )
