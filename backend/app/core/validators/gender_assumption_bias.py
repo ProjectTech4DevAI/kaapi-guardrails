@@ -1,4 +1,3 @@
-from enum import Enum
 from guardrails import OnFailAction
 from guardrails.validators import (
     FailResult,
@@ -13,12 +12,7 @@ from typing import Callable, List, Optional
 import pandas
 import re
 from app.core.config import Settings
-
-class BiasCategories(Enum):
-    Generic = "generic"
-    Healthcare = "healthcare"
-    Education = "education"
-    All = "all"
+from app.core.enum import BiasCategories
 
 @register_validator(name="gender-assumption-bias", data_type="string")
 class GenderAssumptionBias(Validator):

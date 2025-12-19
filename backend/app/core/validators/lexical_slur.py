@@ -1,4 +1,3 @@
-from enum import Enum
 from guardrails import OnFailAction
 from guardrails.validators import (
     FailResult,
@@ -7,7 +6,6 @@ from guardrails.validators import (
     ValidationResult,
     Validator
 )
-from pathlib import Path
 from typing import Callable, Optional
 
 import emoji
@@ -18,12 +16,7 @@ import string
 import unicodedata
 
 from app.core.config import Settings
-
-class SlurSeverity(Enum):
-    Low = "low"
-    Medium = "medium"
-    High = "high"
-    All = "all"
+from app.core.enum import SlurSeverity
 
 @register_validator(name="lexical-slur", data_type="string")
 class LexicalSlur(Validator):
