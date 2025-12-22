@@ -6,7 +6,6 @@ from guardrails.validators import (
     ValidationResult,
     Validator
 )
-from pathlib import Path
 from typing import Callable, List, Optional
 
 import pandas
@@ -59,7 +58,13 @@ class GenderAssumptionBias(Validator):
         neutral_term_col = 'neutral-term'
         gender_bias_list = []
 
-        df = pandas.read_csv(file_path)
+        try:
+            df = pandas.read_csv(file_path)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Gender bias file not found at {file_path}")
+        except Exception as e:
+            raise ValueError(f"Failed to load gender bias list from {file_path}: {e}")
+
         df['word'] = df['word'].str.lower()
         df[neutral_term_col] = df[neutral_term_col].str.lower()
 
@@ -67,7 +72,7 @@ class GenderAssumptionBias(Validator):
             if category == BiasCategories.All:
                 temp = df
             else:
-                temp = df[df['type'] == category]
+                temp = df[df['type'] == category.value]
 
             rows = temp.to_dict(orient="records")
             for row in rows:

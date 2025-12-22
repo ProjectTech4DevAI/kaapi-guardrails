@@ -50,9 +50,8 @@ class PIIRemover(Validator):
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
         text = value
-        lang = self.language_detector.predict(text)
 
-        if lang == self.language_detector.is_hindi(text):
+        if self.language_detector.is_hindi(text):
             anonymized_text = self.run_hinglish_presidio(text)
         else:
             anonymized_text = self.run_english_presidio(text)

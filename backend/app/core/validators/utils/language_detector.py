@@ -1,4 +1,3 @@
-from functools import lru_cache
 from transformers import pipeline
 
 from app.core.constants import LANG_HINDI, LANG_ENGLISH, LABEL, SCORE
@@ -24,7 +23,6 @@ class LanguageDetector():
     def _normalize(label: str) -> str:
         return LANG_HINDI if label.startswith(LANG_HINDI) else label
 
-    @lru_cache(maxsize=1024)
     def predict(self, text: str):
         """
         Returns normalized language + raw confidence.

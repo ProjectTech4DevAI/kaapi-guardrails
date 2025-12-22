@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 
@@ -13,7 +14,7 @@ async def run_input_guardrails(
     payload: GuardrailInputRequest,
     _: AuthDep,
 ):
-    response_id = "ABC"
+    response_id = str(uuid.uuid4())
 
     try:
         guard = build_guard(payload.validators)
@@ -61,7 +62,7 @@ async def run_output_guardrails(
     payload: GuardrailOutputRequest,
     _: AuthDep,
 ):
-    response_id = "ABC"
+    response_id = str(uuid.uuid4())
 
     try:
         guard = build_guard(payload.validators)

@@ -86,7 +86,13 @@ class LexicalSlur(Validator):
     def load_slur_list(self):
         file_path = Settings.SLUR_LIST_FILEPATH
 
-        df = pandas.read_csv(file_path)
+        try:
+            df = pandas.read_csv(file_path)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Slur list file not found at {file_path}")
+        except Exception as e:
+            raise ValueError(f"Failed to load slur list from {file_path}: {e}")
+
         df['label'] = df['label'].str.lower()
 
         # TODO - filter by languages if specified
