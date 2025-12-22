@@ -1,0 +1,73 @@
+word,neutral-term,type
+he,they,generic
+she,they,generic
+him,them,generic
+her,them,generic
+his,their,generic
+hers,their,generic
+वह,वे,generic
+वो,वे,generic
+उसे,उन्हें,generic
+उसका,उनका,generic
+उसकी,उनकी,generic
+woh,woh,generic
+uska,unka,generic
+uski,unki,generic
+policeman,police officer,profession
+policewoman,police officer,profession
+fireman,firefighter,profession
+firewoman,firefighter,profession
+salesman,sales representative,profession
+saleswoman,sales representative,profession
+chairman,chairperson,profession
+spokesman,spokesperson,profession
+spokeswoman,spokesperson,profession
+waiter,server,profession
+waitress,server,profession
+पुलिसवाला,पुलिस अधिकारी,profession
+पुलिसवाली,पुलिस अधिकारी,profession
+फायरमैन,दमकलकर्मी,profession
+सेल्समैन,विक्रय प्रतिनिधि,profession
+दुकानदारनी,दुकानदार,profession
+policewala,police officer,profession
+policewali,police officer,profession
+salesman,sales rep,profession
+dukandaarni,shopkeeper,profession
+headmaster,principal,education
+headmistress,principal,education
+schoolboy,student,education
+schoolgirl,student,education
+alumnus,alum,education
+alumna,alum,education
+शिक्षक,अध्यापक,education
+शिक्षिका,अध्यापक,education
+छात्र,विद्यार्थी,education
+छात्रा,विद्यार्थी,education
+shikshak,adhyapak,education
+shikshika,adhyapak,education
+ladka,vidyarthi,education
+ladki,vidyarthi,education
+ladka,yuva,generic
+ladki,yuva,generic
+ladka,baccha,healthcare
+ladki,baccha,healthcare
+लड़का,युवा,generic
+लड़की,युवा,generic
+midwife,birth attendant,healthcare
+receptionist,front desk staff,healthcare
+attendant,attendant,healthcare
+दाई,प्रसव सहायक,healthcare
+परिचर,परिचारक,healthcare
+परिचारिका,परिचारक,healthcare
+daai,birth attendant,healthcare
+parichar,attendant,healthcare
+paricharika,attendant,healthcare
+beta,baccha,healthcare
+bete,bacche,healthcare
+beti,baccha,healthcare
+बोला,कहा,generic
+बोली,कहा,generic
+गया,गए,generic
+गई,गए,generic
+आया,आए,generic
+आई,आए,generic

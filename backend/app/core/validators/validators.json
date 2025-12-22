@@ -1,0 +1,24 @@
+{
+    "validators": [
+        {
+            "type": "uli_slur_match",
+            "version": "0.1.0",
+            "source": "local"
+        },
+        {
+            "type": "pii_remover",
+            "version": "0.1.0",
+            "source": "local"
+        },
+        {
+            "type": "gender_assumption_bias",
+            "version": "0.1.0",
+            "source": "local"
+        },
+        {
+            "type": "ban_list",
+            "version": "0.1.0",
+            "source": "hub://guardrails/ban_list"
+        }
+    ]
+}
