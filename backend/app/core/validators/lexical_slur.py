@@ -53,7 +53,7 @@ class LexicalSlur(Validator):
         if len(detected_slurs) > 0:
             for word in words:
                 if word in detected_slurs:
-                    self.text = self.text.replace(word, "[REDACTED_SLUR]")
+                    self.text = re.sub(rf'\b{re.escape(word)}\b', "[REDACTED_SLUR]", self.text, flags=re.IGNORECASE)
 
         if len(detected_slurs) > 0:
             return FailResult(
@@ -98,7 +98,12 @@ class LexicalSlur(Validator):
             raise FileNotFoundError(f"Slur list file not found at {file_path}")
         except Exception as e:
             raise ValueError(f"Failed to load slur list from {file_path}: {e}")
-
+        
+        required_columns = ['label', 'severity']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            raise ValueError(f"Slur list CSV missing required columns: {missing_columns}")
+        
         df['label'] = df['label'].str.lower()
 
         if self.severity == SlurSeverity.Low:
