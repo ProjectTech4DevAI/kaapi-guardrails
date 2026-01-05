@@ -30,6 +30,7 @@ class LexicalSlur(Validator):
         languages: Optional[list] = None,
         on_fail: Optional[Callable] = OnFailAction.FIX
     ):    
+        self._SLUR_CACHE = {}
         self.severity = severity
         self.languages = languages or ["en", "hi"]
         self.slur_list = self.load_slur_list()
@@ -84,6 +85,11 @@ class LexicalSlur(Validator):
         return text
 
     def load_slur_list(self):
+        cache_key = self.severity.value if hasattr(self.severity, "value") else str(self.severity)
+
+        if cache_key in self._SLUR_CACHE:
+            return self._SLUR_CACHE[cache_key]
+
         file_path = Settings.SLUR_LIST_FILEPATH
 
         try:
@@ -95,13 +101,14 @@ class LexicalSlur(Validator):
 
         df['label'] = df['label'].str.lower()
 
-        # TODO - filter by languages if specified
-
         if self.severity == SlurSeverity.Low:
-            return df[df['severity'].isin(['L', 'M', 'H'])]['label'].tolist()
+            slurs = df[df['severity'].isin(['L', 'M', 'H'])]['label'].tolist()
         elif self.severity == SlurSeverity.Medium:
-            return df[df['severity'].isin(['M', 'H'])]['label'].tolist()
+            slurs = df[df['severity'].isin(['M', 'H'])]['label'].tolist()
         elif self.severity == SlurSeverity.High:
-            return df[df['severity'] == 'H']['label'].tolist()
+            slurs = df[df['severity'] == 'H']['label'].tolist()
+        else:
+            slurs = df['label'].tolist()
 
-        return df['label'].tolist()
+        self._SLUR_CACHE[cache_key] = slurs
+        return slurs

@@ -1,6 +1,5 @@
 from guardrails.hub import BanList
-from guardrails.utils.validator_utils import get_validator
-from typing import ClassVar, List, Literal
+from typing import List, Literal
 
 from app.models.base_validator_config import BaseValidatorConfig
 from app.core.constants import BAN_LIST
