@@ -9,31 +9,16 @@ from sqlmodel import Session
 from sqlalchemy import event
 
 from app.core.db import engine
-from app.api.deps import get_db
+from app.api.deps import get_db, security
 from app.main import app
 
 @pytest.fixture(scope="function")
-def db() -> Generator[Session, None, None]:
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection)
+def client():
+    from app.api.deps import verify_bearer_token
 
-    nested = session.begin_nested()
+    app.dependency_overrides[verify_bearer_token] = lambda: True
 
-    @event.listens_for(session, "after_transaction_end")
-    def restart_savepoint(sess, trans):
-        if trans.nested and not trans._parent.nested:
-            sess.begin_nested()
-
-    try:
-        yield session
-    finally:
-        session.close()
-        transaction.rollback()
-        connection.close()
-
-@pytest.fixture(scope="function")
-def client(db: Session):
-    app.dependency_overrides[get_db] = lambda: db
     with TestClient(app) as c:
         yield c
+
+    app.dependency_overrides.clear()

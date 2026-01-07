@@ -26,7 +26,7 @@ async def run_output_guardrails(
     _: AuthDep,
 ):
     return await _validate_with_guard(
-        payload.input,
+        payload.output,
         payload.validators,
         "safe_output"
     )
