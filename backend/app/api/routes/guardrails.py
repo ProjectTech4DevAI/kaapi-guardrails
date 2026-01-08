@@ -1,14 +1,13 @@
 import uuid
 from uuid import UUID
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from app.models.guardrail_config import GuardrailInputRequest, GuardrailOutputRequest
 from app.api.deps import AuthDep, SessionDep
 from app.core.api_response import APIResponse
 from app.core.guardrail_controller import build_guard, get_validator_config_models
-
 from app.crud.request_log import RequestLogCrud
+from app.models.guardrail_config import GuardrailInputRequest, GuardrailOutputRequest
 from app.models.request import  RequestLogUpdate
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
