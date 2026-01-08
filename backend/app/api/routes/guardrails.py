@@ -32,12 +32,17 @@ async def run_input_guardrails(
 @router.post("/output")
 async def run_output_guardrails(
     payload: GuardrailOutputRequest,
+    session: SessionDep,
     _: AuthDep,
 ):
+    request_log_crud = RequestLogCrud(session=session)
+    request_log = request_log_crud.create(request_id=UUID(payload.request_id), input_text=payload.output)
     return await _validate_with_guard(
         payload.output,
         payload.validators,
-        "safe_output"
+        "safe_output",
+        request_log_crud,
+        request_log.id
     )
 
 @router.get("/validator/")

@@ -25,5 +25,6 @@ class GuardrailInputRequest(SQLModel):
     validators: List[ValidatorConfigItem]
 
 class GuardrailOutputRequest(SQLModel):
+    request_id: str
     output: str
     validators: List[ValidatorConfigItem]
