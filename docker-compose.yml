@@ -1,0 +1,90 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:16
+    container_name: kaapi-guardrails-postgres-db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER not set}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB not set}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - app-db-data:/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+    container_name: kaapi-guardrails-adminer
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - ADMINER_DESIGN=pepa-linha-dark
+    ports:
+      - "8080:8080"
+
+  prestart:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    container_name: kaapi-guardrails-prestart
+    build:
+      context: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    command: bash scripts/prestart.sh
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+    profiles: ["prestart"]
+
+  backend:
+    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    container_name: kaapi-guardrails-backend
+    restart: always
+    build:
+      context: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+    env_file:
+      - .env
+    environment:
+      POSTGRES_SERVER: db
+    ports:
+      - "8000:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/utils/health-check/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      uv run uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
+    develop:
+      watch:
+        # Sync backend source code into container immediately on change
+        - action: sync
+          path: ./backend/app
+          target: /app/app
+        # Rebuild image if dependencies change
+        - action: rebuild
+          path: ./backend/pyproject.toml
+        - action: rebuild
+          path: ./backend/uv.lock
+
+volumes:
+  app-db-data:
