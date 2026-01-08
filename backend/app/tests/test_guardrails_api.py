@@ -1,9 +1,11 @@
 import pytest
+from uuid import uuid4
 
 from unittest.mock import patch
 from app.tests.guardrails_mocks import MockResult, MockFailure
 
 build_guard_path = "app.api.routes.guardrails.build_guard"
+request_id = "123e4567-e89b-12d3-a456-426614174000"
 
 def test_routes_exist(client):
     paths = {route.path for route in client.app.routes}
@@ -22,6 +24,7 @@ def test_input_guardrails_success(client):
         response = client.post(
             "/api/v1/guardrails/input/",
             json={
+                "request_id": request_id,
                 "input": "hello world",
                 "validators": [],
             },
@@ -49,6 +52,7 @@ def test_input_guardrails_validation_failure(client):
         response = client.post(
             "/api/v1/guardrails/input/",
             json={
+                "request_id": request_id,
                 "input": "my phone is 999999",
                 "validators": [],
             },
@@ -74,6 +78,7 @@ def test_output_guardrails_success(client):
         response = client.post(
             "/api/v1/guardrails/output",
             json={
+                "request_id": request_id,
                 "output": "LLM output text",
                 "validators": [],
             },
@@ -92,6 +97,7 @@ def test_guardrails_internal_error(client):
         response = client.post(
             "/api/v1/guardrails/input/",
             json={
+                "request_id": request_id,
                 "input": "text",
                 "validators": [],
             },

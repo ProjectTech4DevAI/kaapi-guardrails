@@ -2,11 +2,14 @@ import pytest
 
 pytestmark = pytest.mark.integration
 
+request_id = "123e4567-e89b-12d3-a456-426614174000"
+
 @pytest.mark.integration
 def test_input_guardrails_with_real_banlist(integration_client):
     response = integration_client.post(
         "/api/v1/guardrails/input/",
         json={
+            "request_id": request_id,
             "input": "this contains badword",
             "validators": [
                 {
@@ -28,6 +31,7 @@ def test_input_guardrails_passes_clean_text(integration_client):
     response = integration_client.post(
         "/api/v1/guardrails/input/",
         json={
+            "request_id": request_id,
             "input": "this is clean",
             "validators": [
                 {
@@ -48,6 +52,7 @@ def test_input_guardrails_with_lexical_slur(integration_client):
     response = integration_client.post(
         "/api/v1/guardrails/input/",
         json={
+            "request_id": request_id,
             "input": "This sentence contains chakki.",
             "validators": [
                 {
@@ -68,6 +73,7 @@ def test_input_guardrails_with_lexical_slur_clean_text(integration_client):
     response = integration_client.post(
         "/api/v1/guardrails/input/",
         json={
+            "request_id": request_id,
             "input": "This is a completely safe sentence",
             "validators": [
                 {
@@ -88,6 +94,7 @@ def test_input_guardrails_with_multiple_validators(integration_client):
     response = integration_client.post(
         "/api/v1/guardrails/input/",
         json={
+            "request_id": request_id,
             "input": "This sentence contains chakki cause I want a sonography done to kill the female foetus.",
             "validators": [
                 {
@@ -112,6 +119,7 @@ def test_input_guardrails_with_incorrect_validator_config(integration_client):
     response = integration_client.post(
         "/api/v1/guardrails/input/",
         json={
+            "request_id": request_id,
             "input": "This sentence contains chakki.",
             "validators": [
                 {
@@ -133,6 +141,7 @@ def test_input_guardrails_with_validator_actions(integration_client):
     response = integration_client.post(
         "/api/v1/guardrails/input/",
         json={
+            "request_id": request_id,
             "input": "This sentence contains chakki.",
             "validators": [
                 {

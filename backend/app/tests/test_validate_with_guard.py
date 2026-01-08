@@ -1,10 +1,14 @@
 import pytest
+from uuid import uuid4
 
 from fastapi.responses import JSONResponse
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from app.api.routes.guardrails import _validate_with_guard
 from app.tests.guardrails_mocks import MockResult, MockFailure
+
+mock_request_log_crud = MagicMock()
+mock_request_log_id = uuid4()
 
 @pytest.mark.asyncio
 async def test_validate_with_guard_success(client):
@@ -20,6 +24,8 @@ async def test_validate_with_guard_success(client):
             data="hello",
             validators=[],
             response_field="safe_input",
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
         )
 
     assert response.success is True
@@ -43,6 +49,8 @@ async def test_validate_with_guard_validation_error_with_failures():
             data="bad text",
             validators=[],
             response_field="safe_input",
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
         )
 
     assert isinstance(response, JSONResponse)
@@ -67,6 +75,8 @@ async def test_validate_with_guard_validation_error_no_failures():
             data="bad text",
             validators=[],
             response_field="safe_output",
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
         )
 
     assert response.status_code == 400
@@ -85,6 +95,8 @@ async def test_validate_with_guard_exception():
             data="text",
             validators=[],
             response_field="safe_input",
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
         )
 
     assert response.status_code == 500
