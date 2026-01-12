@@ -1,11 +1,11 @@
 from collections.abc import Generator
+import secrets
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session
 
-# from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 
@@ -30,7 +30,7 @@ def verify_bearer_token(
 
     token = credentials.credentials
 
-    if token != settings.AUTH_TOKEN:
+    if not secrets.compare_digest(token, settings.AUTH_TOKEN):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",

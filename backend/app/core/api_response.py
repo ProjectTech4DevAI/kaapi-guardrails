@@ -9,7 +9,7 @@ class APIResponse(BaseModel):
 
     @classmethod
     def success_response(cls, data: Any, metadata: Any = None):
-        return cls(success=True, data=data, metadata=metadata)
+        return cls(success=True, data=data).model_dump(exclude_none=True)
 
     @classmethod
     def failure_response(cls, error: Any, metadata: Any = None):
