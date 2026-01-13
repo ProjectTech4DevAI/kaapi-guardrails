@@ -158,7 +158,7 @@ If you don't want to start with the default models and want to remove them / mod
 # Guardrails AI
 
 ## Guardrails AI Setup
-1. Ensure that the .env.example file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
+1. Ensure that the .env file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
 
 2. Make the `install_guardrails_from_hub.sh` script executable using this command (run this from the `backend` folder) -
 

@@ -1,11 +1,9 @@
 import os
 from pathlib import Path
-import secrets
 from typing import Any, ClassVar, Literal
 import warnings
 
 from pydantic import (
-    EmailStr,
     HttpUrl,
     PostgresDsn,
     computed_field,
@@ -30,7 +28,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     ENVIRONMENT: Literal["development", "testing", "staging", "production"] = "testing"
@@ -74,9 +71,6 @@ class Settings(BaseSettings):
             port=self.POSTGRES_PORT,
             path=self.POSTGRES_DB,
         )
-
-    FIRST_SUPERUSER: EmailStr
-    FIRST_SUPERUSER_PASSWORD: str
 
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
