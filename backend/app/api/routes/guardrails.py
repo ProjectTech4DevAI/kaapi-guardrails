@@ -8,7 +8,7 @@ from app.api.deps import AuthDep, SessionDep
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.crud.request_log import RequestLogCrud
 from app.models.guardrail_config import GuardrailInputRequest, GuardrailOutputRequest
-from app.models.request import  RequestLogUpdate
+from app.models.request import  RequestLogUpdate, RequestStatus
 from app.utils import APIResponse
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
@@ -83,8 +83,9 @@ async def _validate_with_guard(
         result = guard.validate(data)
         
         if result.validated_output is not None:
-            request_log_crud.update_success(
+            request_log_crud.update(
                 request_log_id=request_log_id, 
+                request_status=RequestStatus.SUCCESS,
                 request_log_update= RequestLogUpdate(
                     response_text=result.validated_output, 
                     response_id=response_id
@@ -100,8 +101,9 @@ async def _validate_with_guard(
         
         error = ", ".join(f.failure_message for f in (result.failures or []))
 
-        request_log_crud.update_error(
+        request_log_crud.update(
             request_log_id=request_log_id, 
+            request_status=RequestStatus.ERROR,
             request_log_update= RequestLogUpdate(
                 response_text=error,
                 response_id=response_id
@@ -116,8 +118,9 @@ async def _validate_with_guard(
         )
     
     except Exception as e:
-        request_log_crud.update_error(
+        request_log_crud.update(
             request_log_id=request_log_id, 
+            request_status=RequestStatus.ERROR,
             request_log_update= RequestLogUpdate(
                 response_text=str(e), 
                 response_id=response_id

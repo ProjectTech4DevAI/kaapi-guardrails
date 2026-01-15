@@ -1,6 +1,6 @@
-from typing import Optional
 from datetime import datetime
 from enum import Enum
+from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlmodel import SQLModel, Field
@@ -12,6 +12,7 @@ class RequestStatus(str, Enum):
     SUCCESS = "success"
     ERROR = "error"
     WARNING = "warning"
+
 
 class RequestLog(SQLModel, table=True):
     __tablename__ = "request_log"

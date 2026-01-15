@@ -10,7 +10,7 @@ from app.models.lexical_slur_safety_validator_config import LexicalSlurSafetyVal
 from app.models.pii_remover_safety_validator_config import PIIRemoverSafetyValidatorConfig
 
 ValidatorConfigItem = Annotated[
-    # future validators will go here
+    # future validators will come here
     Union[
         BanListSafetyValidatorConfig,
         GenderAssumptionBiasSafetyValidatorConfig,

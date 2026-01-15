@@ -22,10 +22,11 @@ class GenderAssumptionBias(Validator):
 
     def __init__(
         self, 
-        categories: Optional[List[BiasCategories]] = [BiasCategories.All],
+        categories: Optional[List[BiasCategories]] = None,
         on_fail: Optional[Callable] = OnFailAction.FIX
     ):
-        self.gender_bias_list = self.load_gender_bias_list(categories)
+        self.categories = categories or [BiasCategories.All]
+        self.gender_bias_list = self.load_gender_bias_list(self.categories)
         super().__init__(on_fail=on_fail)
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:

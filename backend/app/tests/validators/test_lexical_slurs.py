@@ -56,34 +56,32 @@ def build_validator(severity="all", languages=None):
 def test_passes_when_no_slur(patch_slur_load):
     validator = build_validator()
     result = validator._validate("hello world, everything is fine.")
-    assert result.outcome is "pass"
+    assert result.outcome == "pass"
 
 
 def test_fails_when_slur_detected(patch_slur_load):
     validator = build_validator()
     result = validator._validate("You are a badword!")
-    assert result.outcome is "fail"
+    assert result.outcome == "fail"
     assert "badword" in result.error_message
 
 
 def test_emoji_are_removed_before_validation(patch_slur_load):
     validator = build_validator()
     result = validator._validate("You 🤮 badword 🤮 person")
-    assert result.outcome is "fail"
+    assert result.outcome == "fail"
     assert "badword" in result.error_message
 
 
 def test_punctuation_is_removed(patch_slur_load):
     validator = build_validator()
     result = validator._validate("You are a, badword!!")
-    assert result.outcome is "fail"
-
+    assert result.outcome == "fail"
 
 def test_numbers_are_removed(patch_slur_load):
     validator = build_validator()
     result = validator._validate("b4dw0rd badword again")  # "badword" appears once cleaned
-    assert result.outcome is "fail"
-
+    assert result.outcome == "fail"
 
 def test_severity_low_includes_all(patch_slur_load, monkeypatch, slur_csv):
     """Low severity = L + M + H."""

@@ -1,11 +1,10 @@
 from collections.abc import Generator
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status, Security
+from fastapi import Depends, HTTPException, status, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session
 
-# from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 
