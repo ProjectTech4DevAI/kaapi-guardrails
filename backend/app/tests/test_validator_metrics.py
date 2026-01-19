@@ -1,13 +1,15 @@
-import logging
-import re
+from datetime import datetime
 from pathlib import Path
+
+import json
+import logging
 logging.getLogger("presidio-analyzer").setLevel(logging.ERROR)
 import os
 os.environ["GUARDRAILS_RUNNER"] = "sync"
-import pandas as pd
 import time
 import tracemalloc
-import json
+
+import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent
 request_id = "123e4567-e89b-12d3-a456-426614174000"
@@ -39,11 +41,6 @@ def compute_metrics(y_true, y_pred):
         "f1": f1,
         "accuracy": accuracy,
     }
-
-
-import json
-from datetime import datetime
-from pathlib import Path
 
 def compute_and_dump_metrics(
     y_true,
