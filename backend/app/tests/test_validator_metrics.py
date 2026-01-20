@@ -84,6 +84,8 @@ def get_slur_detector_guardrail_response(input_text: str, integration_client):
     )
     return response
 
+# Because the detector relies uses lexical slur matching rather than contextual understanding, it flags every instance containing terms from its slur lexicon as a positive match. 
+# This leads to zero true negatives and a consistent pattern of false positives. 
 def test_input_guardrails_with_lexical_slur(integration_client):
     def parse_slur_response(response):
         body = response.json()
@@ -122,7 +124,7 @@ def test_input_guardrails_with_lexical_slur(integration_client):
     )
 
     # ---- Accuracy metrics ----
-    df["y_true"] = df["label"].apply(slur_to_binary)
+    df["y_true"] = df["label"]
     df["y_pred"] = df["uli_slur_match"].apply(slur_to_binary)
 
     accuracy_metrics = compute_metrics(df["y_true"], df["y_pred"])
@@ -175,9 +177,9 @@ def get_pii_remover_guardrail_response(input_text: str, integration_client):
     body = response.json()
 
     if body["success"] == False:
-        return "no_pii"
-    else:
         return "pii"
+    else:
+        return "no_pii"
 
 def test_pii_detection_guardrail_response(integration_client):
     def to_binary(x):
