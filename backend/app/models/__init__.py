@@ -1,4 +1,4 @@
 from sqlmodel import SQLModel
 
-from app.models.request import RequestLog
-from app.models.validator_log import ValidatorLog
+from app.models.logging.request import RequestLog
+from app.models.logging.validator import ValidatorLog
