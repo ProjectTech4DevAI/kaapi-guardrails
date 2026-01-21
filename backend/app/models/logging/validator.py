@@ -7,8 +7,8 @@ from sqlmodel import SQLModel, Field
 from app.utils import now
 
 class ValidatorOutcome(str, Enum):
-    PASS = "pass"
-    FAIL = "fail"
+    PASS = "PASS"
+    FAIL = "FAIL"
 
 class ValidatorLog(SQLModel, table=True):
     __tablename__ = "validator_log"

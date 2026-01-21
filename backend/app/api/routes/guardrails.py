@@ -50,8 +50,7 @@ async def run_output_guardrails(
         "safe_output",
         request_log_crud,
         request_log.id,
-        validator_log_crud,
-        request_id
+        validator_log_crud
     )
 
 @router.get("/validator/")
