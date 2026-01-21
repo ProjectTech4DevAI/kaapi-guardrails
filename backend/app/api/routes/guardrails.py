@@ -11,6 +11,7 @@ from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.models.guardrail_config import GuardrailInputRequest, GuardrailOutputRequest
 from app.models.logging.request import  RequestLogUpdate, RequestStatus
+from app.models.logging.validator import ValidatorOutcome
 from app.utils import APIResponse
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
@@ -23,7 +24,13 @@ async def run_input_guardrails(
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
-    request_id = UUID(payload.request_id)
+    request_id = None
+
+    try:
+        request_id = UUID(payload.request_id)
+    except ValueError:
+        return APIResponse.failure_response(error="Invalid request_id")
+
     request_log = request_log_crud.create(request_id, input_text=payload.input)    
     return await _validate_with_guard(
         payload.input,
@@ -42,7 +49,13 @@ async def run_output_guardrails(
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
-    request_id = UUID(payload.request_id)
+    request_id = None
+
+    try:
+        request_id = UUID(payload.request_id)
+    except ValueError:
+        return APIResponse.failure_response(error="Invalid request_id")
+
     request_log = request_log_crud.create(request_id, input_text=payload.output)
     return await _validate_with_guard(
         payload.output,
@@ -111,6 +124,23 @@ async def _validate_with_guard(
                 }
             )
 
+        request_log_crud.update(
+            request_log_id=request_log_id,
+            request_status=RequestStatus.ERROR,
+            request_log_update=RequestLogUpdate(
+                response_text=str(result),
+                response_id=response_id,
+            ),
+        )
+        add_validator_logs(guard, request_log_id, validator_log_crud)
+        return APIResponse.failure_response(
+            data={
+                "response_id": response_id,
+                response_field: None,
+            },
+            error="Validation failed",
+        )
+
     except Exception as e:
         request_log_crud.update(
             request_log_id=request_log_id, 
@@ -156,5 +186,5 @@ def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: V
             input=log.value_before_validation,
             output=log.value_after_validation,
             error=error_message,
-            outcome=result.outcome
+            outcome=ValidatorOutcome(result.outcome.upper())
         )
