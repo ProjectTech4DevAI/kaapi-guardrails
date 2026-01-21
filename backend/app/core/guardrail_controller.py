@@ -5,7 +5,14 @@ from guardrails import Guard
 from app.models.guardrail_config import ValidatorConfigItem
 
 def build_guard(validator_items):
-    validators = [v_item.build() for v_item in validator_items]
+    validators = []
+
+    for v_item in validator_items:
+        validator = v_item.build(
+            on_fail=v_item.resolve_on_fail()
+        )
+        validators.append(validator)
+
     return Guard().use_many(*validators)
 
 def get_validator_config_models():

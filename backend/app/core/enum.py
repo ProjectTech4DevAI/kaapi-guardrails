@@ -11,3 +11,8 @@ class BiasCategories(Enum):
     Healthcare = "healthcare"
     Education = "education"
     All = "all"
+
+class GuardrailOnFail(Enum):
+    Exception = "exception"
+    Fix = "fix"
+    Rephrase = "rephrase"

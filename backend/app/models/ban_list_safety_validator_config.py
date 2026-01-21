@@ -8,8 +8,8 @@ class BanListSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["ban_list"]
     banned_words: List[str] #list of banned words to be redacted
 
-    def build(self):
+    def build(self, *, on_fail):
         return BanList(
             banned_words=self.banned_words,
-            on_fail=self.resolve_on_fail(),
+            on_fail=on_fail,
         )

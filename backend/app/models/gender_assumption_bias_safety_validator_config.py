@@ -8,8 +8,8 @@ class GenderAssumptionBiasSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["gender_assumption_bias"]
     categories: Optional[List[BiasCategories]] = [BiasCategories.All] # preferred category (based on sector)
 
-    def build(self):
+    def build(self, *, on_fail):
         return GenderAssumptionBias(
             categories=self.categories,
-            on_fail=self.resolve_on_fail(),
+            on_fail=on_fail,
         )
