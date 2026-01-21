@@ -27,7 +27,7 @@ def upgrade() -> None:
     sa.Column('input', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('output', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('error', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('outcome', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('outcome', sa.Enum('PASS', 'FAIL', name='validatoroutcome'), nullable=False),
     sa.Column('inserted_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['request_id'], ['request_log.id'], ),

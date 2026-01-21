@@ -1,9 +1,9 @@
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter, status
-from fastapi.responses import JSONResponse
-from guardrails.validators import PassResult, FailResult
+from fastapi import APIRouter
+from guardrails.guard import Guard
+from guardrails.validators import FailResult
 
 from app.api.deps import AuthDep, SessionDep
 from app.core.guardrail_controller import build_guard, get_validator_config_models
@@ -132,7 +132,7 @@ async def _validate_with_guard(
             error=str(e),
         )
 
-def add_validator_logs(guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud):
+def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud):
     if not guard or not guard.history or not guard.history.last:
         return
 
