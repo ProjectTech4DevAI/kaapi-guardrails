@@ -11,7 +11,7 @@ from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.models.guardrail_config import GuardrailInputRequest, GuardrailOutputRequest
 from app.models.logging.request import  RequestLogUpdate, RequestStatus
-from app.models.logging.validator import ValidatorOutcome
+from app.models.logging.validator import ValidatorLog, ValidatorOutcome
 from app.utils import APIResponse
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
@@ -180,11 +180,13 @@ def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: V
         if isinstance(result, FailResult):
             error_message = result.error_message
 
-        validator_log_crud.create(
+        validator_log = ValidatorLog(
             request_id=request_log_id,
             name=log.validator_name,
             input=log.value_before_validation,
             output=log.value_after_validation,
             error=error_message,
-            outcome=ValidatorOutcome(result.outcome.upper())
+            outcome=ValidatorOutcome(result.outcome.upper()),
         )
+
+        validator_log_crud.create(log=validator_log)
