@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from guardrails import OnFailAction
+from guardrails.validators import Validator
 from sqlmodel import SQLModel
 
 from app.core.enum import GuardrailOnFail
@@ -21,7 +22,7 @@ class BaseValidatorConfig(SQLModel):
     def resolve_on_fail(self):
         return _ON_FAIL_MAP[self.on_fail]
 
-    def build(self, *, on_fail) -> Any:
+    def build(self, *, on_fail) -> Validator:
         raise NotImplementedError(
             f"{self.__class__.__name__} must implement build()"
         )
