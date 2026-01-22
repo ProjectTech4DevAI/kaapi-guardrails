@@ -13,29 +13,51 @@ class ValidatorOutcome(str, Enum):
 class ValidatorLog(SQLModel, table=True):
     __tablename__ = "validator_log"
 
-    # unique id of the validator log entry
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    id: UUID = Field(
+        default_factory=uuid4,
+        primary_key=True,
+        sa_column_kwargs={"comment": "Unique identifier for the validator log entry"},
+    )
 
-    # request id (to be associated with request_log table)
-    request_id: UUID = Field(foreign_key="request_log.id", nullable=False)
+    request_id: UUID = Field(
+        foreign_key="request_log.id", 
+        nullable=False,
+        sa_column_kwargs={"comment": "Foreign key to the associated request log entry"},
+    )
 
-    # name of the validator
-    name: str = Field(nullable=False)
+    name: str = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Name of the validator used"},
+    )
 
-    # input message for the validator to check
-    input: str = Field(nullable=False)
+    input: str = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Input message for the validator to check"},
+    )
 
-    # output message post validation
-    output: str | None = Field(nullable=True)
+    output: str | None = Field(
+        nullable=True,
+        sa_column_kwargs={"comment": "Output message post validation"},
+    )
 
-    # error, if any when the validator throws an exception
-    error: str | None = Field(nullable=True)
+    error: str | None = Field(
+        nullable=True,
+        sa_column_kwargs={"comment": "Error message if the validator throws an exception"},
+    )
 
-    # validator outcome (whether the validation failed or passed)
-    outcome: ValidatorOutcome = Field(nullable=False)
+    outcome: ValidatorOutcome = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Validator outcome (whether the validation failed or passed)"},
+    )
 
-    # timestamp when the entry was inserted
-    inserted_at: datetime = Field(default_factory=now, nullable=False)
+    inserted_at: datetime = Field(
+        default_factory=now,
+        nullable=False,
+        sa_column_kwargs={"comment": "Timestamp when the entry was created"},
+    )
 
-    # timestamp when the entry was updated
-    updated_at: datetime = Field(default_factory=now, nullable=False)
+    updated_at: datetime = Field(
+        default_factory=now,
+        nullable=False,
+        sa_column_kwargs={"comment": "Timestamp when the entry was last updated"},
+    )
