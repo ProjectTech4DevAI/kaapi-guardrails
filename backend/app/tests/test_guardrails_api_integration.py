@@ -170,3 +170,25 @@ def test_input_guardrails_with_validator_actions_exception(integration_client):
     body = response.json()
     assert body["success"] is False
     assert "chakki" in body["error"]
+
+
+def test_input_guardrails_with_validator_actions_rephrase(integration_client):
+    response = integration_client.post(
+        "/api/v1/guardrails/input/",
+        json={
+            "request_id": request_id,
+            "input": "This sentence contains chakki.",
+            "validators": [
+                {
+                    "type": "uli_slur_match",
+                    "severity": "all",
+                    "on_fail": "rephrase",
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert "Please rephrase the query without unsafe content. Mentioned toxic words" in body["data"]["safe_input"]
