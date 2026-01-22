@@ -176,14 +176,14 @@ def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: V
     for log in iteration.outputs.validator_logs:
         result = log.validation_result
 
-        error_message = ""
+        error_message = None
         if isinstance(result, FailResult):
             error_message = result.error_message
 
         validator_log = ValidatorLog(
             request_id=request_log_id,
             name=log.validator_name,
-            input=log.value_before_validation,
+            input=str(log.value_before_validation),
             output=log.value_after_validation,
             error=error_message,
             outcome=ValidatorOutcome(result.outcome.upper()),
