@@ -23,15 +23,16 @@ def upgrade() -> None:
     op.create_table('validator_log',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('request_id', sa.Uuid(), nullable=False),
+    sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('input', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('output', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('error', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('output', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('error', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('outcome', sa.Enum('PASS', 'FAIL', name='validatoroutcome'), nullable=False),
     sa.Column('inserted_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['request_id'], ['request_log.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-
 
 def downgrade() -> None:
     op.drop_table('validator_log')
