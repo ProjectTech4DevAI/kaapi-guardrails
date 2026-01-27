@@ -162,15 +162,17 @@ async def _validate_with_guard(
         )
 
 def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud):
-    if not guard or not guard.history or not guard.history.last:
+    history = getattr(guard, "history", None)
+    if not history:
         return
 
-    call = guard.history.last
-    if not call.iterations:
+    last_call = getattr(history, "last", None)
+    if not last_call or not getattr(last_call, "iterations", None):
         return
 
-    iteration = call.iterations[-1]
-    if not iteration.outputs or not iteration.outputs.validator_logs:
+    iteration = last_call.iterations[-1]
+    outputs = getattr(iteration, "outputs", None)
+    if not outputs or not getattr(outputs, "validator_logs", None):
         return
 
     for log in iteration.outputs.validator_logs:
