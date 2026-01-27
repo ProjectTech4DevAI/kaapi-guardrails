@@ -50,7 +50,7 @@ class LexicalSlur(Validator):
         if not detected_slurs:
             return PassResult(value=original_text)
 
-        redacted_text = original_text
+        redacted_text = normalized_text
         for slur, pattern in self._slur_patterns:
             if slur in detected_slurs:
                 redacted_text = pattern.sub(
