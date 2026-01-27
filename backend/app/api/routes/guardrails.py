@@ -46,7 +46,10 @@ async def run_input_guardrails(
         validator_log_crud,
     )
 
-@router.post("/output/", response_model_exclude_none=True)
+@router.post(
+        "/output/",
+        response_model=APIResponse[Dict[str, Any]],
+        response_model_exclude_none=True)
 async def run_output_guardrails(
     payload: GuardrailOutputRequest,
     session: SessionDep,
