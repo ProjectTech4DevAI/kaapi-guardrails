@@ -1,4 +1,5 @@
 import uuid
+from typing import Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -17,7 +18,10 @@ from app.utils import APIResponse
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
-@router.post("/input/")
+@router.post(
+        "/input/",
+        response_model=APIResponse[Dict[str, Any]],
+        response_model_exclude_none=True)
 async def run_input_guardrails(
     payload: GuardrailInputRequest,
     session: SessionDep,
@@ -42,7 +46,7 @@ async def run_input_guardrails(
         validator_log_crud,
     )
 
-@router.post("/output/")
+@router.post("/output/", response_model_exclude_none=True)
 async def run_output_guardrails(
     payload: GuardrailOutputRequest,
     session: SessionDep,
@@ -134,13 +138,13 @@ async def _validate_with_guard(
         if guard is not None:
             add_validator_logs(guard, request_log_id, validator_log_crud)
 
-        payload = {
-            "response_id": response_id,
-            response_field: validated_output,
-        }
+        payload: dict[str, Any] = { "response_id": response_id }
 
-        if validated_output and validated_output.startswith(REPHRASE_ON_FAIL_PREFIX):
-            payload["rephrase_needed"] = True
+        if validated_output is not None:
+            payload[response_field] = validated_output
+            
+            if validated_output.startswith(REPHRASE_ON_FAIL_PREFIX):
+                payload["rephrase_needed"] = True
 
         if status == RequestStatus.SUCCESS:
             return APIResponse.success_response(data=payload)
