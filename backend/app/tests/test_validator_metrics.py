@@ -1,18 +1,23 @@
 from datetime import datetime
 from pathlib import Path
-
 import json
 import logging
-logging.getLogger("presidio-analyzer").setLevel(logging.ERROR)
 import os
 os.environ["GUARDRAILS_RUNNER"] = "sync"
+import re
 import time
+
+from guardrails.validators import FailResult
+logging.getLogger("presidio-analyzer").setLevel(logging.ERROR)
+import pandas as pd
+import pytest
 import tracemalloc
 
-import pandas as pd
+from app.core.validators.pii_remover import PIIRemover
 
 BASE_DIR = Path(__file__).resolve().parent
 request_id = "123e4567-e89b-12d3-a456-426614174000"
+ENTITY_PATTERN = re.compile(r"[\[<]([A-Z0-9_]+)[\]>]")
 
 #--------------General Evaluation Utils ----------------#
 def percentile(values, p):
@@ -86,6 +91,7 @@ def get_slur_detector_guardrail_response(input_text: str, integration_client):
 
 # Because the detector relies uses lexical slur matching rather than contextual understanding, it flags every instance containing terms from its slur lexicon as a positive match. 
 # This leads to zero true negatives and a consistent pattern of false positives. 
+@pytest.mark.slow
 def test_input_guardrails_with_lexical_slur(integration_client):
     def parse_slur_response(response):
         body = response.json()
@@ -181,6 +187,60 @@ def get_pii_remover_guardrail_response(input_text: str, integration_client):
     else:
         return "no_pii"
 
+
+def extract_entities(text: str) -> set[str]:
+    if not isinstance(text, str):
+        return set()
+    return set(ENTITY_PATTERN.findall(text))
+
+def compare_entities(gold: set[str], pred: set[str]):
+    tp = gold & pred
+    fn = gold - pred      # missed entities
+    fp = pred - gold      # hallucinated entities
+    return tp, fp, fn
+
+from collections import defaultdict
+
+def compute_entity_metrics(gold_texts, pred_texts):
+    stats = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0})
+
+    for gold_txt, pred_txt in zip(gold_texts, pred_texts):
+        gold_entities = extract_entities(gold_txt)
+        pred_entities = extract_entities(pred_txt)
+
+        tp, fp, fn = compare_entities(gold_entities, pred_entities)
+
+        for e in tp:
+            stats[e]["tp"] += 1
+        for e in fp:
+            stats[e]["fp"] += 1
+        for e in fn:
+            stats[e]["fn"] += 1
+
+    return stats
+
+def finalize_entity_metrics(stats):
+    report = {}
+
+    for entity, s in stats.items():
+        tp, fp, fn = s["tp"], s["fp"], s["fn"]
+
+        precision = tp / (tp + fp) if (tp + fp) else 0.0
+        recall = tp / (tp + fn) if (tp + fn) else 0.0
+        f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
+
+        report[entity] = {
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        }
+
+    return report
+
+@pytest.mark.slow
 def test_pii_detection_guardrail_response(integration_client):
     def to_binary(x):
         return 1 if x == "pii" else 0
@@ -242,5 +302,64 @@ def test_pii_detection_guardrail_response(integration_client):
 
     # ---- Write single JSON ----
     out_path = BASE_DIR / "datasets" / "pii_evaluation_report.json"
+    with open(out_path, "w") as f:
+        json.dump(report, f, indent=2)
+
+@pytest.mark.slow
+def test_pii_detection_guardrail_response_direct(integration_client):
+    def to_binary(x):
+        return 1 if x == "pii" else 0
+
+    df = pd.read_csv(BASE_DIR / "datasets" / "pii_detection_testing_dataset.csv")
+    validator = PIIRemover()
+
+    latencies = []
+
+    tracemalloc.start()
+
+    def profiled_call(text):
+        start = time.perf_counter()
+        result = validator._validate(text)
+        latencies.append((time.perf_counter() - start) * 1000)
+        if isinstance(result, FailResult):
+            return result.fix_value, "pii"
+        return text, "no_pii"
+
+    df["anonymized_text"], df["pii_remover"] = zip(
+        *df["source_text"].astype(str).map(profiled_call)
+    )
+
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    peak_memory_mb = peak / (1024 * 1024)
+
+    # ---- Save output dataset ----
+    df.to_csv(
+        BASE_DIR / "datasets" / "pii_detection_testing_dataset_output.csv",
+        index=False,
+    )
+
+    # ---- Accuracy metrics ----
+    df["y_true"] = df["label"].apply(to_binary)
+    df["y_pred"] = df["pii_remover"].apply(to_binary)
+
+    entity_stats = compute_entity_metrics(
+        gold_texts=df["target_text"],
+        pred_texts=df["anonymized_text"],
+    )
+
+    entity_report = finalize_entity_metrics(entity_stats)
+
+    report = {
+        "guardrail": "pii-remover",
+        "dataset": "masked_pii_eval",
+        "num_samples": len(df),
+        "entity_metrics": entity_report,
+        "generated_at": datetime.utcnow().isoformat(),
+    }
+
+    # ---- Write single JSON ----
+    out_path = BASE_DIR / "datasets" / "pii_evaluation_report_direct.json"
     with open(out_path, "w") as f:
         json.dump(report, f, indent=2)
