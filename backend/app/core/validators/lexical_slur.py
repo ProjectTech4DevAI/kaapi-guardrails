@@ -35,51 +35,68 @@ class LexicalSlur(Validator):
         self.severity = severity
         self.languages = languages or ["en", "hi"]
         self.slur_list = self.load_slur_list()
+        self._compile_slur_patterns()
         super().__init__(on_fail=on_fail, search_words=self.slur_list)
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
-        translator = str.maketrans('', '', string.punctuation)
-
-        value = self.remove_emojis(value)
-        value = self.clean_text(value)
-        words = value.split()
+        original_text = value
+        normalized_text = self.normalize_for_matching(value)
         detected_slurs = []
 
-        clean_words = [
-            w.translate(translator).lower()
-            for w in words
-        ]
+        for slur, pattern in self._slur_patterns:
+            if pattern.search(normalized_text):
+                detected_slurs.append(slur)
 
-        detected_slurs = list(
-            set(clean_words) & set(self.slur_list)
+        if not detected_slurs:
+            return PassResult(value=original_text)
+
+        redacted_text = original_text
+        for slur, pattern in self._slur_patterns:
+            if slur in detected_slurs:
+                redacted_text = pattern.sub(
+                    "[REDACTED_SLUR]", redacted_text
+                )
+
+        return FailResult(
+            error_message=f"Mentioned toxic words: {', '.join(detected_slurs)}",
+            fix_value=redacted_text,
         )
 
-        for slur in detected_slurs:
-            pattern = rf'\b{re.escape(slur)}\b'
-            value = re.sub(pattern, "[REDACTED_SLUR]", value, flags=re.IGNORECASE)
-
-        if len(detected_slurs) > 0:
-            return FailResult(
-                error_message=f"Mentioned toxic words: {', '.join(detected_slurs)}",
-                fix_value=value
-            )
-
-        return PassResult(value=value)
-
-    def normalize_text(self, text):
-        # Fix mojibake, weird encodings, etc.
+    def normalize_for_matching(self, text: str) -> str:
+        """
+        Normalize input text for detection:
+        - remove emojis
+        - fix encoding issues
+        - normalize unicode (NFKC)
+        - lowercase
+        - normalize whitespace
+        """
+        text = self.remove_emojis(text)
         text = ftfy.fix_text(text)
-        # Normalize to NFKC form — converts fancy fonts to plain
         text = unicodedata.normalize("NFKC", text)
-        return text
+        text = re.sub(r"\s+", " ", text).strip()
+        return text.lower()
 
     def remove_emojis(self, text):
+        """
+        Removed emojis from given string.
+        """
         return emoji.replace_emoji(text, replace='')
 
-    def clean_text(self, text):
-        text = self.normalize_text(text)
-        clean_text = re.sub(r'\s+', ' ', text).strip()
-        return clean_text
+    def _compile_slur_patterns(self):
+        """
+        Compile regex patterns for all slurs.
+        Uses Unicode-safe boundaries and longest-match-first ordering.
+        """
+        self._slur_patterns = []
+
+        for slur in self.slur_list:
+            escaped = re.escape(slur)
+            pattern = rf'(?<!\w){escaped}(?!\w)'
+            compiled = re.compile(pattern, re.IGNORECASE)
+            self._slur_patterns.append((slur, compiled))
+
+        self._slur_patterns.sort(key=lambda x: len(x[0]), reverse=True)
 
     def load_slur_list(self):
         cache_key = self.severity.value if hasattr(self.severity, "value") else str(self.severity)
