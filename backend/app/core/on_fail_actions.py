@@ -1,4 +1,6 @@
 from guardrails.validators import FailResult
 
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+
 def rephrase_query_on_fail(value: str, fail_result: FailResult):
-    return f"Please rephrase the query without unsafe content. {fail_result.error_message}"
+    return f"{REPHRASE_ON_FAIL_PREFIX} {fail_result.error_message}"

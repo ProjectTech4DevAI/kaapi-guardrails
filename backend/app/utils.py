@@ -21,7 +21,7 @@ class APIResponse(BaseModel, Generic[T]):
     def success_response(
         cls, data: T, metadata: Optional[Dict[str, Any]] = None
     ) -> "APIResponse[T]":
-        return cls(success=True, data=data, error=None, metadata=metadata)
+        return cls(success=True, data=data).model_dump(exclude_none=True)
 
     @classmethod
     def failure_response(
@@ -37,4 +37,4 @@ class APIResponse(BaseModel, Generic[T]):
         else:
             error_message = error
 
-        return cls(success=False, data=data, error=error_message, metadata=metadata)
+        return cls(success=False, data=data, error=error_message, metadata=metadata).model_dump(exclude_none=True)

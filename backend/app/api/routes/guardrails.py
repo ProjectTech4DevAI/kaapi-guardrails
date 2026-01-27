@@ -6,6 +6,7 @@ from guardrails.guard import Guard
 from guardrails.validators import FailResult
 
 from app.api.deps import AuthDep, SessionDep
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
@@ -98,67 +99,84 @@ async def _validate_with_guard(
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
 ) -> APIResponse:
+    """
+    Runs Guardrails validation on input/output data, persists request & validator logs,
+    and returns a structured APIResponse.
+
+    This function treats validation failures as first-class outcomes (not exceptions),
+    while still safely handling unexpected runtime errors.
+    """
     response_id = uuid.uuid4() 
     guard = None
+
+    def _finalize(
+        *,
+        status: RequestStatus,
+        response_text: str | None,
+        api_error: str | None = None,
+        validated_output: str | None = None,
+    ) -> APIResponse:
+        """
+        Single exit-point helper to ensure:
+        - request logs are always updated
+        - validator logs are written when available
+        - API responses are consistent
+        """
+        request_log_crud.update(
+            request_log_id=request_log_id,
+            request_status=status,
+            request_log_update=RequestLogUpdate(
+                response_text=response_text,
+                response_id=response_id,
+            ),
+        )
+
+        if guard is not None:
+            add_validator_logs(guard, request_log_id, validator_log_crud)
+
+        payload = {
+            "response_id": response_id,
+            response_field: validated_output,
+        }
+
+        if validated_output and validated_output.startswith(REPHRASE_ON_FAIL_PREFIX):
+            payload["rephrase_needed"] = True
+
+        if status == RequestStatus.SUCCESS:
+            return APIResponse.success_response(data=payload)
+
+        return APIResponse.failure_response(
+            data=payload,
+            error=api_error or "Validation failed",
+        )
 
     try:
         guard = build_guard(validators)
         result = guard.validate(data)
 
+        # Case 1: validation passed OR failed-with-fix (on_fail=FIX)
         if result.validated_output is not None:
-            request_log_crud.update(
-                request_log_id=request_log_id, 
-                request_status=RequestStatus.SUCCESS,
-                request_log_update= RequestLogUpdate(
-                    response_text=result.validated_output, 
-                    response_id=response_id
-                    )
-                )
-            
-            add_validator_logs(guard, request_log_id, validator_log_crud)
-
-            return APIResponse.success_response(
-                data={
-                    "response_id": response_id,
-                    response_field: result.validated_output,
-                }
+            return _finalize(
+                status=RequestStatus.SUCCESS,
+                response_text=result.validated_output,
+                validated_output=result.validated_output,
             )
 
-        request_log_crud.update(
-            request_log_id=request_log_id,
-            request_status=RequestStatus.ERROR,
-            request_log_update=RequestLogUpdate(
-                response_text=str(result),
-                response_id=response_id,
-            ),
-        )
-        add_validator_logs(guard, request_log_id, validator_log_crud)
-        return APIResponse.failure_response(
-            data={
-                "response_id": response_id,
-                response_field: None,
-            },
-            error="Validation failed",
+        # Case 2: validation failed without a fix
+        return _finalize(
+            status=RequestStatus.ERROR,
+            response_text=str(result.error),
+            api_error="Validation failed",
+            validated_output=None,
         )
 
-    except Exception as e:
-        request_log_crud.update(
-            request_log_id=request_log_id, 
-            request_status=RequestStatus.ERROR,
-            request_log_update= RequestLogUpdate(
-                response_text=str(e), 
-                response_id=response_id
-                )
-            )
-
-        add_validator_logs(guard, request_log_id, validator_log_crud)
-
-        return APIResponse.failure_response(
-            data={
-                "response_id": response_id,
-                response_field: None,
-                },
-            error=str(e),
+    except Exception as exc:
+        # Case 3: unexpected system / runtime failure
+        return _finalize(
+            status=RequestStatus.ERROR,
+            response_text=str(exc),
+            api_error=str(exc),
+            validated_output=None,
         )
 
 def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud):
