@@ -38,7 +38,7 @@ def compute_entity_metrics(
     """
     stats = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0})
 
-    for gold_txt, pred_txt in zip(gold_texts, pred_texts):
+    for gold_txt, pred_txt in zip(gold_texts, pred_texts, strict=True):
         gold_entities = extract_entities(gold_txt)
         pred_entities = extract_entities(pred_txt)
 
