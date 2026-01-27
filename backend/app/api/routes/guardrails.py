@@ -182,7 +182,7 @@ async def _validate_with_guard(
         return _finalize(
             status=RequestStatus.ERROR,
             response_text=str(exc),
-            api_error=str(exc),
+            api_error="Internal server error during validation",
             validated_output=None,
         )
 
