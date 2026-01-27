@@ -70,7 +70,7 @@ def test_input_guardrails_validation_failure(client, mock_crud):
     body = response.json()
     assert body["success"] is False
     assert body["data"]["safe_input"] is None
-    assert body["error"] == "PII detected"
+    assert body["error"] == "Validation failed"
 
 
 def test_output_guardrails_success(client, mock_crud):
