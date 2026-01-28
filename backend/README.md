@@ -115,6 +115,7 @@ app/evaluation/outputs/
 ```
 
 - To evaluate Lexical Slur Validator, run the offline evaluation script: `python app/evaluation/lexical_slur/run.py` 
+
 Expected outputs:
 ```
 app/eval/outputs/lexical_slur/
@@ -122,9 +123,11 @@ app/eval/outputs/lexical_slur/
 └── metrics.json
 ```
 predictions.csv contains row-level inputs, predictions, and labels.
+
 metrics.json contains binary classification metrics and performance stats (latency + peak memory).
 
 - To evaluate PII Validator, run the PII evaluation script: `python app/evaluation/pii/run.py`
+
 Expected outputs:
 ```
 app/eval/outputs/pii_remover/
@@ -132,6 +135,7 @@ app/eval/outputs/pii_remover/
 └── metrics.json
 ```
 predictions.csv contains original text, anonymized output, ground-truth masked text
+
 metrics.json contains entity-level precision, recall, and F1 per PII type.
 
 ### Test running stack
