@@ -24,7 +24,7 @@ def test_route_exists(client):
     assert VALIDATE_API_PATH in paths
 
 
-def test_validate_guardrails_success(client, mock_crud):
+def test_validate_guardrails_success(client):
     class MockGuard:
         def validate(self, data):
             return MockResult(validated_output="clean text")

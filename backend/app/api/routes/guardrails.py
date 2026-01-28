@@ -96,7 +96,12 @@ async def _validate_with_guard(
         - validator logs are written when available
         - API responses are consistent
         """
-        response_text = validated_output or error_message
+        response_text = (
+            validated_output if validated_output is not None else error_message
+        )
+        if response_text is None:
+            response_text = "Validation failed"
+
         request_log_crud.update(
             request_log_id=request_log_id,
             request_status=status,
