@@ -20,6 +20,10 @@ def override_dependencies():
     """
 
     # ---- Auth override ----
+    app.dependency_overrides[verify_bearer_token] = lambda: True
+
+    # ---- DB session override ----
+    mock_session = MagicMock()
     app.dependency_overrides[SessionDep] = lambda: mock_session
 
     # ---- CRUD override ----
