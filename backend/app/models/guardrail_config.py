@@ -21,25 +21,14 @@ ValidatorConfigItem = Annotated[
     Field(discriminator="type")
 ]
 
-#---------------Guardrail Request Models-----------------#
-class GuardrailInputRequest(SQLModel):
+#---------------Guardrail Request Model-----------------#
+class GuardrailRequest(SQLModel):
     request_id: str
     input: str
     validators: List[ValidatorConfigItem]
 
-class GuardrailOutputRequest(SQLModel):
-    request_id: str
-    output: str
-    validators: List[ValidatorConfigItem]
-
-
-#---------------Guardrail Response Models-----------------#
+#---------------Guardrail Response Model-----------------#
 class GuardrailResponse(SQLModel):
     response_id: UUID
     rephrase_needed: bool = False
-
-class GuardrailInputResponse(GuardrailResponse):
-    safe_input: Optional[str] = None
-
-class GuardrailOutputResponse(GuardrailResponse):
-    safe_output: Optional[str] = None
+    safe_text: Optional[str] = None

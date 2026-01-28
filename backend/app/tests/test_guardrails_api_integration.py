@@ -1,5 +1,7 @@
 import pytest
 
+from app.tests.utils.constants import SAFE_TEXT_FIELD, VALIDATE_API_PATH
+
 pytestmark = pytest.mark.integration
 
 request_id = "123e4567-e89b-12d3-a456-426614174000"
@@ -7,7 +9,7 @@ request_id = "123e4567-e89b-12d3-a456-426614174000"
 
 def test_input_guardrails_with_real_banlist(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": "this contains badword",
@@ -24,12 +26,12 @@ def test_input_guardrails_with_real_banlist(integration_client):
 
     body = response.json()
     assert body["success"] is True
-    assert body["data"]["safe_input"] == "this contains b"
+    assert body["data"][SAFE_TEXT_FIELD] == "this contains b"
 
 
 def test_input_guardrails_passes_clean_text(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": "this is clean",
@@ -46,12 +48,12 @@ def test_input_guardrails_passes_clean_text(integration_client):
     body = response.json()
 
     assert body["success"] is True
-    assert body["data"]["safe_input"] == "this is clean"
+    assert body["data"][SAFE_TEXT_FIELD] == "this is clean"
 
 
 def test_input_guardrails_with_lexical_slur(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": "This sentence contains chakki.",
@@ -68,12 +70,12 @@ def test_input_guardrails_with_lexical_slur(integration_client):
 
     body = response.json()
     assert body["success"] is True
-    assert body["data"]["safe_input"] == "this sentence contains [REDACTED_SLUR]"
+    assert body["data"][SAFE_TEXT_FIELD] == "this sentence contains [REDACTED_SLUR]"
 
 
 def test_input_guardrails_with_lexical_slur_clean_text(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": "This is a completely safe sentence",
@@ -90,12 +92,12 @@ def test_input_guardrails_with_lexical_slur_clean_text(integration_client):
 
     body = response.json()
     assert body["success"] is True
-    assert body["data"]["safe_input"] == "This is a completely safe sentence"
+    assert body["data"][SAFE_TEXT_FIELD] == "This is a completely safe sentence"
 
 
 def test_input_guardrails_with_multiple_validators(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": (
@@ -120,14 +122,14 @@ def test_input_guardrails_with_multiple_validators(integration_client):
     body = response.json()
     assert body["success"] is True
     assert (
-        body["data"]["safe_input"]
+        body["data"][SAFE_TEXT_FIELD]
         == "this sentence contains [REDACTED_SLUR] cause i want a s done to kill the female foetus"
     )
 
 
 def test_input_guardrails_with_incorrect_validator_config(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": "This sentence contains chakki.",
@@ -150,7 +152,7 @@ def test_input_guardrails_with_incorrect_validator_config(integration_client):
 
 def test_input_guardrails_with_validator_actions_exception(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": "This sentence contains chakki.",
@@ -174,7 +176,7 @@ def test_input_guardrails_with_validator_actions_exception(integration_client):
 
 def test_input_guardrails_with_validator_actions_rephrase(integration_client):
     response = integration_client.post(
-        "/api/v1/guardrails/input/",
+        VALIDATE_API_PATH,
         json={
             "request_id": request_id,
             "input": "This sentence contains chakki.",
@@ -191,4 +193,4 @@ def test_input_guardrails_with_validator_actions_rephrase(integration_client):
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is True
-    assert "Please rephrase the query without unsafe content. Mentioned toxic words" in body["data"]["safe_input"]
+    assert "Please rephrase the query without unsafe content. Mentioned toxic words" in body["data"][SAFE_TEXT_FIELD]

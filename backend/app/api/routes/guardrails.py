@@ -1,5 +1,4 @@
 import uuid
-from typing import Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -7,16 +6,11 @@ from guardrails.guard import Guard
 from guardrails.validators import FailResult
 
 from app.api.deps import AuthDep, SessionDep
-from app.core.constants import REPHRASE_ON_FAIL_PREFIX, SAFE_INPUT_FIELD, SAFE_OUTPUT_FIELD
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
-from app.models.guardrail_config import (
-    GuardrailInputRequest,
-    GuardrailOutputRequest,
-    GuardrailInputResponse,
-    GuardrailOutputResponse,
-)
+from app.models.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.models.logging.request import  RequestLogUpdate, RequestStatus
 from app.models.logging.validator import ValidatorLog, ValidatorOutcome
 from app.utils import APIResponse
@@ -24,11 +18,11 @@ from app.utils import APIResponse
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
 @router.post(
-        "/input/",
-        response_model=APIResponse[GuardrailInputResponse],
+        "/validate/",
+        response_model=APIResponse[GuardrailResponse],
         response_model_exclude_none=True)
-async def run_input_guardrails(
-    payload: GuardrailInputRequest,
+async def validate_guardrails(
+    payload: GuardrailRequest,
     session: SessionDep,
     _: AuthDep,
 ):
@@ -44,40 +38,12 @@ async def run_input_guardrails(
     return await _validate_with_guard(
         payload.input,
         payload.validators,
-        SAFE_INPUT_FIELD,
         request_log_crud,
         request_log.id,
         validator_log_crud,
     )
 
-@router.post(
-        "/output/",
-        response_model=APIResponse[GuardrailOutputResponse],
-        response_model_exclude_none=True)
-async def run_output_guardrails(
-    payload: GuardrailOutputRequest,
-    session: SessionDep,
-    _: AuthDep,
-):
-    request_log_crud = RequestLogCrud(session=session)
-    validator_log_crud = ValidatorLogCrud(session=session)
-
-    try:
-        request_id = UUID(payload.request_id)
-    except ValueError:
-        return APIResponse.failure_response(error="Invalid request_id")
-
-    request_log = request_log_crud.create(request_id, input_text=payload.output)
-    return await _validate_with_guard(
-        payload.output,
-        payload.validators,
-        SAFE_OUTPUT_FIELD,
-        request_log_crud,
-        request_log.id,
-        validator_log_crud
-    )
-
-@router.get("/validator/")
+@router.get("/validators/")
 async def list_validators(_: AuthDep):
     """
     Lists all validators and their parameters directly.
@@ -104,7 +70,6 @@ async def list_validators(_: AuthDep):
 async def _validate_with_guard(
     data: str,
     validators: list,
-    response_type: str,  # "safe_input" or "safe_output"
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
@@ -122,8 +87,8 @@ async def _validate_with_guard(
     def _finalize(
         *,
         status: RequestStatus,
-        response_text: str | None,
         validated_output: str | None = None,
+        error_message: str | None = None,
     ) -> APIResponse:
         """
         Single exit-point helper to ensure:
@@ -131,6 +96,7 @@ async def _validate_with_guard(
         - validator logs are written when available
         - API responses are consistent
         """
+        response_text = validated_output or error_message
         request_log_crud.update(
             request_log_id=request_log_id,
             request_status=status,
@@ -148,18 +114,11 @@ async def _validate_with_guard(
             and validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
         )
 
-        if response_type == SAFE_INPUT_FIELD:
-            response_model = GuardrailInputResponse(
-                response_id=response_id,
-                rephrase_needed=rephrase_needed,
-                safe_input=validated_output,
-            )
-        else:
-            response_model = GuardrailOutputResponse(
-                response_id=response_id,
-                rephrase_needed=rephrase_needed,
-                safe_output=validated_output,
-            )
+        response_model = GuardrailResponse(
+            response_id=response_id,
+            rephrase_needed=rephrase_needed,
+            safe_text=validated_output,
+        )
 
         if status == RequestStatus.SUCCESS:
             return APIResponse.success_response(data=response_model)
@@ -177,35 +136,34 @@ async def _validate_with_guard(
         if result.validated_output is not None:
             return _finalize(
                 status=RequestStatus.SUCCESS,
-                response_text=result.validated_output,
                 validated_output=result.validated_output,
             )
 
         # Case 2: validation failed without a fix
         return _finalize(
             status=RequestStatus.ERROR,
-            response_text=str(result.error),
-            validated_output=None,
+            error_message=str(result.error),
         )
 
     except Exception as exc:
         # Case 3: unexpected system / runtime failure
         return _finalize(
             status=RequestStatus.ERROR,
-            response_text=str(exc),
-            validated_output=None,
+            error_message=str(exc),
         )
 
 def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud):
-    if not guard or not guard.history or not guard.history.last:
+    history = getattr(guard, "history", None)
+    if not history:
         return
 
-    call = guard.history.last
-    if not call.iterations:
+    last_call = getattr(history, "last", None)
+    if not last_call or not getattr(last_call, "iterations", None):
         return
 
-    iteration = call.iterations[-1]
-    if not iteration.outputs or not iteration.outputs.validator_logs:
+    iteration = last_call.iterations[-1]
+    outputs = getattr(iteration, "outputs", None)
+    if not outputs or not getattr(outputs, "validator_logs", None):
         return
 
     for log in iteration.outputs.validator_logs:

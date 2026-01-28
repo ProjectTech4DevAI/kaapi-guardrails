@@ -6,5 +6,3 @@ LABEL = "label"
 SCORE = "score"
 
 REPHRASE_ON_FAIL_PREFIX = "Please rephrase the query without unsafe content."
-SAFE_INPUT_FIELD = "safe_input"
-SAFE_OUTPUT_FIELD = "safe_output"
