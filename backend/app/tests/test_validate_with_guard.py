@@ -104,3 +104,4 @@ async def test_validate_with_guard_exception():
     assert isinstance(response, APIResponse)
     assert response.success is False
     assert response.data["safe_input"] is None
+    assert response.error == "Invalid config"
