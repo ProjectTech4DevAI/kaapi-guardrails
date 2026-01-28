@@ -18,7 +18,13 @@ class BaseValidatorConfig(SQLModel):
     model_config = {"arbitrary_types_allowed": True}
 
     def resolve_on_fail(self):
-        return _ON_FAIL_MAP[self.on_fail]
+        try:
+           return _ON_FAIL_MAP[self.on_fail]
+        except KeyError as e:
+            raise ValueError(
+                f"Invalid on_fail value: {self.on_fail}. Error {e}. " \
+                "Expected one of: exception, fix, rephrase."
+            )
 
     def build(self) -> Validator:
         raise NotImplementedError(
