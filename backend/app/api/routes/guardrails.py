@@ -18,7 +18,7 @@ from app.utils import APIResponse
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
 @router.post(
-        "/validate/",
+        "/",
         response_model=APIResponse[GuardrailResponse],
         response_model_exclude_none=True)
 async def run_guardrails(
@@ -43,7 +43,7 @@ async def run_guardrails(
         validator_log_crud,
     )
 
-@router.get("/validators/")
+@router.get("/")
 async def list_validators(_: AuthDep):
     """
     Lists all validators and their parameters directly.
