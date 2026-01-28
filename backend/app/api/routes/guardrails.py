@@ -21,7 +21,7 @@ router = APIRouter(prefix="/guardrails", tags=["guardrails"])
         "/validate/",
         response_model=APIResponse[GuardrailResponse],
         response_model_exclude_none=True)
-async def validate_guardrails(
+async def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
     _: AuthDep,
