@@ -8,9 +8,7 @@ def build_guard(validator_items):
     validators = []
 
     for v_item in validator_items:
-        validator = v_item.build(
-            on_fail=v_item.resolve_on_fail()
-        )
+        validator = v_item.build()
         validators.append(validator)
 
     return Guard().use_many(*validators)

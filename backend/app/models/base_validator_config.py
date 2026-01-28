@@ -1,5 +1,3 @@
-from abc import ABC, abstractmethod
-
 from guardrails import OnFailAction
 from guardrails.validators import Validator
 from sqlmodel import SQLModel
@@ -22,7 +20,7 @@ class BaseValidatorConfig(SQLModel):
     def resolve_on_fail(self):
         return _ON_FAIL_MAP[self.on_fail]
 
-    def build(self, *, on_fail) -> Validator:
+    def build(self) -> Validator:
         raise NotImplementedError(
             f"{self.__class__.__name__} must implement build()"
         )

@@ -9,9 +9,9 @@ class PIIRemoverSafetyValidatorConfig(BaseValidatorConfig):
     entity_types: Optional[List[str]] = None # list of PII entity types to remove
     threshold: float = 0.5 # confidence threshold for PII detection
 
-    def build(self, *, on_fail):
+    def build(self):
         return PIIRemover(
             entity_types=self.entity_types,
             threshold=self.threshold,
-            on_fail=on_fail,
+            on_fail=self.resolve_on_fail(),
         )

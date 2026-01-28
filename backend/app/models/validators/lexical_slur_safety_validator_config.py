@@ -9,9 +9,9 @@ class LexicalSlurSafetyValidatorConfig(BaseValidatorConfig):
     languages: List[str] = ["en", "hi"] # list of languages to check slurs in
     severity: Literal["low", "medium", "high", "all"] = "all" # severity level of slurs to check
 
-    def build(self, *, on_fail):
+    def build(self):
         return LexicalSlur(
             languages=self.languages,
             severity=SlurSeverity(self.severity),
-            on_fail=on_fail,
+            on_fail=self.resolve_on_fail(),
         )
