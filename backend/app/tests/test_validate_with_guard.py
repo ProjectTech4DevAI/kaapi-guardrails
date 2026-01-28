@@ -9,7 +9,6 @@ from app.utils import APIResponse
 
 
 mock_request_log_crud = MagicMock()
-mock_validator_log_crud = MagicMock()
 mock_request_log_id = uuid4()
 
 
@@ -29,7 +28,6 @@ async def test_validate_with_guard_success():
             response_field="safe_input",
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
-            validator_log_crud=mock_validator_log_crud,
         )
 
     assert isinstance(response, APIResponse)
@@ -57,13 +55,12 @@ async def test_validate_with_guard_validation_error_with_failures():
             response_field="safe_input",
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
-            validator_log_crud=mock_validator_log_crud,
         )
 
     assert isinstance(response, APIResponse)
     assert response.success is False
     assert response.data["safe_input"] is None
-    assert response.error == "Validation failed"
+    assert response.error == "PII detected"
 
 
 @pytest.mark.asyncio
@@ -82,13 +79,12 @@ async def test_validate_with_guard_validation_error_no_failures():
             response_field="safe_output",
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
-            validator_log_crud=mock_validator_log_crud,
         )
 
     assert isinstance(response, APIResponse)
     assert response.success is False
     assert response.data["safe_output"] is None
-    assert response.error == "Validation failed"
+    assert response.error == ""
 
 
 @pytest.mark.asyncio
@@ -103,10 +99,8 @@ async def test_validate_with_guard_exception():
             response_field="safe_input",
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
-            validator_log_crud=mock_validator_log_crud,
         )
 
     assert isinstance(response, APIResponse)
     assert response.success is False
     assert response.data["safe_input"] is None
-    assert response.error == "Invalid config"

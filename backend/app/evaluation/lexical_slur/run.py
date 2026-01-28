@@ -3,9 +3,9 @@ import pandas as pd
 from guardrails.validators import FailResult
 
 from app.core.validators.lexical_slur import LexicalSlur
-from app.eval.common.metrics import compute_binary_metrics
-from app.eval.common.profiling import Profiler
-from app.eval.common.io import write_csv, write_json
+from app.evaluation.common.metrics import compute_binary_metrics
+from app.evaluation.common.profiling import Profiler
+from app.evaluation.common.io import write_csv, write_json
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "outputs" / "lexical_slur"

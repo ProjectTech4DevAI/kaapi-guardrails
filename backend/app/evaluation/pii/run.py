@@ -3,8 +3,8 @@ import pandas as pd
 from guardrails.validators import FailResult
 
 from app.core.validators.pii_remover import PIIRemover
-from app.eval.pii.entity_metrics import compute_entity_metrics
-from app.eval.common.io import write_csv, write_json
+from app.evaluation.pii.entity_metrics import compute_entity_metrics
+from app.evaluation.common.io import write_csv, write_json
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "outputs" / "pii_remover"
