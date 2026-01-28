@@ -93,6 +93,53 @@ The tests run with Pytest, modify and add tests to `./backend/tests/`.
 
 If you use GitHub Actions the tests will run automatically.
 
+## Running evaluation tests
+
+We can benchmark validators like PII Remover and Lexical Slur Detection on curated datasets.
+
+Download the dataset from [here](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89). This contains multiple folders, one for each validator. Each folder contains a testing dataset in csv format for the validator. Download these csv files and store it in `backend/app/evaluation/datasets/` folder. Once the datasets have been stored, we can run the evaluation script for each validator. 
+
+For lexical slur match, ban list and gender assumption bias, testing doesn't make much sense cause these are deterministic. However, we curated a dataset for lexical slur match for use in toxicity detection validator later on. 
+
+Each validator produces:
+- predictions.csv – row-level outputs for debugging and analysis
+- metrics.json – aggregated accuracy + performance metrics
+
+Standardized output structure:
+```
+app/evaluation/outputs/
+  lexical_slur/
+    predictions.csv
+    metrics.json
+  pii_remover/
+    predictions.csv
+    metrics.json
+```
+
+- To evaluate Lexical Slur Validator, run the offline evaluation script: `python app/evaluation/lexical_slur/run.py` 
+
+Expected outputs:
+```
+app/evaluation/outputs/lexical_slur/
+├── predictions.csv
+└── metrics.json
+```
+predictions.csv contains row-level inputs, predictions, and labels.
+
+metrics.json contains binary classification metrics and performance stats (latency + peak memory).
+
+- To evaluate PII Validator, run the PII evaluation script: `python app/evaluation/pii/run.py`
+
+Expected outputs:
+```
+app/evaluation/outputs/pii_remover/
+├── predictions.csv
+└── metrics.json
+```
+predictions.csv contains original text, anonymized output, ground-truth masked text
+
+metrics.json contains entity-level precision, recall, and F1 per PII type.
+
 ### Test running stack
 
 If your stack is already up and you just want to run the tests, you can use:
