@@ -97,6 +97,8 @@ If you use GitHub Actions the tests will run automatically.
 
 We can benchmark validators like PII Remover and Lexical Slur Detection on curated datasets.
 
+Download the dataset from [here](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89). This contains multiple folders, one for each validator. Each folder contains a testing dataset in csv format for the validator. Download these csv files and store it in `backend/app/evaluation/datasets/` folder. Once the datasets have been stored, we can run the evaluation script for each validator. 
+
 For lexical slur match, ban list and gender assumption bias, testing doesn't make much sense cause these are deterministic. However, we curated a dataset for lexical slur match for use in toxicity detection validator later on. 
 
 Each validator produces:
