@@ -118,7 +118,7 @@ app/evaluation/outputs/
 
 Expected outputs:
 ```
-app/eval/outputs/lexical_slur/
+app/evaluation/outputs/lexical_slur/
 ├── predictions.csv
 └── metrics.json
 ```
@@ -130,7 +130,7 @@ metrics.json contains binary classification metrics and performance stats (laten
 
 Expected outputs:
 ```
-app/eval/outputs/pii_remover/
+app/evaluation/outputs/pii_remover/
 ├── predictions.csv
 └── metrics.json
 ```
