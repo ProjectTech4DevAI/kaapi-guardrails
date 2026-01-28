@@ -93,6 +93,47 @@ The tests run with Pytest, modify and add tests to `./backend/tests/`.
 
 If you use GitHub Actions the tests will run automatically.
 
+## Running evaluation tests
+
+We can benchmark validators like PII Remover and Lexical Slur Detection on curated datasets.
+
+For lexical slur match, ban list and gender assumption bias, testing doesn't make much sense cause these are deterministic. However, we curated a dataset for lexical slur match for use in toxicity detection validator later on. 
+
+Each validator produces:
+- predictions.csv – row-level outputs for debugging and analysis
+- metrics.json – aggregated accuracy + performance metrics
+
+Standardized output structure:
+```
+app/evaluation/outputs/
+  lexical_slur/
+    predictions.csv
+    metrics.json
+  pii_remover/
+    predictions.csv
+    metrics.json
+```
+
+- To evaluate Lexical Slur Validator, run the offline evaluation script: `python app/evaluation/lexical_slur/run.py` 
+Expected outputs:
+```
+app/eval/outputs/lexical_slur/
+├── predictions.csv
+└── metrics.json
+```
+predictions.csv contains row-level inputs, predictions, and labels.
+metrics.json contains binary classification metrics and performance stats (latency + peak memory).
+
+- To evaluate PII Validator, run the PII evaluation script: `python app/evaluation/pii/run.py`
+Expected outputs:
+```
+app/eval/outputs/pii_remover/
+├── predictions.csv
+└── metrics.json
+```
+predictions.csv contains original text, anonymized output, ground-truth masked text
+metrics.json contains entity-level precision, recall, and F1 per PII type.
+
 ### Test running stack
 
 If your stack is already up and you just want to run the tests, you can use:
