@@ -7,11 +7,16 @@ from guardrails.guard import Guard
 from guardrails.validators import FailResult
 
 from app.api.deps import AuthDep, SessionDep
-from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX, SAFE_INPUT_FIELD, SAFE_OUTPUT_FIELD
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
-from app.models.guardrail_config import GuardrailInputRequest, GuardrailOutputRequest
+from app.models.guardrail_config import (
+    GuardrailInputRequest,
+    GuardrailOutputRequest,
+    GuardrailInputResponse,
+    GuardrailOutputResponse,
+)
 from app.models.logging.request import  RequestLogUpdate, RequestStatus
 from app.models.logging.validator import ValidatorLog, ValidatorOutcome
 from app.utils import APIResponse
@@ -20,7 +25,7 @@ router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
 @router.post(
         "/input/",
-        response_model=APIResponse[Dict[str, Any]],
+        response_model=APIResponse[GuardrailInputResponse],
         response_model_exclude_none=True)
 async def run_input_guardrails(
     payload: GuardrailInputRequest,
@@ -29,7 +34,6 @@ async def run_input_guardrails(
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
-    request_id = None
 
     try:
         request_id = UUID(payload.request_id)
@@ -40,7 +44,7 @@ async def run_input_guardrails(
     return await _validate_with_guard(
         payload.input,
         payload.validators,
-        "safe_input",
+        SAFE_INPUT_FIELD,
         request_log_crud,
         request_log.id,
         validator_log_crud,
@@ -48,7 +52,7 @@ async def run_input_guardrails(
 
 @router.post(
         "/output/",
-        response_model=APIResponse[Dict[str, Any]],
+        response_model=APIResponse[GuardrailOutputResponse],
         response_model_exclude_none=True)
 async def run_output_guardrails(
     payload: GuardrailOutputRequest,
@@ -57,7 +61,6 @@ async def run_output_guardrails(
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
-    request_id = None
 
     try:
         request_id = UUID(payload.request_id)
@@ -68,7 +71,7 @@ async def run_output_guardrails(
     return await _validate_with_guard(
         payload.output,
         payload.validators,
-        "safe_output",
+        SAFE_OUTPUT_FIELD,
         request_log_crud,
         request_log.id,
         validator_log_crud
@@ -101,7 +104,7 @@ async def list_validators(_: AuthDep):
 async def _validate_with_guard(
     data: str,
     validators: list,
-    response_field: str,  # "safe_input" or "safe_output"
+    response_type: str,  # "safe_input" or "safe_output"
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
@@ -114,13 +117,12 @@ async def _validate_with_guard(
     while still safely handling unexpected runtime errors.
     """
     response_id = uuid.uuid4() 
-    guard = None
+    guard: Guard | None = None
 
     def _finalize(
         *,
         status: RequestStatus,
         response_text: str | None,
-        api_error: str | None = None,
         validated_output: str | None = None,
     ) -> APIResponse:
         """
@@ -141,20 +143,30 @@ async def _validate_with_guard(
         if guard is not None:
             add_validator_logs(guard, request_log_id, validator_log_crud)
 
-        payload: dict[str, Any] = { "response_id": response_id }
+        rephrase_needed = (
+            validated_output is not None
+            and validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
+        )
 
-        if validated_output is not None:
-            payload[response_field] = validated_output
-            
-            if validated_output.startswith(REPHRASE_ON_FAIL_PREFIX):
-                payload["rephrase_needed"] = True
+        if response_type == SAFE_INPUT_FIELD:
+            response_model = GuardrailInputResponse(
+                response_id=response_id,
+                rephrase_needed=rephrase_needed,
+                safe_input=validated_output,
+            )
+        else:
+            response_model = GuardrailOutputResponse(
+                response_id=response_id,
+                rephrase_needed=rephrase_needed,
+                safe_output=validated_output,
+            )
 
         if status == RequestStatus.SUCCESS:
-            return APIResponse.success_response(data=payload)
+            return APIResponse.success_response(data=response_model)
 
         return APIResponse.failure_response(
-            data=payload,
-            error=api_error or "Validation failed",
+            data=response_model,
+            error=response_text or "Validation failed",
         )
 
     try:
@@ -173,7 +185,6 @@ async def _validate_with_guard(
         return _finalize(
             status=RequestStatus.ERROR,
             response_text=str(result.error),
-            api_error="Validation failed",
             validated_output=None,
         )
 
@@ -182,7 +193,6 @@ async def _validate_with_guard(
         return _finalize(
             status=RequestStatus.ERROR,
             response_text=str(exc),
-            api_error="Internal server error during validation",
             validated_output=None,
         )
 
