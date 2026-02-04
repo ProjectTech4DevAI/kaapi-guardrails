@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from pydantic import BaseModel
 from typing import Any, Dict, Generic, Optional, TypeVar
 
+from app.core.constants import VALIDATOR_CONFIG_SYSTEM_FIELDS as SYSTEM_FIELDS
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -10,6 +12,19 @@ T = TypeVar("T")
 
 def now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+def split_validator_payload(data: dict):
+    base = {}
+    config = {}
+
+    for k, v in data.items():
+        if k in SYSTEM_FIELDS:
+            base[k] = v
+        else:
+            config[k] = v
+
+    return base, config
+
 
 class APIResponse(BaseModel, Generic[T]):
     success: bool
