@@ -2,7 +2,7 @@ from typing import List, Literal
 
 from guardrails.hub import BanList
 
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class BanListSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["ban_list"]
