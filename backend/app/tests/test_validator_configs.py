@@ -6,7 +6,6 @@ from sqlmodel import Session
 
 from app.crud.validator_config_crud import validator_config_crud
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
-from app.core.db import engine
 from app.models.config.validator_config_table import ValidatorConfig
 
 # Test data constants

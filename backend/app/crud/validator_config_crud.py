@@ -92,7 +92,8 @@ class ValidatorConfigCrud:
 
         if config:
             obj.config = {**(obj.config or {}), **config}
-            obj.updated_at = now()
+        
+        obj.updated_at = now()
         session.commit()
         session.refresh(obj)
 
