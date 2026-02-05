@@ -71,7 +71,10 @@ class ValidatorConfig(SQLModel, table=True):
     updated_at: datetime = Field(
         default_factory=now, 
         nullable=False,
-        sa_column_kwargs={"comment": "Timestamp when the validator config was last updated"},
+        sa_column_kwargs={
+            "comment": "Timestamp when the validator config was last updated",
+            "onupdate": now,
+        },
     )
 
     __table_args__ = (

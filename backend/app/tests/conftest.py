@@ -30,7 +30,7 @@ def setup_test_db():
 def clean_db():
     with Session(test_engine) as session:
         for table in reversed(SQLModel.metadata.sorted_tables):
-            session.exec(table.delete())
+            session.execute(table.delete())
         session.commit()
 
 @pytest.fixture(scope="function", autouse=True)

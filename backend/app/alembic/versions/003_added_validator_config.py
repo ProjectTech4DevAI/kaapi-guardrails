@@ -1,7 +1,7 @@
 """Added validator_config table
 
 Revision ID: 003
-Revises: 001
+Revises: 002
 Create Date: 2026-02-05 09:42:54.128852
 
 """

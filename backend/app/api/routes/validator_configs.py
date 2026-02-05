@@ -1,10 +1,11 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter
 
 from app.api.deps import AuthDep, SessionDep
-from app.schemas.validator_config import *
+from app.core.enum import Stage, ValidatorType
+from app.schemas.validator_config import ValidatorCreate, ValidatorResponse, ValidatorUpdate
 from app.crud.validator_config_crud import validator_config_crud
 
 
@@ -29,7 +30,7 @@ async def create_validator(
 
 @router.get(
         "/",
-        response_model=List[ValidatorResponse]
+        response_model=list[ValidatorResponse]
     )
 async def list_validators(
     org_id: int,
@@ -54,7 +55,7 @@ async def get_validator(
     _: AuthDep,
 ):
     obj = validator_config_crud.get_or_404(session, id, org_id, project_id)
-    return validator_config_crud._flatten(obj)
+    return validator_config_crud.flatten(obj)
 
 
 @router.patch(

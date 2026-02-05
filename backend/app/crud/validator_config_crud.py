@@ -1,13 +1,14 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
+from app.core.enum import Stage, ValidatorType
 from app.models.config.validator_config_table import ValidatorConfig
-from app.schemas.validator_config import Stage, ValidatorType
-from app.utils import split_validator_payload
+from app.schemas.validator_config import ValidatorCreate
+from app.utils import now, split_validator_payload
 
 
 class ValidatorConfigCrud:
@@ -16,7 +17,7 @@ class ValidatorConfigCrud:
             session: Session, 
             org_id: int, 
             project_id: int, 
-            payload
+            payload: ValidatorCreate
         ):
         data = payload.model_dump()
         base, config = split_validator_payload(data)
@@ -40,7 +41,7 @@ class ValidatorConfigCrud:
             )
 
         session.refresh(obj)
-        return self._flatten(obj)
+        return self.flatten(obj)
 
     def list(
         self,
@@ -49,7 +50,7 @@ class ValidatorConfigCrud:
         project_id: int,
         stage: Optional[Stage] = None,
         type: Optional[ValidatorType] = None,
-    ) -> List[dict]:
+    ) -> list[dict]:
         query = select(ValidatorConfig).where(
             ValidatorConfig.org_id == org_id,
             ValidatorConfig.project_id == project_id,
@@ -62,7 +63,7 @@ class ValidatorConfigCrud:
             query = query.where(ValidatorConfig.type == type)
 
         rows = session.exec(query).all()
-        return [self._flatten(r) for r in rows]
+        return [self.flatten(r) for r in rows]
 
     def get_or_404(
         self,
@@ -91,17 +92,17 @@ class ValidatorConfigCrud:
 
         if config:
             obj.config = {**(obj.config or {}), **config}
-
+            obj.updated_at = now()
         session.commit()
         session.refresh(obj)
 
-        return self._flatten(obj)
+        return self.flatten(obj)
 
     def delete(self, session: Session, obj: ValidatorConfig):
         session.delete(obj)
         session.commit()
 
-    def _flatten(self, row: ValidatorConfig) -> dict:
+    def flatten(self, row: ValidatorConfig) -> dict:
         base = row.model_dump(exclude={"config"})
         return {**base, **(row.config or {})}
 
