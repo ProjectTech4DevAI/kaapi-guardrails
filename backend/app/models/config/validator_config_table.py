@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column
+from sqlalchemy import Column, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field as SQLField
 from sqlmodel import SQLModel, Field
@@ -24,9 +24,8 @@ class ValidatorConfig(SQLModel, table=True):
         sa_column_kwargs={"comment": "Identifier for the organization"},
     )
 
-    project_id: Optional[int] = Field(
-        default=None, 
-        index=True,
+    project_id: int = Field(
+        nullable=False,
         sa_column_kwargs={"comment": "Identifier for the project"},
     )
 
@@ -73,4 +72,11 @@ class ValidatorConfig(SQLModel, table=True):
         default_factory=now, 
         nullable=False,
         sa_column_kwargs={"comment": "Timestamp when the validator config was last updated"},
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "org_id", "project_id", "type", "stage",
+            name="uq_validator_identity"
+        ),
     )

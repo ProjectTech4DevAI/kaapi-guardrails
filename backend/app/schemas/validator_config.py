@@ -1,5 +1,5 @@
 from typing import Optional
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlmodel import SQLModel
 
@@ -32,4 +32,4 @@ class ValidatorUpdate(SQLModel):
 class ValidatorResponse(ValidatorBase):
     id: UUID
     org_id: int
-    project_id: Optional[int] = None
+    project_id: int

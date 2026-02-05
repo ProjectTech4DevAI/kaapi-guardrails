@@ -1,7 +1,8 @@
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
 from app.api.deps import AuthDep, SessionDep
@@ -33,9 +34,18 @@ async def create_validator(
     )
 
     session.add(obj)
-    session.commit()
+
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Validator already exists for this type and stage",
+        )
+
     session.refresh(obj)
-    return obj
+    return flatten_validator(obj)
 
 @router.get(
         "/",
@@ -75,11 +85,7 @@ async def get_validator(
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = session.get(ValidatorConfig, id)
-
-    if not obj or obj.org_id != org_id or obj.project_id != project_id:
-        raise HTTPException(404)
-
+    obj = get_validator_or_404(id, org_id, project_id, session)
     return flatten_validator(obj)
 
 
@@ -95,27 +101,13 @@ async def update_validator(
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = session.get(ValidatorConfig, id)
-
-    if not obj or obj.org_id != org_id or obj.project_id != project_id:
-        raise HTTPException(404)
-
-    data = payload.model_dump(exclude_unset=True)
-    base, config = split_validator_payload(data)
-
-    print("base", base)
-    print("config", config)
-    for k, v in base.items():
-        setattr(obj, k, v)
-
-    if config:
-        obj.config = {**(obj.config or {}), **config}
-
-    session.add(obj)
-    session.commit()
-    session.refresh(obj)
-
-    return flatten_validator(obj)
+    obj = get_validator_or_404(id, org_id, project_id, session)
+    updated_obj = update_validator_config(
+        obj,
+        payload.model_dump(exclude_unset=True),
+        session
+    )
+    return flatten_validator(updated_obj)
 
 
 @router.delete("/{id}")
@@ -126,18 +118,57 @@ async def delete_validator(
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = session.get(ValidatorConfig, id)
-
-    if not obj or obj.org_id != org_id or obj.project_id != project_id:
-        raise HTTPException(404)
-
+    obj = get_validator_or_404(id, org_id, project_id, session)
     session.delete(obj)
     session.commit()
-
     return {"success": True}
 
 def flatten_validator(row: ValidatorConfig) -> dict:
+    """
+    Flatten validator config: combines base fields with config dict.
+    Returns a dict with all fields including config extras.
+    """
     base = row.model_dump(exclude={"config"})
+    flattened = {**base, **(row.config or {})}
+    print("FLATTENED:", flattened)
+    return flattened
 
-    print(base)
-    return {**base, **(row.config or {})}
+
+def get_validator_or_404(
+    id: UUID,
+    org_id: int,
+    project_id: int,
+    session: SessionDep,
+) -> ValidatorConfig:
+    """Fetch validator by id, org_id, and project_id, or raise 404."""
+    obj = session.query(ValidatorConfig).filter(
+        ValidatorConfig.id == id,
+        ValidatorConfig.org_id == org_id,
+        ValidatorConfig.project_id == project_id
+    ).first()
+
+    if not obj:
+        raise HTTPException(status_code=404, detail="Validator not found")
+
+    return obj
+
+
+def update_validator_config(
+    obj: ValidatorConfig,
+    update_data: dict,
+    session: SessionDep,
+) -> ValidatorConfig:
+    """Update validator config fields and return the updated object."""
+    base, config = split_validator_payload(update_data)
+
+    for k, v in base.items():
+        setattr(obj, k, v)
+
+    if config:
+        obj.config = {**(obj.config or {}), **config}
+
+    session.add(obj)
+    session.commit()
+    session.refresh(obj)
+
+    return obj
