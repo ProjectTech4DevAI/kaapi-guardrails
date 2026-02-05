@@ -2,7 +2,7 @@ import uuid
 from unittest.mock import MagicMock
 
 import pytest
-from sqlmodel import Session, delete
+from sqlmodel import Session
 
 from app.crud.validator_config_crud import validator_config_crud
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
@@ -16,19 +16,6 @@ TEST_VALIDATOR_ID = uuid.uuid4()
 TEST_TYPE = ValidatorType.LexicalSlur
 TEST_STAGE = Stage.Input
 TEST_ON_FAIL = GuardrailOnFail.Fix
-
-
-@pytest.fixture
-def clear_database():
-    """Clear ValidatorConfig table before and after each test."""
-    with Session(engine) as session:
-        session.exec(delete(ValidatorConfig))
-        session.commit()
-    yield
-    with Session(engine) as session:
-        session.exec(delete(ValidatorConfig))
-        session.commit()
-
 
 @pytest.fixture
 def mock_session():
@@ -53,7 +40,7 @@ def sample_validator():
 
 class TestFlatten:
     def test_flatten_includes_config_fields(self, sample_validator):
-        result = validator_config_crud._flatten(sample_validator)
+        result = validator_config_crud.flatten(sample_validator)
 
         assert result["severity"] == "all"
         assert result["languages"] == ["en", "hi"]
@@ -71,7 +58,7 @@ class TestFlatten:
             config={},
         )
 
-        result = validator_config_crud._flatten(validator)
+        result = validator_config_crud.flatten(validator)
 
         assert "severity" not in result
 
