@@ -15,18 +15,18 @@ class ValidatorConfigCrud:
     def create(
             self, 
             session: Session, 
-            org_id: int, 
+            organization_id: int, 
             project_id: int, 
             payload: ValidatorCreate
         ):
         data = payload.model_dump()
-        base, config = split_validator_payload(data)
+        model_fields, config_fields = split_validator_payload(data)
 
         obj = ValidatorConfig(
-            org_id=org_id,
+            organization_id=organization_id,
             project_id=project_id,
-            config=config,
-            **base,
+            config=config_fields,
+            **model_fields,
         )
 
         session.add(obj)
@@ -46,13 +46,13 @@ class ValidatorConfigCrud:
     def list(
         self,
         session: Session,
-        org_id: int,
+        organization_id: int,
         project_id: int,
         stage: Optional[Stage] = None,
         type: Optional[ValidatorType] = None,
     ) -> list[dict]:
         query = select(ValidatorConfig).where(
-            ValidatorConfig.org_id == org_id,
+            ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,
         )
 
@@ -69,12 +69,12 @@ class ValidatorConfigCrud:
         self,
         session: Session,
         id: UUID,
-        org_id: int,
+        organization_id: int,
         project_id: int,
     ) -> ValidatorConfig:
         obj = session.get(ValidatorConfig, id)
 
-        if not obj or obj.org_id != org_id or obj.project_id != project_id:
+        if not obj or obj.organization_id != organization_id or obj.project_id != project_id:
             raise HTTPException(404, "Validator not found")
 
         return obj
@@ -85,13 +85,13 @@ class ValidatorConfigCrud:
             obj: ValidatorConfig, 
             update_data: dict
         ):
-        base, config = split_validator_payload(update_data)
+        model_fields, config_fields = split_validator_payload(update_data)
 
-        for k, v in base.items():
+        for k, v in model_fields.items():
             setattr(obj, k, v)
 
-        if config:
-            obj.config = {**(obj.config or {}), **config}
+        if config_fields:
+            obj.config = {**(obj.config or {}), **config_fields}
         
         obj.updated_at = now()
         session.commit()

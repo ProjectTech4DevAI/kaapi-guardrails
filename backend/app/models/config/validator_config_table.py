@@ -19,7 +19,7 @@ class ValidatorConfig(SQLModel, table=True):
         sa_column_kwargs={"comment": "Unique identifier for the validator configuration"},
     )
 
-    org_id: int = Field(
+    organization_id: int = Field(
         index=True,
         sa_column_kwargs={"comment": "Identifier for the organization"},
     )
@@ -79,7 +79,7 @@ class ValidatorConfig(SQLModel, table=True):
 
     __table_args__ = (
         UniqueConstraint(
-            "org_id", "project_id", "type", "stage",
+            "organization_id", "project_id", "type", "stage",
             name="uq_validator_identity"
         ),
     )

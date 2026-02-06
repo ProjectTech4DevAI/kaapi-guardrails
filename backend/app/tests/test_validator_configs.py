@@ -9,7 +9,7 @@ from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.models.config.validator_config_table import ValidatorConfig
 
 # Test data constants
-TEST_ORG_ID = 1
+TEST_ORGANIZATION_ID = 1
 TEST_PROJECT_ID = 1
 TEST_VALIDATOR_ID = uuid.uuid4()
 TEST_TYPE = ValidatorType.LexicalSlur
@@ -27,7 +27,7 @@ def sample_validator():
     """Create a sample validator config for testing."""
     return ValidatorConfig(
         id=TEST_VALIDATOR_ID,
-        org_id=TEST_ORG_ID,
+        organization_id=TEST_ORGANIZATION_ID,
         project_id=TEST_PROJECT_ID,
         type=TEST_TYPE,
         stage=TEST_STAGE,
@@ -48,7 +48,7 @@ class TestFlatten:
     def test_flatten_empty_config(self):
         validator = ValidatorConfig(
             id=TEST_VALIDATOR_ID,
-            org_id=TEST_ORG_ID,
+            organization_id=TEST_ORGANIZATION_ID,
             project_id=TEST_PROJECT_ID,
             type=TEST_TYPE,
             stage=TEST_STAGE,
@@ -69,7 +69,7 @@ class TestGetOr404:
         result = validator_config_crud.get_or_404(
             mock_session,
             TEST_VALIDATOR_ID,
-            TEST_ORG_ID,
+            TEST_ORGANIZATION_ID,
             TEST_PROJECT_ID,
         )
 
@@ -83,7 +83,7 @@ class TestGetOr404:
             validator_config_crud.get_or_404(
                 mock_session,
                 TEST_VALIDATOR_ID,
-                TEST_ORG_ID,
+                TEST_ORGANIZATION_ID,
                 TEST_PROJECT_ID,
             )
 

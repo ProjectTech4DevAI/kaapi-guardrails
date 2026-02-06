@@ -1,7 +1,6 @@
 import uuid
 
 import pytest
-from sqlalchemy.exc import OperationalError
 from sqlmodel import Session, delete
 
 from app.core.db import engine
@@ -10,10 +9,10 @@ from app.models.config.validator_config_table import ValidatorConfig
 pytestmark = pytest.mark.integration
 
 # Test data constants
-TEST_ORG_ID = 1
+TEST_ORGANIZATION_ID = 1
 TEST_PROJECT_ID = 1
 BASE_URL = "/api/v1/guardrails/validators/configs/"
-DEFAULT_QUERY_PARAMS = f"?org_id={TEST_ORG_ID}&project_id={TEST_PROJECT_ID}"
+DEFAULT_QUERY_PARAMS = f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
 
 VALIDATOR_PAYLOADS = {
     "lexical_slur": {
@@ -69,7 +68,7 @@ class BaseValidatorTest:
 
     def list_validators(self, client, **query_params):
         """Helper to list validators with optional filters."""
-        params_str = f"?org_id={TEST_ORG_ID}&project_id={TEST_PROJECT_ID}"
+        params_str = f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
         if query_params:
             params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
         return client.get(f"{BASE_URL}{params_str}")
@@ -160,7 +159,7 @@ class TestListValidators(BaseValidatorTest):
     def test_list_validators_empty(self, integration_client, clear_database):
         """Test listing validators when none exist."""
         response = integration_client.get(
-            f"{BASE_URL}?org_id=999&project_id=999",
+            f"{BASE_URL}?organization_id=999&project_id=999",
         )
 
         assert response.status_code == 200
@@ -202,7 +201,7 @@ class TestGetValidator(BaseValidatorTest):
 
         # Try to access it as different org
         response = integration_client.get(
-            f"{BASE_URL}{validator_id}/?org_id=2&project_id=1",
+            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
         )
 
         assert response.status_code == 404
@@ -292,7 +291,7 @@ class TestDeleteValidator(BaseValidatorTest):
 
         # Try to delete it as different org
         response = integration_client.delete(
-            f"{BASE_URL}{validator_id}/?org_id=2&project_id=1",
+            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
         )
 
         assert response.status_code == 404

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -31,5 +32,7 @@ class ValidatorUpdate(SQLModel):
 
 class ValidatorResponse(ValidatorBase):
     id: UUID
-    org_id: int
+    organization_id: int
     project_id: int
+    created_at: datetime
+    updated_at: datetime

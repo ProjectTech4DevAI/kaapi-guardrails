@@ -22,25 +22,24 @@ router = APIRouter(
 async def create_validator(
     payload: ValidatorCreate,
     session: SessionDep,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     _: AuthDep,
 ):
-    return validator_config_crud.create(session, org_id, project_id, payload)
-
+    return validator_config_crud.create(session, organization_id, project_id, payload)
 @router.get(
         "/",
         response_model=list[ValidatorResponse]
     )
 async def list_validators(
-    org_id: int,
+    organization_id: int,
     project_id: int,
     session: SessionDep,
     _: AuthDep,
     stage: Optional[Stage] = None,
     type: Optional[ValidatorType] = None,
 ):
-    return validator_config_crud.list(session, org_id, project_id, stage, type)
+    return validator_config_crud.list(session, organization_id, project_id, stage, type)
 
 
 @router.get(
@@ -49,12 +48,12 @@ async def list_validators(
     )
 async def get_validator(
     id: UUID,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, org_id, project_id)
+    obj = validator_config_crud.get_or_404(session, id, organization_id, project_id)
     return validator_config_crud.flatten(obj)
 
 
@@ -64,13 +63,13 @@ async def get_validator(
     )
 async def update_validator(
     id: UUID,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     payload: ValidatorUpdate,
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, org_id, project_id)
+    obj = validator_config_crud.get_or_404(session, id, organization_id, project_id)
     return validator_config_crud.update(
         session,
         obj,
@@ -81,11 +80,11 @@ async def update_validator(
 @router.delete("/{id}")
 async def delete_validator(
     id: UUID,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, org_id, project_id)
+    obj = validator_config_crud.get_or_404(session, id, organization_id, project_id)
     validator_config_crud.delete(session, obj)
     return {"success": True}
