@@ -1,8 +1,8 @@
 from typing import List, Literal, Optional
 
-from app.models.base_validator_config import BaseValidatorConfig
 from app.core.enum import BiasCategories
 from app.core.validators.gender_assumption_bias import GenderAssumptionBias
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class GenderAssumptionBiasSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["gender_assumption_bias"]

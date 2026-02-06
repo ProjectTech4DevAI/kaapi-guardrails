@@ -70,7 +70,7 @@ def test_input_guardrails_with_lexical_slur(integration_client):
 
     body = response.json()
     assert body["success"] is True
-    assert body["data"][SAFE_TEXT_FIELD] == "this sentence contains [REDACTED_SLUR]"
+    assert body["data"][SAFE_TEXT_FIELD] == "this sentence contains [REDACTED_SLUR]."
 
 
 def test_input_guardrails_with_lexical_slur_clean_text(integration_client):
@@ -123,7 +123,7 @@ def test_input_guardrails_with_multiple_validators(integration_client):
     assert body["success"] is True
     assert (
         body["data"][SAFE_TEXT_FIELD]
-        == "this sentence contains [REDACTED_SLUR] cause i want a s done to kill the female foetus"
+        == "this sentence contains [REDACTED_SLUR] cause i want a s done to kill the female foetus."
     )
 
 

@@ -2,7 +2,7 @@ from typing import get_args
 
 from guardrails import Guard
 
-from app.models.guardrail_config import ValidatorConfigItem
+from app.schemas.guardrail_config import ValidatorConfigItem
 
 def build_guard(validator_items):
     validators = [v_item.build() for v_item in validator_items]

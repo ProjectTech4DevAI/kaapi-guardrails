@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import List, Literal, Optional
 
-from app.models.base_validator_config import BaseValidatorConfig
 from app.core.validators.pii_remover import PIIRemover
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class PIIRemoverSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["pii_remover"]
