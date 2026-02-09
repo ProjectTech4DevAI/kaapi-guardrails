@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from app.core.enum import Stage, ValidatorType
-from app.models.config.validator_config_table import ValidatorConfig
+from app.models.config.validator_config import ValidatorConfig
 from app.schemas.validator_config import ValidatorCreate
 from app.utils import now, split_validator_payload
 

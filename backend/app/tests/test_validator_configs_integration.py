@@ -4,7 +4,7 @@ import pytest
 from sqlmodel import Session, delete
 
 from app.core.db import engine
-from app.models.config.validator_config_table import ValidatorConfig
+from app.models.config.validator_config import ValidatorConfig
 
 pytestmark = pytest.mark.integration
 
