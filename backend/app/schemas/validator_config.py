@@ -9,15 +9,10 @@ from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 
 class ValidatorBase(SQLModel):
     model_config = {"extra": "allow"}
-    id: UUID
-    organization_id: int
-    project_id: int
     type: ValidatorType
     stage: Stage
     on_fail_action: GuardrailOnFail
     is_enabled: bool = True
-    created_at: datetime
-    updated_at: datetime
 
 
 class ValidatorCreate(ValidatorBase):

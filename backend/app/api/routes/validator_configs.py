@@ -32,7 +32,7 @@ async def create_validator(
 
 @router.get(
         "/",
-        response_model=list[ValidatorResponse]
+        response_model=APIResponse[list[ValidatorResponse]]
     )
 async def list_validators(
     organization_id: int,
@@ -48,7 +48,7 @@ async def list_validators(
 
 @router.get(
         "/{id}",
-        response_model=ValidatorResponse
+        response_model=APIResponse[ValidatorResponse]
     )
 async def get_validator(
     id: UUID,
@@ -63,7 +63,7 @@ async def get_validator(
 
 @router.patch(
         "/{id}",
-        response_model=ValidatorResponse
+        response_model=APIResponse[ValidatorResponse]
     )
 async def update_validator(
     id: UUID,
