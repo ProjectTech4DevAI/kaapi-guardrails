@@ -1,5 +1,6 @@
 from guardrails import OnFailAction
 from guardrails.validators import Validator
+from pydantic import ConfigDict
 from sqlmodel import SQLModel
 
 from app.core.enum import GuardrailOnFail
@@ -13,9 +14,12 @@ _ON_FAIL_MAP = {
 }
 
 class BaseValidatorConfig(SQLModel):
-    on_fail: GuardrailOnFail = GuardrailOnFail.Fix
+    model_config = ConfigDict(
+        extra="forbid",
+        arbitrary_types_allowed=True
+    )
 
-    model_config = {"arbitrary_types_allowed": True}
+    on_fail: GuardrailOnFail = GuardrailOnFail.Fix
 
     def resolve_on_fail(self):
         try:
