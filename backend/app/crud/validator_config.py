@@ -94,14 +94,28 @@ class ValidatorConfigCrud:
             obj.config = {**(obj.config or {}), **config_fields}
         
         obj.updated_at = now()
-        session.commit()
-        session.refresh(obj)
+        try:
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            raise HTTPException(
+                400,
+                "Validator already exists for this type and stage",
+            )
+        except Exception:
+            session.rollback()
+            raise
 
+        session.refresh(obj)
         return self.flatten(obj)
 
     def delete(self, session: Session, obj: ValidatorConfig):
         session.delete(obj)
-        session.commit()
+        try:
+            session.commit()
+        except:
+            session.rollback()
+            raise
 
     def flatten(self, row: ValidatorConfig) -> dict:
         base = row.model_dump(exclude={"config"})

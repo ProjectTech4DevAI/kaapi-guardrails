@@ -6,6 +6,7 @@ from sqlalchemy import Column, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field as SQLField
 from sqlmodel import SQLModel, Field
+import sqlalchemy as sa
 
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.utils import now
@@ -45,11 +46,13 @@ class ValidatorConfig(SQLModel, table=True):
         sa_column_kwargs={"comment": "Action to take when the validator fails"},
     )
 
+
     config: dict[str, Any] = SQLField(
         default_factory=dict,
         sa_column=Column(
             JSONB,
             nullable=False,
+            server_default=sa.text("'{}'::jsonb"),
             comment="Configuration for the validator",
         ),
         description=(

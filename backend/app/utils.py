@@ -23,8 +23,11 @@ def split_validator_payload(data: dict):
         else:
             config_fields[key] = value
 
-    return model_fields, config_fields
+    overlap = set(model_fields) & set(config_fields)
+    if overlap:
+        raise ValueError(f"Config keys conflict with reserved field names: {overlap}")
 
+    return model_fields, config_fields
 
 class APIResponse(BaseModel, Generic[T]):
     success: bool

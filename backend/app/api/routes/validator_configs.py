@@ -20,7 +20,7 @@ router = APIRouter(
         "/",
         response_model=APIResponse[ValidatorResponse]
     )
-async def create_validator(
+def create_validator(
     payload: ValidatorCreate,
     session: SessionDep,
     organization_id: int,
@@ -34,7 +34,7 @@ async def create_validator(
         "/",
         response_model=APIResponse[list[ValidatorResponse]]
     )
-async def list_validators(
+def list_validators(
     organization_id: int,
     project_id: int,
     session: SessionDep,
@@ -50,7 +50,7 @@ async def list_validators(
         "/{id}",
         response_model=APIResponse[ValidatorResponse]
     )
-async def get_validator(
+def get_validator(
     id: UUID,
     organization_id: int,
     project_id: int,
@@ -65,7 +65,7 @@ async def get_validator(
         "/{id}",
         response_model=APIResponse[ValidatorResponse]
     )
-async def update_validator(
+def update_validator(
     id: UUID,
     organization_id: int,
     project_id: int,
@@ -82,7 +82,7 @@ async def update_validator(
         "/{id}",
         response_model=APIResponse[dict]
     )
-async def delete_validator(
+def delete_validator(
     id: UUID,
     organization_id: int,
     project_id: int,
