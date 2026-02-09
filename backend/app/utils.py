@@ -14,17 +14,20 @@ def now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 def split_validator_payload(data: dict):
-    base = {}
-    config = {}
+    model_fields = {}
+    config_fields = {}
 
-    for k, v in data.items():
-        if k in SYSTEM_FIELDS:
-            base[k] = v
+    for key, value in data.items():
+        if key in SYSTEM_FIELDS:
+            model_fields[key] = value
         else:
-            config[k] = v
+            config_fields[key] = value
 
-    return base, config
+    overlap = set(model_fields) & set(config_fields)
+    if overlap:
+        raise ValueError(f"Config keys conflict with reserved field names: {overlap}")
 
+    return model_fields, config_fields
 
 class APIResponse(BaseModel, Generic[T]):
     success: bool

@@ -8,7 +8,7 @@ SCORE = "score"
 REPHRASE_ON_FAIL_PREFIX = "Please rephrase the query without unsafe content."
 
 VALIDATOR_CONFIG_SYSTEM_FIELDS = {
-    "org_id",
+    "organization_id",
     "project_id",
     "type",
     "stage",

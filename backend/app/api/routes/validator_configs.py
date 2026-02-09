@@ -6,7 +6,8 @@ from fastapi import APIRouter
 from app.api.deps import AuthDep, SessionDep
 from app.core.enum import Stage, ValidatorType
 from app.schemas.validator_config import ValidatorCreate, ValidatorResponse, ValidatorUpdate
-from app.crud.validator_config_crud import validator_config_crud
+from app.crud.validator_config import validator_config_crud
+from app.utils import APIResponse
 
 
 router = APIRouter(
@@ -17,75 +18,77 @@ router = APIRouter(
 
 @router.post(
         "/",
-        response_model=ValidatorResponse
+        response_model=APIResponse[ValidatorResponse]
     )
-async def create_validator(
+def create_validator(
     payload: ValidatorCreate,
     session: SessionDep,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     _: AuthDep,
 ):
-    return validator_config_crud.create(session, org_id, project_id, payload)
+    response_model = validator_config_crud.create(session, organization_id, project_id, payload)
+    return APIResponse.success_response(data=response_model)
 
 @router.get(
         "/",
-        response_model=list[ValidatorResponse]
+        response_model=APIResponse[list[ValidatorResponse]]
     )
-async def list_validators(
-    org_id: int,
+def list_validators(
+    organization_id: int,
     project_id: int,
     session: SessionDep,
     _: AuthDep,
     stage: Optional[Stage] = None,
     type: Optional[ValidatorType] = None,
 ):
-    return validator_config_crud.list(session, org_id, project_id, stage, type)
+    response_model = validator_config_crud.list(session, organization_id, project_id, stage, type)
+    return APIResponse.success_response(data=response_model)
 
 
 @router.get(
         "/{id}",
-        response_model=ValidatorResponse
+        response_model=APIResponse[ValidatorResponse]
     )
-async def get_validator(
+def get_validator(
     id: UUID,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, org_id, project_id)
-    return validator_config_crud.flatten(obj)
+    obj = validator_config_crud.get(session, id, organization_id, project_id)
+    return APIResponse.success_response(data=validator_config_crud.flatten(obj))
 
 
 @router.patch(
         "/{id}",
-        response_model=ValidatorResponse
+        response_model=APIResponse[ValidatorResponse]
     )
-async def update_validator(
+def update_validator(
     id: UUID,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     payload: ValidatorUpdate,
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, org_id, project_id)
-    return validator_config_crud.update(
-        session,
-        obj,
-        payload.model_dump(exclude_unset=True),
+    obj = validator_config_crud.get(session, id, organization_id, project_id)
+    response_model = validator_config_crud.update(session, obj, payload.model_dump(exclude_unset=True))
+    return APIResponse.success_response(data=response_model)
+
+
+@router.delete(
+        "/{id}",
+        response_model=APIResponse[dict]
     )
-
-
-@router.delete("/{id}")
-async def delete_validator(
+def delete_validator(
     id: UUID,
-    org_id: int,
+    organization_id: int,
     project_id: int,
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, org_id, project_id)
+    obj = validator_config_crud.get(session, id, organization_id, project_id)
     validator_config_crud.delete(session, obj)
-    return {"success": True}
+    return APIResponse.success_response(data={"message": "Validator deleted successfully"})

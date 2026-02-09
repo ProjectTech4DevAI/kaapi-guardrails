@@ -1,19 +1,18 @@
 import uuid
 
 import pytest
-from sqlalchemy.exc import OperationalError
 from sqlmodel import Session, delete
 
 from app.core.db import engine
-from app.models.config.validator_config_table import ValidatorConfig
+from app.models.config.validator_config import ValidatorConfig
 
 pytestmark = pytest.mark.integration
 
 # Test data constants
-TEST_ORG_ID = 1
+TEST_ORGANIZATION_ID = 1
 TEST_PROJECT_ID = 1
 BASE_URL = "/api/v1/guardrails/validators/configs/"
-DEFAULT_QUERY_PARAMS = f"?org_id={TEST_ORG_ID}&project_id={TEST_PROJECT_ID}"
+DEFAULT_QUERY_PARAMS = f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
 
 VALIDATOR_PAYLOADS = {
     "lexical_slur": {
@@ -69,14 +68,14 @@ class BaseValidatorTest:
 
     def list_validators(self, client, **query_params):
         """Helper to list validators with optional filters."""
-        params_str = f"?org_id={TEST_ORG_ID}&project_id={TEST_PROJECT_ID}"
+        params_str = f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
         if query_params:
             params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
         return client.get(f"{BASE_URL}{params_str}")
 
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
-        return client.patch(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}", json=payload)
+        return client.patch(f"{BASE_URL}{validator_id}{DEFAULT_QUERY_PARAMS}", json=payload)
 
     def delete_validator(self, client, validator_id):
         """Helper to delete a validator."""
@@ -91,7 +90,7 @@ class TestCreateValidator(BaseValidatorTest):
         response = self.create_validator(integration_client, "lexical_slur")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert data["type"] == "uli_slur_match"
         assert data["stage"] == "input"
         assert data["severity"] == "all"
@@ -130,7 +129,7 @@ class TestListValidators(BaseValidatorTest):
         response = self.list_validators(integration_client)
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 2
 
     def test_list_validators_filter_by_stage(self, integration_client, clear_database):
@@ -141,7 +140,7 @@ class TestListValidators(BaseValidatorTest):
         response = self.list_validators(integration_client, stage="input")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 1
         assert data[0]["stage"] == "input"
 
@@ -153,18 +152,18 @@ class TestListValidators(BaseValidatorTest):
         response = self.list_validators(integration_client, type="pii_remover")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 1
         assert data[0]["type"] == "pii_remover"
 
     def test_list_validators_empty(self, integration_client, clear_database):
         """Test listing validators when none exist."""
         response = integration_client.get(
-            f"{BASE_URL}?org_id=999&project_id=999",
+            f"{BASE_URL}?organization_id=999&project_id=999",
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 0
 
 
@@ -177,13 +176,13 @@ class TestGetValidator(BaseValidatorTest):
         create_response = self.create_validator(
             integration_client, "lexical_slur", severity="all"
         )
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Retrieve it
         response = self.get_validator(integration_client, validator_id)
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert data["id"] == validator_id
         assert data["severity"] == "all"
 
@@ -198,11 +197,11 @@ class TestGetValidator(BaseValidatorTest):
         """Test that accessing validator from different org returns 404."""
         # Create a validator for org 1
         create_response = self.create_validator(integration_client, "minimal")
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Try to access it as different org
         response = integration_client.get(
-            f"{BASE_URL}{validator_id}/?org_id=2&project_id=1",
+            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
         )
 
         assert response.status_code == 404
@@ -217,16 +216,16 @@ class TestUpdateValidator(BaseValidatorTest):
         create_response = self.create_validator(
             integration_client, "lexical_slur", severity="all"
         )
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Update it
-        update_payload = {"on_fail_action": "exception", "severity": "high"}
+        update_payload = {"on_fail_action": "exception", "is_enabled": False}
         response = self.update_validator(integration_client, validator_id, update_payload)
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert data["on_fail_action"] == "exception"
-        assert data["severity"] == "high"
+        assert data["is_enabled"] is False
 
     def test_update_validator_partial(self, integration_client, clear_database):
         """Test partial update preserves original fields."""
@@ -237,21 +236,21 @@ class TestUpdateValidator(BaseValidatorTest):
             severity="all",
             languages=["en", "hi"],
         )
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Update only one field
-        update_payload = {"severity": "low"}
+        update_payload = {"is_enabled": False}
         response = self.update_validator(integration_client, validator_id, update_payload)
 
         assert response.status_code == 200
-        data = response.json()
-        assert data["severity"] == "low"
-        assert data["languages"] == ["en", "hi"]  # Original preserved
+        data = response.json()["data"]
+        assert data["is_enabled"] is False
+        assert data["on_fail_action"] == "fix"  # Original preserved
 
     def test_update_validator_not_found(self, integration_client, clear_database):
         """Test updating non-existent validator returns 404."""
         fake_id = uuid.uuid4()
-        update_payload = {"severity": "low"}
+        update_payload = {"is_enabled": False}
 
         response = self.update_validator(integration_client, fake_id, update_payload)
 
@@ -265,7 +264,7 @@ class TestDeleteValidator(BaseValidatorTest):
         """Test successful validator deletion."""
         # Create a validator
         create_response = self.create_validator(integration_client, "minimal")
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Delete it
         response = self.delete_validator(integration_client, validator_id)
@@ -288,11 +287,11 @@ class TestDeleteValidator(BaseValidatorTest):
         """Test that deleting validator from different org returns 404."""
         # Create a validator for org 1
         create_response = self.create_validator(integration_client, "minimal")
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Try to delete it as different org
         response = integration_client.delete(
-            f"{BASE_URL}{validator_id}/?org_id=2&project_id=1",
+            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
         )
 
         assert response.status_code == 404
