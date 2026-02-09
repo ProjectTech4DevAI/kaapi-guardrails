@@ -10,9 +10,9 @@ from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
-from app.models.guardrail_config import GuardrailRequest, GuardrailResponse
-from app.models.logging.request import  RequestLogUpdate, RequestStatus
-from app.models.logging.validator import ValidatorLog, ValidatorOutcome
+from app.models.logging.request_log import  RequestLogUpdate, RequestStatus
+from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
+from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.utils import APIResponse
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
