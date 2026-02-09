@@ -78,7 +78,10 @@ async def update_validator(
     return APIResponse.success_response(data=response_model)
 
 
-@router.delete("/{id}")
+@router.delete(
+        "/{id}",
+        response_model=APIResponse[dict]
+    )
 async def delete_validator(
     id: UUID,
     organization_id: int,
