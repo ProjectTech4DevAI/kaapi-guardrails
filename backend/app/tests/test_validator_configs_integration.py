@@ -75,7 +75,7 @@ class BaseValidatorTest:
 
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
-        return client.patch(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}", json=payload)
+        return client.patch(f"{BASE_URL}{validator_id}{DEFAULT_QUERY_PARAMS}", json=payload)
 
     def delete_validator(self, client, validator_id):
         """Helper to delete a validator."""
@@ -219,13 +219,13 @@ class TestUpdateValidator(BaseValidatorTest):
         validator_id = create_response.json()["data"]["id"]
 
         # Update it
-        update_payload = {"on_fail_action": "exception", "severity": "high"}
+        update_payload = {"on_fail_action": "exception", "is_enabled": False}
         response = self.update_validator(integration_client, validator_id, update_payload)
 
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["on_fail_action"] == "exception"
-        assert data["severity"] == "high"
+        assert data["is_enabled"] is False
 
     def test_update_validator_partial(self, integration_client, clear_database):
         """Test partial update preserves original fields."""
@@ -239,18 +239,18 @@ class TestUpdateValidator(BaseValidatorTest):
         validator_id = create_response.json()["data"]["id"]
 
         # Update only one field
-        update_payload = {"severity": "low"}
+        update_payload = {"is_enabled": False}
         response = self.update_validator(integration_client, validator_id, update_payload)
 
         assert response.status_code == 200
         data = response.json()["data"]
-        assert data["severity"] == "low"
-        assert data["languages"] == ["en", "hi"]  # Original preserved
+        assert data["is_enabled"] is False
+        assert data["on_fail_action"] == "fix"  # Original preserved
 
     def test_update_validator_not_found(self, integration_client, clear_database):
         """Test updating non-existent validator returns 404."""
         fake_id = uuid.uuid4()
-        update_payload = {"severity": "low"}
+        update_payload = {"is_enabled": False}
 
         response = self.update_validator(integration_client, fake_id, update_payload)
 
