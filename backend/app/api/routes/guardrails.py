@@ -177,7 +177,7 @@ def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: V
     for log in iteration.outputs.validator_logs:
         result = log.validation_result
 
-        if include_all_validator_logs == False and isinstance(result, PassResult):
+        if not include_all_validator_logs and isinstance(result, PassResult):
             continue
 
         error_message = None
