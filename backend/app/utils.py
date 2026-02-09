@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from pydantic import BaseModel
 from typing import Any, Dict, Generic, Optional, TypeVar
 
+from app.core.constants import VALIDATOR_CONFIG_SYSTEM_FIELDS as SYSTEM_FIELDS
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -10,6 +12,22 @@ T = TypeVar("T")
 
 def now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+def split_validator_payload(data: dict):
+    model_fields = {}
+    config_fields = {}
+
+    for key, value in data.items():
+        if key in SYSTEM_FIELDS:
+            model_fields[key] = value
+        else:
+            config_fields[key] = value
+
+    overlap = set(model_fields) & set(config_fields)
+    if overlap:
+        raise ValueError(f"Config keys conflict with reserved field names: {overlap}")
+
+    return model_fields, config_fields
 
 class APIResponse(BaseModel, Generic[T]):
     success: bool

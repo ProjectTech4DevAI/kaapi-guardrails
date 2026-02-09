@@ -1,50 +1,43 @@
+# conftest.py
 import os
-from unittest.mock import MagicMock
+os.environ["ENVIRONMENT"] = "testing"
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session, create_engine, SQLModel
 
-# MUST be set before app import
-os.environ["ENVIRONMENT"] = "testing"
-
-from app.api.deps import SessionDep, verify_bearer_token
-from app.api.routes import guardrails
 from app.main import app
+from app.api.deps import SessionDep, verify_bearer_token
+from app.core.config import settings
+
+test_engine = create_engine(
+    str(settings.SQLALCHEMY_DATABASE_URI),
+    echo=False,
+    pool_pre_ping=True,
+)
+
+def override_session():
+    with Session(test_engine) as session:
+        yield session
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_db():
+    SQLModel.metadata.create_all(test_engine)
+    yield
+    SQLModel.metadata.drop_all(test_engine)
 
 @pytest.fixture(scope="function", autouse=True)
-def override_dependencies(monkeypatch):
-    """
-    Override ALL external dependencies:
-    - Auth
-    - DB session
-    - CRUDs
-    """
+def clean_db():
+    with Session(test_engine) as session:
+        for table in reversed(SQLModel.metadata.sorted_tables):
+            session.execute(table.delete())
+        session.commit()
 
-    # ---- Auth override ----
+@pytest.fixture(scope="function", autouse=True)
+def override_dependencies():
     app.dependency_overrides[verify_bearer_token] = lambda: True
 
-    # ---- DB session override ----
-    mock_session = MagicMock()
-    app.dependency_overrides[SessionDep] = lambda: mock_session
-
-    # ---- CRUD override ----
-    mock_request_log_crud = MagicMock()
-    mock_request_log_crud.create.return_value = MagicMock(id=1)
-    mock_request_log_crud.update.return_value = None
-
-    mock_validator_log_crud = MagicMock()
-    mock_validator_log_crud.create.return_value = None
-
-    monkeypatch.setattr(
-        guardrails,
-        "RequestLogCrud",
-        lambda session: mock_request_log_crud,
-    )
-    monkeypatch.setattr(
-        guardrails,
-        "ValidatorLogCrud",
-        lambda session: mock_validator_log_crud,
-    )
+    app.dependency_overrides[SessionDep] = override_session
 
     yield
 

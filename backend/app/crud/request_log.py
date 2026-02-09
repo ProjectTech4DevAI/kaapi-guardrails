@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Session
 
-from app.models.logging.request import RequestLog, RequestLogUpdate, RequestStatus
+from app.models.logging.request_log import RequestLog, RequestLogUpdate, RequestStatus
 from app.utils import now
 
 class RequestLogCrud:

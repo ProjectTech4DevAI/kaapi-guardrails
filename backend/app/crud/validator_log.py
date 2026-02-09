@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from sqlmodel import Session
 
-from app.models.logging.validator import ValidatorLog
+from app.models.logging.validator_log import ValidatorLog
 from app.utils import now
 
 class ValidatorLogCrud:
