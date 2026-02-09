@@ -18,7 +18,7 @@ class ValidatorConfigCrud:
             organization_id: int, 
             project_id: int, 
             payload: ValidatorCreate
-        ):
+        ) -> dict:
         data = payload.model_dump()
         model_fields, config_fields = split_validator_payload(data)
 
@@ -65,7 +65,7 @@ class ValidatorConfigCrud:
         rows = session.exec(query).all()
         return [self.flatten(r) for r in rows]
 
-    def get_or_404(
+    def get(
         self,
         session: Session,
         id: UUID,
@@ -84,7 +84,7 @@ class ValidatorConfigCrud:
             session: Session, 
             obj: ValidatorConfig, 
             update_data: dict
-        ):
+        ) -> dict:
         model_fields, config_fields = split_validator_payload(update_data)
 
         for k, v in model_fields.items():

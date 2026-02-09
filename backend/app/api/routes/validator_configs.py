@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from app.api.deps import AuthDep, SessionDep
 from app.core.enum import Stage, ValidatorType
 from app.schemas.validator_config import ValidatorCreate, ValidatorResponse, ValidatorUpdate
-from app.crud.validator_config_crud import validator_config_crud
+from app.crud.validator_config import validator_config_crud
 
 
 router = APIRouter(
@@ -53,7 +53,7 @@ async def get_validator(
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, organization_id, project_id)
+    obj = validator_config_crud.get(session, id, organization_id, project_id)
     return validator_config_crud.flatten(obj)
 
 
@@ -69,7 +69,7 @@ async def update_validator(
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, organization_id, project_id)
+    obj = validator_config_crud.get(session, id, organization_id, project_id)
     return validator_config_crud.update(
         session,
         obj,
@@ -85,6 +85,6 @@ async def delete_validator(
     session: SessionDep,
     _: AuthDep,
 ):
-    obj = validator_config_crud.get_or_404(session, id, organization_id, project_id)
+    obj = validator_config_crud.get(session, id, organization_id, project_id)
     validator_config_crud.delete(session, obj)
     return {"success": True}

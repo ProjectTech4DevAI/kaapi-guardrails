@@ -1,1 +1,1 @@
-from app.crud.request_log_repo import RequestLogCrud
+from app.crud.request_log import RequestLogCrud

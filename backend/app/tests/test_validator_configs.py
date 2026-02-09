@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 from sqlmodel import Session
 
-from app.crud.validator_config_crud import validator_config_crud
+from app.crud.validator_config import validator_config_crud
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
 
