@@ -66,7 +66,7 @@ class TestGetOr404:
     def test_success(self, sample_validator, mock_session):
         mock_session.get.return_value = sample_validator
 
-        result = validator_config_crud.get_or_404(
+        result = validator_config_crud.get(
             mock_session,
             TEST_VALIDATOR_ID,
             TEST_ORGANIZATION_ID,
@@ -80,7 +80,7 @@ class TestGetOr404:
         mock_session.get.return_value = None
 
         with pytest.raises(Exception) as exc:
-            validator_config_crud.get_or_404(
+            validator_config_crud.get(
                 mock_session,
                 TEST_VALIDATOR_ID,
                 TEST_ORGANIZATION_ID,

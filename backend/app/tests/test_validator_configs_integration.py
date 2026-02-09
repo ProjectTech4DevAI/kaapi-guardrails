@@ -90,7 +90,7 @@ class TestCreateValidator(BaseValidatorTest):
         response = self.create_validator(integration_client, "lexical_slur")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert data["type"] == "uli_slur_match"
         assert data["stage"] == "input"
         assert data["severity"] == "all"
@@ -129,7 +129,7 @@ class TestListValidators(BaseValidatorTest):
         response = self.list_validators(integration_client)
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 2
 
     def test_list_validators_filter_by_stage(self, integration_client, clear_database):
@@ -140,7 +140,7 @@ class TestListValidators(BaseValidatorTest):
         response = self.list_validators(integration_client, stage="input")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 1
         assert data[0]["stage"] == "input"
 
@@ -152,7 +152,7 @@ class TestListValidators(BaseValidatorTest):
         response = self.list_validators(integration_client, type="pii_remover")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 1
         assert data[0]["type"] == "pii_remover"
 
@@ -163,7 +163,7 @@ class TestListValidators(BaseValidatorTest):
         )
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert len(data) == 0
 
 
@@ -176,13 +176,13 @@ class TestGetValidator(BaseValidatorTest):
         create_response = self.create_validator(
             integration_client, "lexical_slur", severity="all"
         )
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Retrieve it
         response = self.get_validator(integration_client, validator_id)
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert data["id"] == validator_id
         assert data["severity"] == "all"
 
@@ -197,7 +197,7 @@ class TestGetValidator(BaseValidatorTest):
         """Test that accessing validator from different org returns 404."""
         # Create a validator for org 1
         create_response = self.create_validator(integration_client, "minimal")
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Try to access it as different org
         response = integration_client.get(
@@ -216,14 +216,14 @@ class TestUpdateValidator(BaseValidatorTest):
         create_response = self.create_validator(
             integration_client, "lexical_slur", severity="all"
         )
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Update it
         update_payload = {"on_fail_action": "exception", "severity": "high"}
         response = self.update_validator(integration_client, validator_id, update_payload)
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert data["on_fail_action"] == "exception"
         assert data["severity"] == "high"
 
@@ -236,14 +236,14 @@ class TestUpdateValidator(BaseValidatorTest):
             severity="all",
             languages=["en", "hi"],
         )
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Update only one field
         update_payload = {"severity": "low"}
         response = self.update_validator(integration_client, validator_id, update_payload)
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["data"]
         assert data["severity"] == "low"
         assert data["languages"] == ["en", "hi"]  # Original preserved
 
@@ -264,7 +264,7 @@ class TestDeleteValidator(BaseValidatorTest):
         """Test successful validator deletion."""
         # Create a validator
         create_response = self.create_validator(integration_client, "minimal")
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Delete it
         response = self.delete_validator(integration_client, validator_id)
@@ -287,7 +287,7 @@ class TestDeleteValidator(BaseValidatorTest):
         """Test that deleting validator from different org returns 404."""
         # Create a validator for org 1
         create_response = self.create_validator(integration_client, "minimal")
-        validator_id = create_response.json()["id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Try to delete it as different org
         response = integration_client.delete(
