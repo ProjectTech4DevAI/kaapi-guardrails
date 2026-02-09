@@ -2,13 +2,15 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from pydantic import ConfigDict
 from sqlmodel import SQLModel
 
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 
 
 class ValidatorBase(SQLModel):
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
+
     type: ValidatorType
     stage: Stage
     on_fail_action: GuardrailOnFail
@@ -20,8 +22,7 @@ class ValidatorCreate(ValidatorBase):
 
 
 class ValidatorUpdate(SQLModel):
-    # also allow extras for partial updates
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="forbid")
 
     type: Optional[ValidatorType] = None
     stage: Optional[Stage] = None

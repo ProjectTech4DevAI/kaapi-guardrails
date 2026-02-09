@@ -113,7 +113,7 @@ class ValidatorConfigCrud:
         session.delete(obj)
         try:
             session.commit()
-        except:
+        except Exception:
             session.rollback()
             raise
 
