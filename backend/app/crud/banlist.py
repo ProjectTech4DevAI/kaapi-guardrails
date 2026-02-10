@@ -33,7 +33,10 @@ class BanListCrud:
                 400,
                 "Banlist already exists for the given configuration"
             )
-        
+        except Exception:
+            session.rollback()
+            raise
+
         session.refresh(obj)
         return obj
 

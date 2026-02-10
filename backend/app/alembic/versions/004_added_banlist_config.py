@@ -32,6 +32,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(), nullable=False),
 
         sa.PrimaryKeyConstraint('id'),
+        sa.UniqueConstraint('name', 'organization_id', 'project_id', name='uq_banlist_name_org_project'),
     )
 
     op.create_index("idx_banlist_organization", "ban_list", ["organization_id"])

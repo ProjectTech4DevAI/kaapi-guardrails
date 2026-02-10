@@ -23,7 +23,7 @@ class BanList(SQLModel, table=True):
         sa_column_kwargs={"comment": "Name of the ban list entry"}
     )
 
-    description: Optional[str] = Field(
+    description: str = Field(
         nullable=False,
         sa_column_kwargs={"comment": "Description of the ban list entry"}
     )
@@ -51,7 +51,6 @@ class BanList(SQLModel, table=True):
     )
 
     domain: str = Field(
-        default=None, 
         index=False,
         nullable=False,
         sa_column_kwargs={"comment": "Domain or context for the ban list entry"}
