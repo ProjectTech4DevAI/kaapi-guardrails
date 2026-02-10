@@ -2,9 +2,12 @@ from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
 
+from pydantic import ConfigDict
 from sqlmodel import SQLModel
 
 class BanListBase(SQLModel):
+    model_config = ConfigDict(extra="allow")
+
     name: str
     description: str
     banned_words: list[str]
@@ -25,4 +28,4 @@ class BanListUpdate(SQLModel):
 
 
 class BanListResponse(BanListBase):
-    pass
+    id: UUID

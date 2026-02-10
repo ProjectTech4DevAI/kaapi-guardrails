@@ -46,6 +46,9 @@ class BanListCrud:
     ) -> BanList:
         obj = session.get(BanList, id)
 
+        if obj is None:
+            raise HTTPException(status_code=404, detail="Banlist not found")
+
         if not obj.is_public:
             self.check_owner(obj, organization_id, project_id)
 
