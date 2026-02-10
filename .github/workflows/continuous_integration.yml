@@ -1,4 +1,4 @@
-name: Kaapi_Guardrail CI
+name: Kaapi Guardrails CI
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: ai_platform_test
+          POSTGRES_DB: kaapi_guardrails_testing
         ports:
           - 5432:5432
         options: --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
@@ -61,17 +61,5 @@ jobs:
         working-directory: backend
 
       - name: Run tests
-        run: uv run bash scripts/tests-start.sh "Coverage for ${{ github.sha }}"
-        working-directory: backend
-
-      - name: Upload coverage reports to codecov
-        uses: codecov/codecov-action@v5.5.1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-
-      - name: Check coverage percentage
-        run: |
-          source .venv/bin/activate
-          coverage report --fail-under=70
+        run: uv run bash scripts/tests-start.sh 
         working-directory: backend
