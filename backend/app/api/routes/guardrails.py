@@ -25,7 +25,7 @@ async def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
     _: AuthDep,
-    suppress_pass_logs: bool = False,
+    suppress_pass_logs: bool = True,
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
@@ -177,7 +177,7 @@ def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: V
     for log in iteration.outputs.validator_logs:
         result = log.validation_result
 
-        if not suppress_pass_logs and isinstance(result, PassResult):
+        if suppress_pass_logs and isinstance(result, PassResult):
             continue
 
         error_message = None
