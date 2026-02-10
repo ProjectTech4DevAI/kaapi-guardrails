@@ -25,7 +25,7 @@ async def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
     _: AuthDep,
-    include_all_validator_logs: bool = False,
+    suppress_pass_logs: bool = False,
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
@@ -42,7 +42,7 @@ async def run_guardrails(
         request_log_crud,
         request_log.id,
         validator_log_crud,
-        include_all_validator_logs
+        suppress_pass_logs
     )
 
 @router.get("/")
@@ -75,7 +75,7 @@ async def _validate_with_guard(
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
-    include_all_validator_logs: bool = False,
+    suppress_pass_logs: bool = False,
 ) -> APIResponse:
     """
     Runs Guardrails validation on input/output data, persists request & validator logs,
@@ -115,7 +115,7 @@ async def _validate_with_guard(
         )
 
         if guard is not None:
-            add_validator_logs(guard, request_log_id, validator_log_crud, include_all_validator_logs)
+            add_validator_logs(guard, request_log_id, validator_log_crud, suppress_pass_logs)
 
         rephrase_needed = (
             validated_output is not None
@@ -160,7 +160,7 @@ async def _validate_with_guard(
             error_message=str(exc),
         )
 
-def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud, include_all_validator_logs: bool = False):
+def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud, suppress_pass_logs: bool = False):
     history = getattr(guard, "history", None)
     if not history:
         return
@@ -177,7 +177,7 @@ def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: V
     for log in iteration.outputs.validator_logs:
         result = log.validation_result
 
-        if not include_all_validator_logs and isinstance(result, PassResult):
+        if not suppress_pass_logs and isinstance(result, PassResult):
             continue
 
         error_message = None
