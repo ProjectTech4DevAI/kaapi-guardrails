@@ -1,9 +1,5 @@
 import uuid
 import pytest
-from sqlmodel import Session, delete
-
-from app.core.db import engine
-from app.models.config.banlist import BanList
 from app.tests.seed_data import (
     BANLIST_INTEGRATION_ORGANIZATION_ID,
     BANLIST_INTEGRATION_PROJECT_ID,
@@ -18,19 +14,6 @@ DEFAULT_QUERY = (
     f"?organization_id={BANLIST_INTEGRATION_ORGANIZATION_ID}"
     f"&project_id={BANLIST_INTEGRATION_PROJECT_ID}"
 )
-
-
-@pytest.fixture
-def clear_database():
-    with Session(engine) as session:
-        session.exec(delete(BanList))
-        session.commit()
-
-    yield
-
-    with Session(engine) as session:
-        session.exec(delete(BanList))
-        session.commit()
 
 
 class BaseBanListTest:

@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
@@ -10,8 +9,9 @@ from app.models.config.banlist import BanList
 from app.schemas.banlist import BanListCreate, BanListUpdate
 from app.utils import now
 
+
 class BanListCrud:
-    def create(     
+    def create(
         self,
         session: Session,
         data: BanListCreate,
@@ -41,8 +41,8 @@ class BanListCrud:
         return obj
 
     def get(
-        self, 
-        session: Session, 
+        self,
+        session: Session,
         id: UUID,
         organization_id: int,
         project_id: int
@@ -114,16 +114,17 @@ class BanListCrud:
             session.rollback()
             raise
 
-def check_owner(self, obj, organization_id, project_id):
-    is_owner = (
-        obj.organization_id == organization_id
-        and obj.project_id == project_id
-    )
-
-    if not is_owner:
-        raise HTTPException(
-            status_code=403,
-            detail="You do not have permission to access this resource."
+    def check_owner(self, obj: BanList, organization_id: int, project_id: int) -> None:
+        is_owner = (
+            obj.organization_id == organization_id
+            and obj.project_id == project_id
         )
+
+        if not is_owner:
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to access this resource."
+            )
+
 
 banlist_crud = BanListCrud()

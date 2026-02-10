@@ -1,10 +1,6 @@
 import uuid
 
 import pytest
-from sqlmodel import Session, delete
-
-from app.core.db import engine
-from app.models.config.validator_config import ValidatorConfig
 from app.tests.seed_data import (
     VALIDATOR_INTEGRATION_ORGANIZATION_ID,
     VALIDATOR_INTEGRATION_PROJECT_ID,
@@ -18,20 +14,6 @@ DEFAULT_QUERY_PARAMS = (
     f"?organization_id={VALIDATOR_INTEGRATION_ORGANIZATION_ID}"
     f"&project_id={VALIDATOR_INTEGRATION_PROJECT_ID}"
 )
-
-
-@pytest.fixture
-def clear_database():
-    """Clear ValidatorConfig table before and after each test."""
-    with Session(engine) as session:
-        session.exec(delete(ValidatorConfig))
-        session.commit()
-
-    yield
-
-    with Session(engine) as session:
-        session.exec(delete(ValidatorConfig))
-        session.commit()
 
 
 class BaseValidatorTest:
