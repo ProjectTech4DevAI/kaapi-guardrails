@@ -48,17 +48,17 @@ jobs:
         run: uv sync
         working-directory: backend
 
-      - name: Activate virtual environment and run Alembic migrations
-        run: |
-          source .venv/bin/activate
-          alembic upgrade head
-        working-directory: backend
-
       - name: Install Guardrails hub validators
         run: |
           source .venv/bin/activate
           chmod +x scripts/install_guardrails_from_hub.sh
           scripts/install_guardrails_from_hub.sh
+        working-directory: backend
+
+      - name: Activate virtual environment and run Alembic migrations
+        run: |
+          source .venv/bin/activate
+          alembic upgrade head
         working-directory: backend
 
       - name: Run pre-commit
