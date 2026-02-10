@@ -1,18 +1,18 @@
-import uuid
 from uuid import UUID
+import uuid
 
 from fastapi import APIRouter
 from guardrails.guard import Guard
-from guardrails.validators import FailResult
+from guardrails.validators import FailResult, PassResult
 
 from app.api.deps import AuthDep, SessionDep
 from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
+from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.models.logging.request_log import  RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
-from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.utils import APIResponse
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
@@ -25,6 +25,7 @@ async def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
     _: AuthDep,
+    suppress_pass_logs: bool = True,
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
@@ -41,6 +42,7 @@ async def run_guardrails(
         request_log_crud,
         request_log.id,
         validator_log_crud,
+        suppress_pass_logs
     )
 
 @router.get("/")
@@ -73,6 +75,7 @@ async def _validate_with_guard(
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
+    suppress_pass_logs: bool = False,
 ) -> APIResponse:
     """
     Runs Guardrails validation on input/output data, persists request & validator logs,
@@ -112,7 +115,7 @@ async def _validate_with_guard(
         )
 
         if guard is not None:
-            add_validator_logs(guard, request_log_id, validator_log_crud)
+            add_validator_logs(guard, request_log_id, validator_log_crud, suppress_pass_logs)
 
         rephrase_needed = (
             validated_output is not None
@@ -157,7 +160,7 @@ async def _validate_with_guard(
             error_message=str(exc),
         )
 
-def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud):
+def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud, suppress_pass_logs: bool = False):
     history = getattr(guard, "history", None)
     if not history:
         return
@@ -173,6 +176,9 @@ def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: V
 
     for log in iteration.outputs.validator_logs:
         result = log.validation_result
+
+        if suppress_pass_logs and isinstance(result, PassResult):
+            continue
 
         error_message = None
         if isinstance(result, FailResult):
