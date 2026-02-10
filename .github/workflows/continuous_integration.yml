@@ -23,7 +23,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12"]
-        redis-version: [6]
 
     steps:
       - uses: actions/checkout@v6
@@ -35,17 +34,24 @@ jobs:
 
       - name: Making env file
         run: |
-          cp .env.test.example .env
           cp .env.test.example .env.test
+          sed -i "s|GUARDRAILS_HUB_API_KEY=\"<ADD-KEY>\"|GUARDRAILS_HUB_API_KEY=\"${{ secrets.GUARDRAILS_HUB_API_KEY }}\"|" .env.test
+          cp .env.test .env
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           version: "0.4.15"
           enable-cache: true
 
       - name: Install dependencies
         run: uv sync
+        working-directory: backend
+
+      - name: Install Guardrails hub validators
+        run: |
+          chmod +x scripts/install_guardrails_from_hub.sh
+          scripts/install_guardrails_from_hub.sh
         working-directory: backend
 
       - name: Activate virtual environment and run Alembic migrations
@@ -57,7 +63,7 @@ jobs:
       - name: Run pre-commit
         run: |
           source .venv/bin/activate
-          uv run pre-commit run --all-files
+          uv run --project backend pre-commit run --all-files
         working-directory: backend
 
       - name: Run tests
