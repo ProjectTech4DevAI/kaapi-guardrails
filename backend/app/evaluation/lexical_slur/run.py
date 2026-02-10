@@ -18,8 +18,10 @@ df = pd.read_csv(BASE_DIR / "datasets" / "lexical_slur_testing_dataset.csv")
 validator = LexicalSlur()
 
 with Profiler() as p:
-    df["result"] = df["commentText"].astype(str).apply(
-        lambda x: p.record(lambda t: validator.validate(t, metadata=None), x)
+    df["result"] = (
+        df["commentText"]
+        .astype(str)
+        .apply(lambda x: p.record(lambda t: validator.validate(t, metadata=None), x))
     )
 
 df["y_pred"] = df["result"].apply(lambda r: int(isinstance(r, FailResult)))

@@ -8,12 +8,15 @@ from sqlmodel import Session
 from app.core.config import settings
 from app.core.db import engine
 
+
 def get_db() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
 
+
 SessionDep = Annotated[Session, Depends(get_db)]
 security = HTTPBearer(auto_error=False)
+
 
 def verify_bearer_token(
     credentials: Annotated[
@@ -36,5 +39,6 @@ def verify_bearer_token(
         )
 
     return True
+
 
 AuthDep = Annotated[bool, Depends(verify_bearer_token)]

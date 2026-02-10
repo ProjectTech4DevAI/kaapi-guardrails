@@ -8,11 +8,12 @@ from guardrails.validators import (
     PassResult,
     register_validator,
     ValidationResult,
-    Validator
+    Validator,
 )
 
 from app.core.config import Settings
 from app.core.enum import BiasCategories
+
 
 @register_validator(name="gender-assumption-bias", data_type="string")
 class GenderAssumptionBias(Validator):
@@ -21,9 +22,9 @@ class GenderAssumptionBias(Validator):
     """
 
     def __init__(
-        self, 
+        self,
         categories: Optional[List[BiasCategories]] = None,
-        on_fail: Optional[Callable] = OnFailAction.FIX
+        on_fail: Optional[Callable] = OnFailAction.FIX,
     ):
         self.categories = categories or [BiasCategories.All]
         self.gender_bias_list = self.load_gender_bias_list(self.categories)
@@ -48,14 +49,14 @@ class GenderAssumptionBias(Validator):
         if bias_check:
             return FailResult(
                 error_message=f"Detected gender assumption bias: {detected_biased_words}",
-                fix_value=value
+                fix_value=value,
             )
 
         return PassResult(value=value)
 
     def load_gender_bias_list(self, categories):
         file_path = Settings.GENDER_BIAS_LIST_FILEPATH
-        neutral_term_col = 'neutral-term'
+        neutral_term_col = "neutral-term"
         gender_bias_list = []
 
         try:
@@ -65,19 +66,18 @@ class GenderAssumptionBias(Validator):
         except Exception as e:
             raise ValueError(f"Failed to load gender bias list from {file_path}: {e}")
 
-        df['word'] = df['word'].str.lower()
+        df["word"] = df["word"].str.lower()
         df[neutral_term_col] = df[neutral_term_col].str.lower()
 
         for category in categories:
             if category == BiasCategories.All:
                 temp = df
             else:
-                temp = df[df['type'] == category.value]
+                temp = df[df["type"] == category.value]
 
             rows = temp.to_dict(orient="records")
             for row in rows:
-                gender_bias_list.append({
-                    "word": row["word"],
-                    neutral_term_col: row[neutral_term_col]
-                })
+                gender_bias_list.append(
+                    {"word": row["word"], neutral_term_col: row[neutral_term_col]}
+                )
         return gender_bias_list

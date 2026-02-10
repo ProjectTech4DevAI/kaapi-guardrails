@@ -13,11 +13,13 @@ df = pd.read_csv(BASE_DIR / "datasets" / "pii_detection_testing_dataset.csv")
 
 validator = PIIRemover()
 
+
 def run_pii(text: str) -> str:
     result = validator._validate(text)
     if isinstance(result, FailResult):
         return result.fix_value
     return text
+
 
 df["anonymized"] = df["source_text"].astype(str).apply(run_pii)
 

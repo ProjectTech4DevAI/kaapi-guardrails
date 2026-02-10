@@ -6,9 +6,11 @@ from sqlmodel import SQLModel, Field
 
 from app.utils import now
 
+
 class ValidatorOutcome(str, Enum):
     PASS = "PASS"
     FAIL = "FAIL"
+
 
 class ValidatorLog(SQLModel, table=True):
     __tablename__ = "validator_log"
@@ -20,7 +22,7 @@ class ValidatorLog(SQLModel, table=True):
     )
 
     request_id: UUID = Field(
-        foreign_key="request_log.id", 
+        foreign_key="request_log.id",
         nullable=False,
         sa_column_kwargs={"comment": "Foreign key to the associated request log entry"},
     )
@@ -42,12 +44,16 @@ class ValidatorLog(SQLModel, table=True):
 
     error: str | None = Field(
         nullable=True,
-        sa_column_kwargs={"comment": "Error message if the validator throws an exception"},
+        sa_column_kwargs={
+            "comment": "Error message if the validator throws an exception"
+        },
     )
 
     outcome: ValidatorOutcome = Field(
         nullable=False,
-        sa_column_kwargs={"comment": "Validator outcome (whether the validation failed or passed)"},
+        sa_column_kwargs={
+            "comment": "Validator outcome (whether the validation failed or passed)"
+        },
     )
 
     inserted_at: datetime = Field(

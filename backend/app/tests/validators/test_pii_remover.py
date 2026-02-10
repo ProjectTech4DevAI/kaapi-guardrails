@@ -9,6 +9,7 @@ from app.core.validators.pii_remover import ALL_ENTITY_TYPES, PIIRemover
 # Fixtures
 # -------------------------------
 
+
 @pytest.fixture
 def mock_presidio():
     """
@@ -19,7 +20,6 @@ def mock_presidio():
     ) as mock_analyzer, patch(
         "app.core.validators.pii_remover.AnonymizerEngine"
     ) as mock_anonymizer:
-
         analyzer_instance = mock_analyzer.return_value
         anonymizer_instance = mock_anonymizer.return_value
 
@@ -38,6 +38,7 @@ def validator(mock_presidio):
 # TESTS
 # -------------------------------
 
+
 def test_pass_when_no_pii_detected(validator):
     """
     If anonymized text is identical to input, should PASS.
@@ -51,9 +52,7 @@ def test_fail_when_pii_detected(validator):
     """
     If anonymized text differs, should FAIL with fix_value.
     """
-    validator.anonymizer.anonymize.return_value = MagicMock(
-        text="redacted text"
-    )
+    validator.anonymizer.anonymize.return_value = MagicMock(text="redacted text")
 
     result = validator._validate("original text")
 
@@ -88,10 +87,7 @@ def test_indian_recognizers_registered_when_requested():
     """
     with patch(
         "app.core.validators.pii_remover.AnalyzerEngine"
-    ) as mock_analyzer, patch(
-        "app.core.validators.pii_remover.AnonymizerEngine"
-    ):
-
+    ) as mock_analyzer, patch("app.core.validators.pii_remover.AnonymizerEngine"):
         registry = mock_analyzer.return_value.registry
 
         PIIRemover(

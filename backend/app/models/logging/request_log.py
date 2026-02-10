@@ -7,6 +7,7 @@ from sqlmodel import SQLModel, Field
 
 from app.utils import now
 
+
 class RequestStatus(str, Enum):
     PROCESSING = "processing"
     SUCCESS = "success"
@@ -18,7 +19,7 @@ class RequestLog(SQLModel, table=True):
     __tablename__ = "request_log"
 
     id: UUID = Field(
-        default_factory=uuid4, 
+        default_factory=uuid4,
         primary_key=True,
         sa_column_kwargs={"comment": "Unique identifier for the request log entry"},
     )
@@ -29,7 +30,7 @@ class RequestLog(SQLModel, table=True):
     )
 
     response_id: Optional[UUID] = Field(
-        default=None, 
+        default=None,
         nullable=True,
         sa_column_kwargs={"comment": "Identifier for the response"},
     )
@@ -45,19 +46,19 @@ class RequestLog(SQLModel, table=True):
     )
 
     response_text: Optional[str] = Field(
-        default=None, 
+        default=None,
         nullable=True,
         sa_column_kwargs={"comment": "Text of the response received"},
     )
-    
+
     inserted_at: datetime = Field(
-        default_factory=now, 
+        default_factory=now,
         nullable=False,
         sa_column_kwargs={"comment": "Timestamp when the entry was created"},
     )
 
     updated_at: datetime = Field(
-        default_factory=now, 
+        default_factory=now,
         nullable=False,
         sa_column_kwargs={"comment": "Timestamp when the entry was last updated"},
     )

@@ -5,6 +5,7 @@ from sqlmodel import Session
 from app.models.logging.validator_log import ValidatorLog
 from app.utils import now
 
+
 class ValidatorLogCrud:
     def __init__(self, session: Session):
         self.session = session

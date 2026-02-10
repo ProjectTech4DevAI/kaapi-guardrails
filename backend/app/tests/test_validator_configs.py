@@ -16,6 +16,7 @@ TEST_TYPE = ValidatorType.LexicalSlur
 TEST_STAGE = Stage.Input
 TEST_ON_FAIL = GuardrailOnFail.Fix
 
+
 @pytest.fixture
 def mock_session():
     """Create a mock session for database operations."""

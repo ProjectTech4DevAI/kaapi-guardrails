@@ -23,8 +23,10 @@ target_metadata = SQLModel.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+
 def get_url():
     return str(settings.SQLALCHEMY_DATABASE_URI)
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

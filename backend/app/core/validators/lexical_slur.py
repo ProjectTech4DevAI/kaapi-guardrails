@@ -12,25 +12,26 @@ from guardrails.validators import (
     PassResult,
     register_validator,
     ValidationResult,
-    Validator
+    Validator,
 )
 
 from app.core.config import Settings
 from app.core.enum import SlurSeverity
+
 
 @register_validator(name="lexical-slur", data_type="string")
 class LexicalSlur(Validator):
     """
     Validate text for the presence of lexical slurs using a predefined list.
     """
-    
+
     _SLUR_CACHE: dict = {}
 
     def __init__(
-        self, 
+        self,
         severity: SlurSeverity = SlurSeverity.All,
         languages: Optional[list] = None,
-        on_fail: Optional[Callable] = OnFailAction.FIX
+        on_fail: Optional[Callable] = OnFailAction.FIX,
     ):
         self.severity = severity
         self.languages = languages or ["en", "hi"]
@@ -53,9 +54,7 @@ class LexicalSlur(Validator):
         redacted_text = normalized_text
         for slur, pattern in self._slur_patterns:
             if slur in detected_slurs:
-                redacted_text = pattern.sub(
-                    "[REDACTED_SLUR]", redacted_text
-                )
+                redacted_text = pattern.sub("[REDACTED_SLUR]", redacted_text)
 
         return FailResult(
             error_message=f"Mentioned toxic words: {', '.join(detected_slurs)}",
@@ -81,7 +80,7 @@ class LexicalSlur(Validator):
         """
         Removed emojis from given string.
         """
-        return emoji.replace_emoji(text, replace='')
+        return emoji.replace_emoji(text, replace="")
 
     def _compile_slur_patterns(self):
         """
@@ -92,14 +91,18 @@ class LexicalSlur(Validator):
 
         for slur in self.slur_list:
             escaped = re.escape(slur)
-            pattern = rf'(?<!\w){escaped}(?!\w)'
+            pattern = rf"(?<!\w){escaped}(?!\w)"
             compiled = re.compile(pattern, re.IGNORECASE)
             self._slur_patterns.append((slur, compiled))
 
         self._slur_patterns.sort(key=lambda x: len(x[0]), reverse=True)
 
     def load_slur_list(self):
-        cache_key = self.severity.value if hasattr(self.severity, "value") else str(self.severity)
+        cache_key = (
+            self.severity.value
+            if hasattr(self.severity, "value")
+            else str(self.severity)
+        )
 
         if cache_key in self._SLUR_CACHE:
             return self._SLUR_CACHE[cache_key]
@@ -112,22 +115,24 @@ class LexicalSlur(Validator):
             raise FileNotFoundError(f"Slur list file not found at {file_path}")
         except Exception as e:
             raise ValueError(f"Failed to load slur list from {file_path}: {e}")
-        
-        required_columns = ['label', 'severity']
+
+        required_columns = ["label", "severity"]
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
-            raise ValueError(f"Slur list CSV missing required columns: {missing_columns}")
-        
-        df['label'] = df['label'].str.lower()
+            raise ValueError(
+                f"Slur list CSV missing required columns: {missing_columns}"
+            )
+
+        df["label"] = df["label"].str.lower()
 
         if self.severity == SlurSeverity.Low:
-            slurs = df[df['severity'].isin(['L', 'M', 'H'])]['label'].tolist()
+            slurs = df[df["severity"].isin(["L", "M", "H"])]["label"].tolist()
         elif self.severity == SlurSeverity.Medium:
-            slurs = df[df['severity'].isin(['M', 'H'])]['label'].tolist()
+            slurs = df[df["severity"].isin(["M", "H"])]["label"].tolist()
         elif self.severity == SlurSeverity.High:
-            slurs = df[df['severity'] == 'H']['label'].tolist()
+            slurs = df[df["severity"] == "H"]["label"].tolist()
         else:
-            slurs = df['label'].tolist()
+            slurs = df["label"].tolist()
 
         self._SLUR_CACHE[cache_key] = slurs
         return slurs

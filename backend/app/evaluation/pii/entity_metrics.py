@@ -23,9 +23,9 @@ def compare_entities(gold: Set[str], pred: Set[str]):
     """
     Compare gold vs predicted entity sets.
     """
-    tp = gold & pred          # correctly detected
-    fn = gold - pred          # missed entities
-    fp = pred - gold          # hallucinated entities
+    tp = gold & pred  # correctly detected
+    fn = gold - pred  # missed entities
+    fp = pred - gold  # hallucinated entities
     return tp, fp, fn
 
 

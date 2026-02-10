@@ -1,5 +1,6 @@
 # conftest.py
 import os
+
 os.environ["ENVIRONMENT"] = "testing"
 
 import pytest
@@ -16,9 +17,11 @@ test_engine = create_engine(
     pool_pre_ping=True,
 )
 
+
 def override_session():
     with Session(test_engine) as session:
         yield session
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
@@ -26,12 +29,14 @@ def setup_test_db():
     yield
     SQLModel.metadata.drop_all(test_engine)
 
+
 @pytest.fixture(scope="function", autouse=True)
 def clean_db():
     with Session(test_engine) as session:
         for table in reversed(SQLModel.metadata.sorted_tables):
             session.execute(table.delete())
         session.commit()
+
 
 @pytest.fixture(scope="function", autouse=True)
 def override_dependencies():
@@ -43,10 +48,12 @@ def override_dependencies():
 
     app.dependency_overrides.clear()
 
+
 @pytest.fixture(scope="function")
 def client():
     with TestClient(app) as c:
         yield c
+
 
 @pytest.fixture(scope="function")
 def integration_client(client):

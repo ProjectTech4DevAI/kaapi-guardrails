@@ -193,4 +193,7 @@ def test_input_guardrails_with_validator_actions_rephrase(integration_client):
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is True
-    assert "Please rephrase the query without unsafe content. Mentioned toxic words" in body["data"][SAFE_TEXT_FIELD]
+    assert (
+        "Please rephrase the query without unsafe content. Mentioned toxic words"
+        in body["data"][SAFE_TEXT_FIELD]
+    )

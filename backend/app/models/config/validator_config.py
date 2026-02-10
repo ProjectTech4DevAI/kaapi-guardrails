@@ -11,13 +11,16 @@ import sqlalchemy as sa
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.utils import now
 
+
 class ValidatorConfig(SQLModel, table=True):
     __tablename__ = "validator_config"
 
     id: UUID = Field(
         default_factory=uuid4,
         primary_key=True,
-        sa_column_kwargs={"comment": "Unique identifier for the validator configuration"},
+        sa_column_kwargs={
+            "comment": "Unique identifier for the validator configuration"
+        },
     )
 
     organization_id: int = Field(
@@ -46,7 +49,6 @@ class ValidatorConfig(SQLModel, table=True):
         sa_column_kwargs={"comment": "Action to take when the validator fails"},
     )
 
-
     config: dict[str, Any] = SQLField(
         default_factory=dict,
         sa_column=Column(
@@ -55,9 +57,7 @@ class ValidatorConfig(SQLModel, table=True):
             server_default=sa.text("'{}'::jsonb"),
             comment="Configuration for the validator",
         ),
-        description=(
-            "Configuration for the validator"
-        ),
+        description=("Configuration for the validator"),
     )
 
     is_enabled: bool = Field(
@@ -68,11 +68,13 @@ class ValidatorConfig(SQLModel, table=True):
     created_at: datetime = Field(
         default_factory=now,
         nullable=False,
-        sa_column_kwargs={"comment": "Timestamp when the validator config was inserted"},
+        sa_column_kwargs={
+            "comment": "Timestamp when the validator config was inserted"
+        },
     )
 
     updated_at: datetime = Field(
-        default_factory=now, 
+        default_factory=now,
         nullable=False,
         sa_column_kwargs={
             "comment": "Timestamp when the validator config was last updated",
@@ -82,7 +84,10 @@ class ValidatorConfig(SQLModel, table=True):
 
     __table_args__ = (
         UniqueConstraint(
-            "organization_id", "project_id", "type", "stage",
-            name="uq_validator_identity"
+            "organization_id",
+            "project_id",
+            "type",
+            "stage",
+            name="uq_validator_identity",
         ),
     )

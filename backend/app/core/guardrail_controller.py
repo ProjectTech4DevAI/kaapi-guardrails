@@ -4,9 +4,11 @@ from guardrails import Guard
 
 from app.schemas.guardrail_config import ValidatorConfigItem
 
+
 def build_guard(validator_items):
     validators = [v_item.build() for v_item in validator_items]
     return Guard().use_many(*validators)
+
 
 def get_validator_config_models():
     annotated_args = get_args(ValidatorConfigItem)

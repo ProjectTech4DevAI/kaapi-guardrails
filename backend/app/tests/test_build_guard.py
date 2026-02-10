@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 from app.core.guardrail_controller import build_guard
 
+
 def test_build_guard_with_validators():
     # mock validator instances returned by .build()
     v1 = Mock(name="validator1")
@@ -36,6 +37,7 @@ def test_build_guard_with_validators():
     # return value is whatever Guard().use_many returns
     assert result == mock_guard.use_many.return_value
 
+
 def test_build_guard_with_no_validators():
     mock_guard = Mock()
 
@@ -48,6 +50,7 @@ def test_build_guard_with_no_validators():
     mock_guard.use_many.assert_called_once_with()
     assert result == mock_guard.use_many.return_value
 
+
 def test_build_guard_build_failure_propagates():
     cfg = Mock()
     cfg.build.side_effect = RuntimeError("invalid config")
@@ -55,6 +58,7 @@ def test_build_guard_build_failure_propagates():
     with patch("app.core.guardrail_controller.Guard"):
         with pytest.raises(RuntimeError, match="invalid config"):
             build_guard([cfg])
+
 
 def test_build_guard_use_many_failure():
     cfg = Mock()

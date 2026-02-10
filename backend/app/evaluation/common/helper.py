@@ -4,6 +4,7 @@ import pandas as pd
 import time
 import tracemalloc
 
+
 def write_csv(df: pd.DataFrame, path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, index=False)
@@ -13,6 +14,7 @@ def write_json(obj: dict, path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         json.dump(obj, f, indent=2)
+
 
 def compute_binary_metrics(y_true, y_pred):
     tp = sum((yt == 1 and yp == 1) for yt, yp in zip(y_true, y_pred, strict=True))

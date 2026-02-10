@@ -45,19 +45,11 @@ class Settings(BaseSettings):
     SLUR_LIST_FILENAME: ClassVar[str] = "curated_slurlist_hi_en.csv"
 
     SLUR_LIST_FILEPATH: ClassVar[Path] = (
-        CORE_DIR
-        / "validators"
-        / "utils"
-        / "files"
-        / SLUR_LIST_FILENAME
+        CORE_DIR / "validators" / "utils" / "files" / SLUR_LIST_FILENAME
     )
 
     GENDER_BIAS_LIST_FILEPATH: ClassVar[Path] = (
-        CORE_DIR
-        / "validators"
-        / "utils"
-        / "files"
-        / "gender_assumption_bias_words.csv"
+        CORE_DIR / "validators" / "utils" / "files" / "gender_assumption_bias_words.csv"
     )
 
     @computed_field  # type: ignore[prop-decorator]
@@ -88,6 +80,7 @@ class Settings(BaseSettings):
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
         return self
 
+
 def get_settings() -> Settings:
     environment = os.getenv("ENVIRONMENT", "development")
 
@@ -103,5 +96,6 @@ def get_settings() -> Settings:
     env_file = env_files.get(environment)
 
     return Settings(_env_file=env_file)
+
 
 settings = get_settings()

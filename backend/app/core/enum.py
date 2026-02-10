@@ -1,10 +1,12 @@
 from enum import Enum
 
+
 class SlurSeverity(Enum):
     Low = "low"
     Medium = "medium"
     High = "high"
     All = "all"
+
 
 class BiasCategories(Enum):
     Generic = "generic"
@@ -12,14 +14,17 @@ class BiasCategories(Enum):
     Education = "education"
     All = "all"
 
+
 class GuardrailOnFail(Enum):
     Exception = "exception"
     Fix = "fix"
     Rephrase = "rephrase"
 
+
 class Stage(Enum):
     Input = "input"
     Output = "output"
+
 
 class ValidatorType(Enum):
     LexicalSlur = "uli_slur_match"

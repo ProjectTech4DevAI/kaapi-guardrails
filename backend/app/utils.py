@@ -10,8 +10,10 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+
 def now():
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 def split_validator_payload(data: dict):
     model_fields = {}
@@ -28,6 +30,7 @@ def split_validator_payload(data: dict):
         raise ValueError(f"Config keys conflict with reserved field names: {overlap}")
 
     return model_fields, config_fields
+
 
 class APIResponse(BaseModel, Generic[T]):
     success: bool
@@ -50,7 +53,10 @@ class APIResponse(BaseModel, Generic[T]):
     ) -> "APIResponse[T]":
         if isinstance(error, list):  # to handle cases when error is a list of errors
             error_message = "\n".join(
-                [f"{err.get('loc', 'unknown')}: {err.get('msg', str(err))}" for err in error]
+                [
+                    f"{err.get('loc', 'unknown')}: {err.get('msg', str(err))}"
+                    for err in error
+                ]
             )
         else:
             error_message = error

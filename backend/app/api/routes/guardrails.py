@@ -11,16 +11,16 @@ from app.core.guardrail_controller import build_guard, get_validator_config_mode
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
-from app.models.logging.request_log import  RequestLogUpdate, RequestStatus
+from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
 from app.utils import APIResponse
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
+
 @router.post(
-        "/",
-        response_model=APIResponse[GuardrailResponse],
-        response_model_exclude_none=True)
+    "/", response_model=APIResponse[GuardrailResponse], response_model_exclude_none=True
+)
 async def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
@@ -35,15 +35,16 @@ async def run_guardrails(
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    request_log = request_log_crud.create(request_id, input_text=payload.input)    
+    request_log = request_log_crud.create(request_id, input_text=payload.input)
     return await _validate_with_guard(
         payload.input,
         payload.validators,
         request_log_crud,
         request_log.id,
         validator_log_crud,
-        suppress_pass_logs
+        suppress_pass_logs,
     )
+
 
 @router.get("/")
 async def list_validators(_: AuthDep):
@@ -57,10 +58,12 @@ async def list_validators(_: AuthDep):
         try:
             schema = model.model_json_schema()
             validator_type = schema["properties"]["type"]["const"]
-            validators.append({
-                "type": validator_type,
-                "config": schema,
-            })
+            validators.append(
+                {
+                    "type": validator_type,
+                    "config": schema,
+                }
+            )
 
         except (KeyError, TypeError) as e:
             return APIResponse.failure_response(
@@ -68,6 +71,7 @@ async def list_validators(_: AuthDep):
             )
 
     return {"validators": validators}
+
 
 async def _validate_with_guard(
     data: str,
@@ -84,7 +88,7 @@ async def _validate_with_guard(
     This function treats validation failures as first-class outcomes (not exceptions),
     while still safely handling unexpected runtime errors.
     """
-    response_id = uuid.uuid4() 
+    response_id = uuid.uuid4()
     guard: Guard | None = None
 
     def _finalize(
@@ -115,11 +119,12 @@ async def _validate_with_guard(
         )
 
         if guard is not None:
-            add_validator_logs(guard, request_log_id, validator_log_crud, suppress_pass_logs)
+            add_validator_logs(
+                guard, request_log_id, validator_log_crud, suppress_pass_logs
+            )
 
-        rephrase_needed = (
-            validated_output is not None
-            and validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
+        rephrase_needed = validated_output is not None and validated_output.startswith(
+            REPHRASE_ON_FAIL_PREFIX
         )
 
         response_model = GuardrailResponse(
@@ -160,7 +165,13 @@ async def _validate_with_guard(
             error_message=str(exc),
         )
 
-def add_validator_logs(guard: Guard, request_log_id: UUID, validator_log_crud: ValidatorLogCrud, suppress_pass_logs: bool = False):
+
+def add_validator_logs(
+    guard: Guard,
+    request_log_id: UUID,
+    validator_log_crud: ValidatorLogCrud,
+    suppress_pass_logs: bool = False,
+):
     history = getattr(guard, "history", None)
     if not history:
         return

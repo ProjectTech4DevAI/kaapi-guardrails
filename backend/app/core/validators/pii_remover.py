@@ -12,11 +12,21 @@ from guardrails.validators import (
 )
 from presidio_analyzer import AnalyzerEngine
 from presidio_anonymizer import AnonymizerEngine
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_aadhaar_recognizer import InAadhaarRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_pan_recognizer import InPanRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_passport_recognizer import InPassportRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_vehicle_registration_recognizer import InVehicleRegistrationRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_recognizer import InVoterRecognizer
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_aadhaar_recognizer import (
+    InAadhaarRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_pan_recognizer import (
+    InPanRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_passport_recognizer import (
+    InPassportRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_vehicle_registration_recognizer import (
+    InVehicleRegistrationRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_recognizer import (
+    InVoterRecognizer,
+)
 
 ALL_ENTITY_TYPES = [
     "CREDIT_CARD",
@@ -29,12 +39,13 @@ ALL_ENTITY_TYPES = [
     "PERSON",
     "PHONE_NUMBER",
     "URL",
-    "IN_AADHAAR", 
-    "IN_PAN", 
+    "IN_AADHAAR",
+    "IN_PAN",
     "IN_PASSPORT",
     "IN_VEHICLE_REGISTRATION",
-    "IN_VOTER"
+    "IN_VOTER",
 ]
+
 
 @register_validator(name="pii-remover", data_type="string")
 class PIIRemover(Validator):
@@ -48,48 +59,41 @@ class PIIRemover(Validator):
         self,
         entity_types=None,
         threshold=0.5,
-        on_fail: Optional[Callable] = OnFailAction.FIX
+        on_fail: Optional[Callable] = OnFailAction.FIX,
     ):
         super().__init__(on_fail=on_fail)
 
         self.entity_types = entity_types or ALL_ENTITY_TYPES
         self.threshold = threshold
         self.on_fail = on_fail
-        os.environ["TOKENIZERS_PARALLELISM"] = "false" # Disables huggingface/tokenizers warning
+        os.environ[
+            "TOKENIZERS_PARALLELISM"
+        ] = "false"  # Disables huggingface/tokenizers warning
 
         self.analyzer = AnalyzerEngine()
 
         if "IN_AADHAAR" in self.entity_types:
-            self.analyzer.registry.add_recognizer(
-                InAadhaarRecognizer()
-            )
+            self.analyzer.registry.add_recognizer(InAadhaarRecognizer())
         if "IN_PAN" in self.entity_types:
-            self.analyzer.registry.add_recognizer(
-                InPanRecognizer()
-            )
+            self.analyzer.registry.add_recognizer(InPanRecognizer())
         if "IN_PASSPORT" in self.entity_types:
-            self.analyzer.registry.add_recognizer(
-                InPassportRecognizer()
-            )
+            self.analyzer.registry.add_recognizer(InPassportRecognizer())
         if "IN_VEHICLE_REGISTRATION" in self.entity_types:
-            self.analyzer.registry.add_recognizer(
-                InVehicleRegistrationRecognizer()
-            )
+            self.analyzer.registry.add_recognizer(InVehicleRegistrationRecognizer())
         if "IN_VOTER" in self.entity_types:
-            self.analyzer.registry.add_recognizer(
-                InVoterRecognizer()
-            )
+            self.analyzer.registry.add_recognizer(InVoterRecognizer())
         self.anonymizer = AnonymizerEngine()
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
         text = value
-        results = self.analyzer.analyze(text=text, entities=self.entity_types, language="en")
+        results = self.analyzer.analyze(
+            text=text, entities=self.entity_types, language="en"
+        )
         anonymized = self.anonymizer.anonymize(text=text, analyzer_results=results)
         anonymized_text = anonymized.text
 
         if anonymized_text != text:
             return FailResult(
-                error_message="PII detected in the text.",
-                fix_value=anonymized_text
+                error_message="PII detected in the text.", fix_value=anonymized_text
             )
         return PassResult(value=text)

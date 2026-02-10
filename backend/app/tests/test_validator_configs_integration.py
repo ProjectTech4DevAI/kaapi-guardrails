@@ -12,7 +12,9 @@ pytestmark = pytest.mark.integration
 TEST_ORGANIZATION_ID = 1
 TEST_PROJECT_ID = 1
 BASE_URL = "/api/v1/guardrails/validators/configs/"
-DEFAULT_QUERY_PARAMS = f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
+DEFAULT_QUERY_PARAMS = (
+    f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
+)
 
 VALIDATOR_PAYLOADS = {
     "lexical_slur": {
@@ -46,9 +48,9 @@ def clear_database():
     with Session(engine) as session:
         session.exec(delete(ValidatorConfig))
         session.commit()
-    
+
     yield
-    
+
     with Session(engine) as session:
         session.exec(delete(ValidatorConfig))
         session.commit()
@@ -68,14 +70,18 @@ class BaseValidatorTest:
 
     def list_validators(self, client, **query_params):
         """Helper to list validators with optional filters."""
-        params_str = f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
+        params_str = (
+            f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
+        )
         if query_params:
             params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
         return client.get(f"{BASE_URL}{params_str}")
 
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
-        return client.patch(f"{BASE_URL}{validator_id}{DEFAULT_QUERY_PARAMS}", json=payload)
+        return client.patch(
+            f"{BASE_URL}{validator_id}{DEFAULT_QUERY_PARAMS}", json=payload
+        )
 
     def delete_validator(self, client, validator_id):
         """Helper to delete a validator."""
@@ -97,7 +103,9 @@ class TestCreateValidator(BaseValidatorTest):
         assert data["languages"] == ["en", "hi"]
         assert "id" in data
 
-    def test_create_validator_duplicate_raises_400(self, integration_client, clear_database):
+    def test_create_validator_duplicate_raises_400(
+        self, integration_client, clear_database
+    ):
         """Test that creating duplicate validator raises 400."""
         # First request should succeed
         response1 = self.create_validator(integration_client, "minimal")
@@ -107,7 +115,9 @@ class TestCreateValidator(BaseValidatorTest):
         response2 = self.create_validator(integration_client, "minimal")
         assert response2.status_code == 400
 
-    def test_create_validator_missing_required_fields(self, integration_client, clear_database):
+    def test_create_validator_missing_required_fields(
+        self, integration_client, clear_database
+    ):
         """Test that missing required fields returns validation error."""
         response = integration_client.post(
             f"{BASE_URL}{DEFAULT_QUERY_PARAMS}",
@@ -220,7 +230,9 @@ class TestUpdateValidator(BaseValidatorTest):
 
         # Update it
         update_payload = {"on_fail_action": "exception", "is_enabled": False}
-        response = self.update_validator(integration_client, validator_id, update_payload)
+        response = self.update_validator(
+            integration_client, validator_id, update_payload
+        )
 
         assert response.status_code == 200
         data = response.json()["data"]
@@ -240,7 +252,9 @@ class TestUpdateValidator(BaseValidatorTest):
 
         # Update only one field
         update_payload = {"is_enabled": False}
-        response = self.update_validator(integration_client, validator_id, update_payload)
+        response = self.update_validator(
+            integration_client, validator_id, update_payload
+        )
 
         assert response.status_code == 200
         data = response.json()["data"]

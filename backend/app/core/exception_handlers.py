@@ -8,6 +8,7 @@ from starlette.status import (
 
 from app.utils import APIResponse
 
+
 def _format_validation_errors(errors: list[dict]) -> str:
     missing_fields: list[str] = []
     invalid_fields: list[str] = []
@@ -17,9 +18,7 @@ def _format_validation_errors(errors: list[dict]) -> str:
         raw_location = error["loc"]
         message = error["msg"]
 
-        location_parts = [
-            part for part in raw_location if part != "body"
-        ]
+        location_parts = [part for part in raw_location if part != "body"]
 
         if not location_parts:
             if message == "Field required":
@@ -41,14 +40,10 @@ def _format_validation_errors(errors: list[dict]) -> str:
         messages.append("Request body is required")
 
     if missing_fields:
-        messages.append(
-            f"Missing required field(s): {', '.join(missing_fields)}"
-        )
+        messages.append(f"Missing required field(s): {', '.join(missing_fields)}")
 
     if invalid_fields:
-        messages.append(
-            f"Invalid field(s): {', '.join(invalid_fields)}"
-        )
+        messages.append(f"Invalid field(s): {', '.join(invalid_fields)}")
 
     return ". ".join(messages)
 

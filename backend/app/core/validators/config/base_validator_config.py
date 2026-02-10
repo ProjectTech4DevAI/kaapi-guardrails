@@ -13,24 +13,20 @@ _ON_FAIL_MAP = {
     GuardrailOnFail.Rephrase: rephrase_query_on_fail,
 }
 
+
 class BaseValidatorConfig(SQLModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        arbitrary_types_allowed=True
-    )
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     on_fail: GuardrailOnFail = GuardrailOnFail.Fix
 
     def resolve_on_fail(self):
         try:
-           return _ON_FAIL_MAP[self.on_fail]
+            return _ON_FAIL_MAP[self.on_fail]
         except KeyError as e:
             raise ValueError(
-                f"Invalid on_fail value: {self.on_fail}. Error {e}. " \
+                f"Invalid on_fail value: {self.on_fail}. Error {e}. "
                 "Expected one of: exception, fix, rephrase."
             )
 
     def build(self) -> Validator:
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement build()"
-        )
+        raise NotImplementedError(f"{self.__class__.__name__} must implement build()")

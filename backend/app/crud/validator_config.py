@@ -13,12 +13,12 @@ from app.utils import now, split_validator_payload
 
 class ValidatorConfigCrud:
     def create(
-            self, 
-            session: Session, 
-            organization_id: int, 
-            project_id: int, 
-            payload: ValidatorCreate
-        ) -> dict:
+        self,
+        session: Session,
+        organization_id: int,
+        project_id: int,
+        payload: ValidatorCreate,
+    ) -> dict:
         data = payload.model_dump()
         model_fields, config_fields = split_validator_payload(data)
 
@@ -74,17 +74,16 @@ class ValidatorConfigCrud:
     ) -> ValidatorConfig:
         obj = session.get(ValidatorConfig, id)
 
-        if not obj or obj.organization_id != organization_id or obj.project_id != project_id:
+        if (
+            not obj
+            or obj.organization_id != organization_id
+            or obj.project_id != project_id
+        ):
             raise HTTPException(404, "Validator not found")
 
         return obj
 
-    def update(
-            self, 
-            session: Session, 
-            obj: ValidatorConfig, 
-            update_data: dict
-        ) -> dict:
+    def update(self, session: Session, obj: ValidatorConfig, update_data: dict) -> dict:
         model_fields, config_fields = split_validator_payload(update_data)
 
         for k, v in model_fields.items():
@@ -92,7 +91,7 @@ class ValidatorConfigCrud:
 
         if config_fields:
             obj.config = {**(obj.config or {}), **config_fields}
-        
+
         obj.updated_at = now()
         try:
             session.commit()
