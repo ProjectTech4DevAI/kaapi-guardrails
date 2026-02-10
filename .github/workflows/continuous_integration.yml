@@ -63,7 +63,7 @@ jobs:
 
       - name: Run pre-commit
         run: |
-          uv run --project backend pre-commit run --all-files
+          uv run pre-commit run --all-files
         working-directory: backend
 
       - name: Run tests
