@@ -80,9 +80,12 @@ class BanListCrud:
     def update(
         self,
         session: Session,
-        obj: BanList,
+        id: UUID,
+        organization_id: int,
+        project_id: int,
         data: BanListUpdate,
     ) -> BanList:
+        obj = self.get(session, id, organization_id, project_id)
         update_data = data.model_dump(exclude_unset=True)
 
         for k, v in update_data.items():
