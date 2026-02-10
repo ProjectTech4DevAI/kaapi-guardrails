@@ -9,23 +9,25 @@ from starlette.status import (
 from app.utils import APIResponse
 
 def _format_validation_errors(errors: list[dict]) -> str:
-    missing_fields = []
-    invalid_fields = []
+    missing_fields: list[str] = []
+    invalid_fields: list[str] = []
 
-    for err in errors:
-        loc = [x for x in err["loc"] if x != "body"]
+    for error in errors:
+        location_parts = [
+            part for part in error["loc"] if part != "body"
+        ]
 
-        if not loc:
+        if not location_parts:
             continue
 
-        field = ".".join(str(x) for x in loc)
+        field_path = ".".join(str(part) for part in location_parts)
 
-        if err["msg"] == "Field required":
-            missing_fields.append(field)
+        if error["msg"] == "Field required":
+            missing_fields.append(field_path)
         else:
-            invalid_fields.append(f"{field} ({err['msg']})")
+            invalid_fields.append(f"{field_path} ({error['msg']})")
 
-    messages = []
+    messages: list[str] = []
 
     if missing_fields:
         messages.append(
@@ -37,7 +39,7 @@ def _format_validation_errors(errors: list[dict]) -> str:
             f"Invalid field(s): {', '.join(invalid_fields)}"
         )
 
-    return ". ".join(messages)Expand commentComment on lines R11 to R40Resolved
+    return ". ".join(messages)
 
 
 def register_exception_handlers(app: FastAPI):
