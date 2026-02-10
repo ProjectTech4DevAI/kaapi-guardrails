@@ -114,8 +114,16 @@ class BanListCrud:
             session.rollback()
             raise
 
-    def check_owner(self, obj, organization_id, project_id):
-        if obj.organization_id != organization_id or obj.project_id != project_id:
-            raise HTTPException(status_code=403, detail="Not owner")
+def check_owner(self, obj, organization_id, project_id):
+    is_owner = (
+        obj.organization_id == organization_id
+        and obj.project_id == project_id
+    )
+
+    if not is_owner:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have permission to access this resource."
+        )
 
 banlist_crud = BanListCrud()
