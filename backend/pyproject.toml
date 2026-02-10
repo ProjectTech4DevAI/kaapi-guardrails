@@ -22,7 +22,7 @@ dependencies = [
     "sentry-sdk[fastapi]<2.0.0,>=1.40.6",
     "pyjwt<3.0.0,>=2.8.0",
     "asgi-correlation-id>=4.3.4",
-    "guardrails-ai>=0.7.2",
+    "guardrails-ai>=0.8.0",
     "emoji",
     "ftfy",
     "presidio_analyzer>=2.2.360",

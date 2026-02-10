@@ -7,6 +7,7 @@ from guardrails.validators import FailResult, PassResult
 
 from app.api.deps import AuthDep, SessionDep
 from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.config import settings
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
@@ -47,7 +48,7 @@ async def run_guardrails(
 
 
 @router.get("/")
-async def list_validators(_: AuthDep):
+def list_validators(_: AuthDep):
     """
     Lists all validators and their parameters directly.
     """
@@ -162,7 +163,9 @@ async def _validate_with_guard(
         # Case 3: unexpected system / runtime failure
         return _finalize(
             status=RequestStatus.ERROR,
-            error_message=str(exc),
+            error_message=(
+                "An unexpected error occurred."
+            ),
         )
 
 

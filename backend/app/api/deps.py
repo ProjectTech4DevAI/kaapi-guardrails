@@ -1,5 +1,7 @@
 from collections.abc import Generator
 from typing import Annotated
+import hashlib
+import secrets
 
 from fastapi import Depends, HTTPException, status, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -30,12 +32,17 @@ def verify_bearer_token(
             detail="Missing Authorization header",
         )
 
-    token = credentials.credentials
+    provided_hash = _hash_token(credentials.credentials)
+    print(provided_hash)
+    expected_hash = settings.AUTH_TOKEN
+    print(expected_hash)
+    if not expected_hash:
+        raise RuntimeError("AUTH_TOKEN is not configured")
 
-    if token != settings.AUTH_TOKEN:
+    if not secrets.compare_digest(provided_hash, expected_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
+            detail="Invalid authorization token"
         )
 
     return True

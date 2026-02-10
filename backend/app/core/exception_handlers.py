@@ -6,6 +6,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
+from app.core.config import settings
 from app.utils import APIResponse
 
 
@@ -47,6 +48,10 @@ def _format_validation_errors(errors: list[dict]) -> str:
 
     return ". ".join(messages)
 
+def _safe_error_message(exc: Exception) -> str:
+    if settings.ENVIRONMENT == "production":
+        return "An unexpected error occurred."
+    return str(exc) or "An unexpected error occurred."
 
 def register_exception_handlers(app: FastAPI):
     @app.exception_handler(RequestValidationError)
@@ -69,6 +74,6 @@ def register_exception_handlers(app: FastAPI):
         return JSONResponse(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             content=APIResponse.failure_response(
-                str(exc) or "An unexpected error occurred."
+                _safe_error_message(exc)
             ).model_dump(),
         )
