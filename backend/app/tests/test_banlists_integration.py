@@ -4,43 +4,20 @@ from sqlmodel import Session, delete
 
 from app.core.db import engine
 from app.models.config.banlist import BanList
+from app.tests.seed_data import (
+    BANLIST_INTEGRATION_ORGANIZATION_ID,
+    BANLIST_INTEGRATION_PROJECT_ID,
+    BAN_LIST_PAYLOADS,
+)
 
 pytestmark = pytest.mark.integration
 
 
-TEST_ORGANIZATION_ID = 1
-TEST_PROJECT_ID = 1
 BASE_URL = "/api/v1/guardrails/ban-lists/"
-DEFAULT_QUERY = f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
-
-
-BAN_LIST_PAYLOADS = {
-    "minimal": {
-        "name": "default",
-        "description": "basic list",
-        "banned_words": ["bad"],
-        "domain": "general",
-    },
-    "health": {
-        "name": "health-list",
-        "description": "healthcare words",
-        "banned_words": ["gender detection", "sonography"],
-        "domain": "health",
-    },
-    "edu": {
-        "name": "edu-list",
-        "description": "education words",
-        "banned_words": ["cheating"],
-        "domain": "edu",
-    },
-    "public": {
-        "name": "public-list",
-        "description": "shared",
-        "banned_words": ["shared"],
-        "is_public": True,
-        "domain": "general",
-    },
-}
+DEFAULT_QUERY = (
+    f"?organization_id={BANLIST_INTEGRATION_ORGANIZATION_ID}"
+    f"&project_id={BANLIST_INTEGRATION_PROJECT_ID}"
+)
 
 
 @pytest.fixture
@@ -68,7 +45,13 @@ class BaseBanListTest:
             params += "&" + "&".join(f"{k}={v}" for k, v in filters.items())
         return client.get(f"{BASE_URL}{params}")
 
-    def get(self, client, id, org=TEST_ORGANIZATION_ID, project=TEST_PROJECT_ID):
+    def get(
+        self,
+        client,
+        id,
+        org=BANLIST_INTEGRATION_ORGANIZATION_ID,
+        project=BANLIST_INTEGRATION_PROJECT_ID,
+    ):
         return client.get(f"{BASE_URL}{id}/?organization_id={org}&project_id={project}")
 
     def update(self, client, id, payload):
@@ -100,19 +83,15 @@ class TestCreateBanList(BaseBanListTest):
 
 class TestListBanLists(BaseBanListTest):
 
-    def test_list_success(self, integration_client, clear_database):
-        self.create(integration_client, "minimal")
-        self.create(integration_client, "health")
+    def test_list_success(self, integration_client, clear_database, seed_db):
 
         response = self.list(integration_client)
 
         assert response.status_code == 200
         data = response.json()["data"]
-        assert len(data) == 2
+        assert len(data) == 4
 
-    def test_filter_by_domain(self, integration_client, clear_database):
-        self.create(integration_client, "health")
-        self.create(integration_client, "edu")
+    def test_filter_by_domain(self, integration_client, clear_database, seed_db):
 
         response = self.list(integration_client, domain="health")
 
@@ -140,9 +119,9 @@ class TestPublicAccess(BaseBanListTest):
 
 class TestGetBanList(BaseBanListTest):
 
-    def test_get_success(self, integration_client, clear_database):
-        create_resp = self.create(integration_client, "minimal")
-        ban_id = create_resp.json()["data"]["id"]
+    def test_get_success(self, integration_client, clear_database, seed_db):
+        list_resp = self.list(integration_client)
+        ban_id = list_resp.json()["data"][0]["id"]
 
         response = self.get(integration_client, ban_id)
 
@@ -154,9 +133,9 @@ class TestGetBanList(BaseBanListTest):
 
         assert response.status_code == 404
 
-    def test_get_wrong_owner_private(self, integration_client, clear_database):
-        create_resp = self.create(integration_client, "minimal")
-        ban_id = create_resp.json()["data"]["id"]
+    def test_get_wrong_owner_private(self, integration_client, clear_database, seed_db):
+        list_resp = self.list(integration_client)
+        ban_id = list_resp.json()["data"][0]["id"]
 
         response = self.get(integration_client, ban_id, org=2, project=2)
 
@@ -165,9 +144,9 @@ class TestGetBanList(BaseBanListTest):
 
 class TestUpdateBanList(BaseBanListTest):
 
-    def test_update_success(self, integration_client, clear_database):
-        create_resp = self.create(integration_client, "minimal")
-        ban_id = create_resp.json()["data"]["id"]
+    def test_update_success(self, integration_client, clear_database, seed_db):
+        list_resp = self.list(integration_client)
+        ban_id = list_resp.json()["data"][0]["id"]
 
         response = self.update(
             integration_client,
@@ -180,9 +159,9 @@ class TestUpdateBanList(BaseBanListTest):
         data = response.json()["data"]
         assert data["banned_words"] == ["bad", "worse"]
 
-    def test_partial_update(self, integration_client, clear_database):
-        create_resp = self.create(integration_client, "minimal")
-        ban_id = create_resp.json()["data"]["id"]
+    def test_partial_update(self, integration_client, clear_database, seed_db):
+        list_resp = self.list(integration_client)
+        ban_id = list_resp.json()["data"][0]["id"]
 
         response = self.update(integration_client, ban_id, {"name": "updated"})
 
@@ -198,9 +177,9 @@ class TestUpdateBanList(BaseBanListTest):
 
 class TestDeleteBanList(BaseBanListTest):
 
-    def test_delete_success(self, integration_client, clear_database):
-        create_resp = self.create(integration_client, "minimal")
-        ban_id = create_resp.json()["data"]["id"]
+    def test_delete_success(self, integration_client, clear_database, seed_db):
+        list_resp = self.list(integration_client)
+        ban_id = list_resp.json()["data"][0]["id"]
 
         response = self.delete(integration_client, ban_id)
 
@@ -214,9 +193,9 @@ class TestDeleteBanList(BaseBanListTest):
 
         assert response.status_code == 404
 
-    def test_delete_wrong_owner(self, integration_client, clear_database):
-        create_resp = self.create(integration_client, "minimal")
-        ban_id = create_resp.json()["data"]["id"]
+    def test_delete_wrong_owner(self, integration_client, clear_database, seed_db):
+        list_resp = self.list(integration_client)
+        ban_id = list_resp.json()["data"][0]["id"]
 
         response = integration_client.delete(
             f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999"
