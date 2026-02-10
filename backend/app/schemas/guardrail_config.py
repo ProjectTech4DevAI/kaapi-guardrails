@@ -1,6 +1,7 @@
 from typing import Annotated, List, Optional, Union
 from uuid import UUID
 
+from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 
 # todo this could be improved by having some auto-discovery mechanism inside
@@ -22,6 +23,7 @@ ValidatorConfigItem = Annotated[
 ]
 
 class GuardrailRequest(SQLModel):
+    model_config = ConfigDict(extra="forbid")
     request_id: str
     input: str
     validators: List[ValidatorConfigItem]
