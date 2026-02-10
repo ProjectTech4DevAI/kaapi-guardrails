@@ -9,7 +9,7 @@ from sqlmodel import Field, SQLModel
 from app.utils import now
 
 class BanList(SQLModel, table=True):
-    __tablename__ = "ban_list"
+    __tablename__ = "banlist"
 
     id: UUID = Field(
         default_factory=uuid4, 
