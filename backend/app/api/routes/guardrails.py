@@ -9,6 +9,7 @@ from app.api.deps import AuthDep, SessionDep
 from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.core.config import settings
 from app.core.guardrail_controller import build_guard, get_validator_config_models
+from app.core.exception_handlers import _safe_error_message
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 @router.post(
     "/", response_model=APIResponse[GuardrailResponse], response_model_exclude_none=True
 )
-async def run_guardrails(
+def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
     _: AuthDep,
@@ -37,7 +38,7 @@ async def run_guardrails(
         return APIResponse.failure_response(error="Invalid request_id")
 
     request_log = request_log_crud.create(request_id, input_text=payload.input)
-    return await _validate_with_guard(
+    return _validate_with_guard(
         payload.input,
         payload.validators,
         request_log_crud,
@@ -68,13 +69,16 @@ def list_validators(_: AuthDep):
 
         except (KeyError, TypeError) as e:
             return APIResponse.failure_response(
-                error=f"Failed to retrieve schema for validator {model.__name__}: {str(e)}",
+                error=(
+                    "Failed to retrieve schema for validator "
+                    f"{model.__name__}: {_safe_error_message(e)}"
+                ),
             )
 
     return {"validators": validators}
 
 
-async def _validate_with_guard(
+def _validate_with_guard(
     data: str,
     validators: list,
     request_log_crud: RequestLogCrud,
@@ -163,9 +167,7 @@ async def _validate_with_guard(
         # Case 3: unexpected system / runtime failure
         return _finalize(
             status=RequestStatus.ERROR,
-            error_message=(
-                "An unexpected error occurred."
-            ),
+            error_message=_safe_error_message(exc),
         )
 
 

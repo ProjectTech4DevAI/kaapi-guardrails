@@ -48,10 +48,12 @@ def _format_validation_errors(errors: list[dict]) -> str:
 
     return ". ".join(messages)
 
+
 def _safe_error_message(exc: Exception) -> str:
     if settings.ENVIRONMENT == "production":
         return "An unexpected error occurred."
     return str(exc) or "An unexpected error occurred."
+
 
 def register_exception_handlers(app: FastAPI):
     @app.exception_handler(RequestValidationError)
@@ -73,7 +75,5 @@ def register_exception_handlers(app: FastAPI):
     async def generic_error_handler(request: Request, exc: Exception):
         return JSONResponse(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-            content=APIResponse.failure_response(
-                _safe_error_message(exc)
-            ).model_dump(),
+            content=APIResponse.failure_response(_safe_error_message(exc)).model_dump(),
         )

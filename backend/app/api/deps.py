@@ -20,6 +20,10 @@ SessionDep = Annotated[Session, Depends(get_db)]
 security = HTTPBearer(auto_error=False)
 
 
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def verify_bearer_token(
     credentials: Annotated[
         HTTPAuthorizationCredentials | None,
@@ -33,16 +37,15 @@ def verify_bearer_token(
         )
 
     provided_hash = _hash_token(credentials.credentials)
-    print(provided_hash)
     expected_hash = settings.AUTH_TOKEN
-    print(expected_hash)
+
     if not expected_hash:
         raise RuntimeError("AUTH_TOKEN is not configured")
 
     if not secrets.compare_digest(provided_hash, expected_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authorization token"
+            detail="Invalid authorization token",
         )
 
     return True
