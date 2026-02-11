@@ -49,6 +49,8 @@ jobs:
         working-directory: backend
 
       - name: Install Guardrails hub validators
+        env:
+          GUARDRAILS_HUB_API_KEY: ${{ secrets.GUARDRAILS_HUB_API_KEY }}
         run: |
           source .venv/bin/activate
           chmod +x scripts/install_guardrails_from_hub.sh
