@@ -79,6 +79,7 @@ def test_get_success(mock_session, sample_banlist):
 
         assert result.data == sample_banlist
 
+
 def test_update_success(mock_session, sample_banlist):
     with patch("app.api.routes.banlist_configs.banlist_crud") as crud:
         crud.get.return_value = sample_banlist

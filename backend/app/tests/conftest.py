@@ -61,6 +61,7 @@ def seed_test_data(session: Session) -> None:
 
     session.commit()
 
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     SQLModel.metadata.create_all(test_engine)
@@ -96,6 +97,7 @@ def seed_db():
         seed_test_data(session)
         yield
 
+
 @pytest.fixture
 def clear_database():
     """Clear key config tables before and after each test."""
@@ -110,6 +112,7 @@ def clear_database():
         session.exec(delete(BanList))
         session.exec(delete(ValidatorConfig))
         session.commit()
+
 
 @pytest.fixture(scope="function")
 def client():

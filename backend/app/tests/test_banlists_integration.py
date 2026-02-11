@@ -17,7 +17,6 @@ DEFAULT_QUERY = (
 
 
 class BaseBanListTest:
-
     def create(self, client, payload_key="minimal", **kwargs):
         payload = {**BAN_LIST_PAYLOADS[payload_key], **kwargs}
         return client.post(f"{BASE_URL}{DEFAULT_QUERY}", json=payload)
@@ -45,7 +44,6 @@ class BaseBanListTest:
 
 
 class TestCreateBanList(BaseBanListTest):
-
     def test_create_success(self, integration_client, clear_database):
         response = self.create(integration_client, "minimal")
 
@@ -65,9 +63,7 @@ class TestCreateBanList(BaseBanListTest):
 
 
 class TestListBanLists(BaseBanListTest):
-
     def test_list_success(self, integration_client, clear_database, seed_db):
-
         response = self.list(integration_client)
 
         assert response.status_code == 200
@@ -75,7 +71,6 @@ class TestListBanLists(BaseBanListTest):
         assert len(data) == 4
 
     def test_filter_by_domain(self, integration_client, clear_database, seed_db):
-
         response = self.list(integration_client, domain="health")
 
         data = response.json()["data"]
@@ -90,7 +85,6 @@ class TestListBanLists(BaseBanListTest):
 
 
 class TestPublicAccess(BaseBanListTest):
-
     def test_public_visible_to_other_org(self, integration_client, clear_database):
         create_resp = self.create(integration_client, "public")
         ban_id = create_resp.json()["data"]["id"]
@@ -101,7 +95,6 @@ class TestPublicAccess(BaseBanListTest):
 
 
 class TestGetBanList(BaseBanListTest):
-
     def test_get_success(self, integration_client, clear_database, seed_db):
         list_resp = self.list(integration_client)
         ban_id = list_resp.json()["data"][0]["id"]
@@ -126,7 +119,6 @@ class TestGetBanList(BaseBanListTest):
 
 
 class TestUpdateBanList(BaseBanListTest):
-
     def test_update_success(self, integration_client, clear_database, seed_db):
         list_resp = self.list(integration_client)
         ban_id = list_resp.json()["data"][0]["id"]
@@ -159,7 +151,6 @@ class TestUpdateBanList(BaseBanListTest):
 
 
 class TestDeleteBanList(BaseBanListTest):
-
     def test_delete_success(self, integration_client, clear_database, seed_db):
         list_resp = self.list(integration_client)
         ban_id = list_resp.json()["data"][0]["id"]

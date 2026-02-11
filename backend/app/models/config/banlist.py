@@ -8,24 +8,24 @@ from sqlmodel import Field, SQLModel
 
 from app.utils import now
 
+
 class BanList(SQLModel, table=True):
     __tablename__ = "banlist"
 
     id: UUID = Field(
-        default_factory=uuid4, 
-        primary_key=True, 
+        default_factory=uuid4,
+        primary_key=True,
         index=True,
-        sa_column_kwargs={"comment": "Unique identifier for the ban list entry"}
+        sa_column_kwargs={"comment": "Unique identifier for the ban list entry"},
     )
 
     name: str = Field(
-        nullable=False, 
-        sa_column_kwargs={"comment": "Name of the ban list entry"}
+        nullable=False, sa_column_kwargs={"comment": "Name of the ban list entry"}
     )
 
     description: str = Field(
         nullable=False,
-        sa_column_kwargs={"comment": "Description of the ban list entry"}
+        sa_column_kwargs={"comment": "Description of the ban list entry"},
     )
 
     banned_words: list[str] = Field(
@@ -34,8 +34,8 @@ class BanList(SQLModel, table=True):
             ARRAY(String),
             nullable=False,
             comment="List of banned words",
-        ), 
-        description=("List of banned words")
+        ),
+        description=("List of banned words"),
     )
 
     organization_id: int = Field(
@@ -53,22 +53,24 @@ class BanList(SQLModel, table=True):
     domain: str = Field(
         index=False,
         nullable=False,
-        sa_column_kwargs={"comment": "Domain or context for the ban list entry"}
+        sa_column_kwargs={"comment": "Domain or context for the ban list entry"},
     )
 
     is_public: bool = Field(
         default=False,
-        sa_column_kwargs={"comment": "Whether the ban list entry is public or private"}
+        sa_column_kwargs={"comment": "Whether the ban list entry is public or private"},
     )
 
     created_at: datetime = Field(
         default_factory=now,
         nullable=False,
-        sa_column_kwargs={"comment": "Timestamp when the ban list entry was created"}
+        sa_column_kwargs={"comment": "Timestamp when the ban list entry was created"},
     )
 
     updated_at: datetime = Field(
         default_factory=now,
         nullable=False,
-        sa_column_kwargs={"comment": "Timestamp when the ban list entry was last updated"}
+        sa_column_kwargs={
+            "comment": "Timestamp when the ban list entry was last updated"
+        },
     )

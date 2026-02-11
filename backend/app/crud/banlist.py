@@ -30,8 +30,7 @@ class BanListCrud:
         except IntegrityError:
             session.rollback()
             raise HTTPException(
-                400,
-                "Banlist already exists for the given configuration"
+                400, "Banlist already exists for the given configuration"
             )
         except Exception:
             session.rollback()
@@ -41,11 +40,7 @@ class BanListCrud:
         return obj
 
     def get(
-        self,
-        session: Session,
-        id: UUID,
-        organization_id: int,
-        project_id: int
+        self, session: Session, id: UUID, organization_id: int, project_id: int
     ) -> BanList:
         obj = session.get(BanList, id)
 
@@ -66,10 +61,10 @@ class BanListCrud:
     ) -> List[BanList]:
         stmt = select(BanList).where(
             (
-                (BanList.organization_id == organization_id) &
-                (BanList.project_id == project_id)
-            ) |
-            (BanList.is_public == True)
+                (BanList.organization_id == organization_id)
+                & (BanList.project_id == project_id)
+            )
+            | (BanList.is_public == True)
         )
 
         if domain:
@@ -99,8 +94,7 @@ class BanListCrud:
         except IntegrityError:
             session.rollback()
             raise HTTPException(
-                400,
-                "Banlist already exists for the given configuration"
+                400, "Banlist already exists for the given configuration"
             )
         except Exception:
             session.rollback()
@@ -119,14 +113,13 @@ class BanListCrud:
 
     def check_owner(self, obj: BanList, organization_id: int, project_id: int) -> None:
         is_owner = (
-            obj.organization_id == organization_id
-            and obj.project_id == project_id
+            obj.organization_id == organization_id and obj.project_id == project_id
         )
 
         if not is_owner:
             raise HTTPException(
                 status_code=403,
-                detail="You do not have permission to access this resource."
+                detail="You do not have permission to access this resource.",
             )
 
 

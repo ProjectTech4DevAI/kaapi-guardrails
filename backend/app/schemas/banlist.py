@@ -5,6 +5,7 @@ from typing import List, Optional
 from pydantic import ConfigDict
 from sqlmodel import SQLModel
 
+
 class BanListBase(SQLModel):
     name: str
     description: str
