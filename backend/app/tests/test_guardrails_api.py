@@ -87,3 +87,36 @@ def test_guardrails_internal_error(client, mock_crud):
     assert body["success"] is False
     assert SAFE_TEXT_FIELD not in body["data"]
     assert "Invalid validator config" in body["error"]
+
+
+def test_validate_guardrails_accepts_validator_config_payload_shape(client):
+    class MockGuard:
+        def validate(self, data):
+            return MockResult(validated_output="clean text")
+
+    with patch(build_guard_path, return_value=MockGuard()):
+        response = client.post(
+            VALIDATE_API_PATH,
+            json={
+                "request_id": request_id,
+                "input": "Mai thak gayi hu saala, you slut cunt faggot.",
+                "validators": [
+                    {
+                        "type": "uli_slur_match",
+                        "stage": "input",
+                        "on_fail_action": "fix",
+                        "is_enabled": True,
+                        "id": "028b1442-7414-4a4a-b484-f66d511709d3",
+                        "organization_id": 1,
+                        "project_id": 1,
+                        "created_at": "2026-02-11T05:49:55.000814",
+                        "updated_at": "2026-02-11T07:47:30.429505",
+                    }
+                ],
+            },
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"][SAFE_TEXT_FIELD] == "clean text"
