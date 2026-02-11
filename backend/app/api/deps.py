@@ -36,13 +36,9 @@ def verify_bearer_token(
             detail="Missing Authorization header",
         )
 
-    provided_hash = _hash_token(credentials.credentials)
-    expected_hash = settings.AUTH_TOKEN
-
-    if not expected_hash:
-        raise RuntimeError("AUTH_TOKEN is not configured")
-
-    if not secrets.compare_digest(provided_hash, expected_hash):
+    if not secrets.compare_digest(
+        _hash_token(credentials.credentials), settings.AUTH_TOKEN
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authorization token",
