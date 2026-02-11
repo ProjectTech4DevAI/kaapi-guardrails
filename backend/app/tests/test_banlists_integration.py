@@ -106,16 +106,25 @@ class TestGetBanList(BaseBanListTest):
     def test_get_not_found(self, integration_client, clear_database):
         fake = uuid.uuid4()
         response = self.get(integration_client, fake)
+        body = response.json()
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert body["success"] is False
+        assert "Banlist not found" in body["error"]
 
     def test_get_wrong_owner_private(self, integration_client, clear_database, seed_db):
         list_resp = self.list(integration_client)
-        ban_id = list_resp.json()["data"][0]["id"]
+        private_banlist = next(
+            item for item in list_resp.json()["data"] if not item["is_public"]
+        )
+        ban_id = private_banlist["id"]
 
         response = self.get(integration_client, ban_id, org=2, project=2)
+        body = response.json()
 
-        assert response.status_code in (403, 404)
+        assert response.status_code == 200
+        assert body["success"] is False
+        assert "permission" in body["error"].lower()
 
 
 class TestUpdateBanList(BaseBanListTest):
@@ -146,8 +155,11 @@ class TestUpdateBanList(BaseBanListTest):
         fake = uuid.uuid4()
 
         response = self.update(integration_client, fake, {"name": "x"})
+        body = response.json()
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert body["success"] is False
+        assert "Banlist not found" in body["error"]
 
 
 class TestDeleteBanList(BaseBanListTest):
@@ -164,15 +176,24 @@ class TestDeleteBanList(BaseBanListTest):
         fake = uuid.uuid4()
 
         response = self.delete(integration_client, fake)
+        body = response.json()
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert body["success"] is False
+        assert "Banlist not found" in body["error"]
 
     def test_delete_wrong_owner(self, integration_client, clear_database, seed_db):
         list_resp = self.list(integration_client)
-        ban_id = list_resp.json()["data"][0]["id"]
+        private_banlist = next(
+            item for item in list_resp.json()["data"] if not item["is_public"]
+        )
+        ban_id = private_banlist["id"]
 
         response = integration_client.delete(
             f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999"
         )
+        body = response.json()
 
-        assert response.status_code in (403, 404)
+        assert response.status_code == 200
+        assert body["success"] is False
+        assert "permission" in body["error"].lower()
