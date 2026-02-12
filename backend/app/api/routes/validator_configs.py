@@ -64,7 +64,7 @@ def list_validators(
     return APIResponse.success_response(data=response_model)
 
 
-@router.get("{config_id}", response_model=APIResponse[list[ValidatorResponse]])
+@router.get("/{config_id}", response_model=APIResponse[list[ValidatorResponse]])
 def list_validators_by_config_id(
     config_id: UUID,
     organization_id: int,

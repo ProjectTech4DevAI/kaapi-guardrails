@@ -66,7 +66,7 @@ class BaseValidatorTest:
 
     def get_validator(self, client, validator_id):
         """Helper to get a specific validator."""
-        return client.get(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}")
+        return client.get(f"{BASE_URL}{validator_id}{DEFAULT_QUERY_PARAMS}")
 
     def list_validators(self, client, **query_params):
         """Helper to list validators with optional filters."""
@@ -84,7 +84,7 @@ class BaseValidatorTest:
         )
         if query_params:
             params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
-        return client.get(f"{BASE_URL}by-config/{config_id}{params_str}")
+        return client.get(f"{BASE_URL}{config_id}{params_str}")
 
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
@@ -194,44 +194,49 @@ class TestGetValidator(BaseValidatorTest):
     """Tests for GET /guardrails/validators/configs/{id} endpoint."""
 
     def test_get_validator_success(self, integration_client, clear_database):
-        """Test successful validator retrieval."""
+        """Test retrieval by config_id returns validators list."""
         # Create a validator
         create_response = self.create_validator(
             integration_client, "lexical_slur", severity="all"
         )
         validator_id = create_response.json()["data"]["id"]
+        config_id = create_response.json()["data"]["config_id"]
 
-        # Retrieve it
-        response = self.get_validator(integration_client, validator_id)
+        # Retrieve by config_id
+        response = self.get_validator(integration_client, config_id)
 
         assert response.status_code == 200
         data = response.json()["data"]
-        assert data["id"] == validator_id
-        assert data["severity"] == "all"
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["id"] == validator_id
+        assert data[0]["severity"] == "all"
 
     def test_get_validator_not_found(self, integration_client, clear_database):
-        """Test retrieving non-existent validator returns 404."""
+        """Test retrieving non-existent config_id returns empty list."""
         fake_id = uuid.uuid4()
         response = self.get_validator(integration_client, fake_id)
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert response.json()["data"] == []
 
     def test_get_validator_wrong_org(self, integration_client, clear_database):
-        """Test that accessing validator from different org returns 404."""
+        """Test that accessing from different org returns empty list."""
         # Create a validator for org 1
         create_response = self.create_validator(integration_client, "minimal")
-        validator_id = create_response.json()["data"]["id"]
+        config_id = create_response.json()["data"]["config_id"]
 
         # Try to access it as different org
         response = integration_client.get(
-            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
+            f"{BASE_URL}{config_id}?organization_id=2&project_id=1",
         )
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert response.json()["data"] == []
 
 
 class TestListValidatorsByConfigId(BaseValidatorTest):
-    """Tests for GET /guardrails/validators/configs/by-config/{config_id} endpoint."""
+    """Tests for GET /guardrails/validators/configs/{config_id} endpoint."""
 
     def test_list_validators_by_config_id_success(
         self, integration_client, clear_database
@@ -331,6 +336,7 @@ class TestDeleteValidator(BaseValidatorTest):
         # Create a validator
         create_response = self.create_validator(integration_client, "minimal")
         validator_id = create_response.json()["data"]["id"]
+        config_id = create_response.json()["data"]["config_id"]
 
         # Delete it
         response = self.delete_validator(integration_client, validator_id)
@@ -339,8 +345,9 @@ class TestDeleteValidator(BaseValidatorTest):
         assert response.json()["success"] is True
 
         # Verify it's deleted
-        get_response = self.get_validator(integration_client, validator_id)
-        assert get_response.status_code == 404
+        get_response = self.get_validator(integration_client, config_id)
+        assert get_response.status_code == 200
+        assert get_response.json()["data"] == []
 
     def test_delete_validator_not_found(self, integration_client, clear_database):
         """Test deleting non-existent validator returns 404."""
