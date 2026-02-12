@@ -2,20 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-ENV_FILE="$PROJECT_ROOT/.env"
 
-if [ -f "$ENV_FILE" ]; then
-  echo "Loading env from $ENV_FILE"
-  set -a
-  source "$ENV_FILE"
-  set +a
-else
-  echo "Env file not found: $ENV_FILE"
-  exit 1
-fi
-
-: "${GUARDRAILS_HUB_API_KEY:?GUARDRAILS_HUB_API_KEY is required}"
+GUARDRAILS_HUB_API_KEY="${GUARDRAILS_HUB_API_KEY:-}"
 
 ENABLE_METRICS="${ENABLE_METRICS:-false}"
 ENABLE_REMOTE_INFERENCING="${ENABLE_REMOTE_INFERENCING:-false}"
@@ -32,12 +20,15 @@ fi
 # Configure Guardrails (non-interactive)
 #######################################
 
-echo "Configuring Guardrails CLI..."
-
-guardrails configure \
-  --token "$GUARDRAILS_HUB_API_KEY" \
-  $( [[ "$ENABLE_METRICS" == "true" ]] && echo "--enable-metrics" || echo "--disable-metrics" ) \
-  $( [[ "$ENABLE_REMOTE_INFERENCING" == "true" ]] && echo "--enable-remote-inferencing" || echo "--disable-remote-inferencing" )
+if [[ -n "$GUARDRAILS_HUB_API_KEY" ]]; then
+  echo "Configuring Guardrails CLI..."
+  guardrails configure \
+    --token "$GUARDRAILS_HUB_API_KEY" \
+    $( [[ "$ENABLE_METRICS" == "true" ]] && echo "--enable-metrics" || echo "--disable-metrics" ) \
+    $( [[ "$ENABLE_REMOTE_INFERENCING" == "true" ]] && echo "--enable-remote-inferencing" || echo "--disable-remote-inferencing" )
+else
+  echo "GUARDRAILS_HUB_API_KEY is not set; skipping Guardrails CLI configure."
+fi
 
 
 #######################################
@@ -60,7 +51,14 @@ fi
 
 for SRC in $HUB_SOURCES; do
   echo "Installing Guardrails hub validator: $SRC"
-  guardrails hub install "$SRC"
+  if ! guardrails hub install "$SRC"; then
+    if [[ -z "$GUARDRAILS_HUB_API_KEY" ]]; then
+      echo "Skipping hub validator install for $SRC because GUARDRAILS_HUB_API_KEY is not set."
+      continue
+    fi
+    echo "Failed to install validator from Hub: $SRC"
+    exit 1
+  fi
 done
 
 echo "All hub validators installed successfully."

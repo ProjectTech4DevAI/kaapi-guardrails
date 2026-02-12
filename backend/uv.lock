@@ -247,7 +247,7 @@ requires-dist = [
     { name = "emoji" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "ftfy" },
-    { name = "guardrails-ai", specifier = "==0.7.2" },
+    { name = "guardrails-ai", specifier = ">=0.7.2" },
     { name = "httpx", specifier = ">=0.25.1,<1.0.0" },
     { name = "jinja2", specifier = ">=3.1.4,<4.0.0" },
     { name = "numpy", specifier = ">=1.24.0" },
@@ -1337,7 +1337,7 @@ wheels = [
 
 [[package]]
 name = "guardrails-ai"
-version = "0.7.2"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },

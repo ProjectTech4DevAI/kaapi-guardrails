@@ -204,6 +204,18 @@ If you don't want to start with the default models and want to remove them / mod
 
 # Guardrails AI
 
+## Auth Token Configuration
+
+`AUTH_TOKEN` must be the SHA-256 hex digest (64 lowercase hex characters) of the bearer token clients will send in the `Authorization: Bearer <token>` header.
+
+Example to generate the digest:
+
+```bash
+echo -n "your-plain-text-token" | shasum -a 256
+```
+
+Set the resulting digest as `AUTH_TOKEN` in your `.env` / `.env.test`.
+
 ## Guardrails AI Setup
 1. Ensure that the .env file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
 
