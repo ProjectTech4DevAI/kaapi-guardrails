@@ -21,6 +21,10 @@ def upgrade() -> None:
     op.create_index("idx_request_log_request_id", "request_log", ["request_id"])
     op.create_index("idx_request_log_status", "request_log", ["status"])
     op.create_index("idx_request_log_inserted_at", "request_log", ["inserted_at"])
+    op.create_index(
+        "ix_request_log_organization_id", "request_log", ["organization_id"]
+    )
+    op.create_index("ix_request_log_project_id", "request_log", ["project_id"])
 
     op.create_index("idx_validator_log_request_id", "validator_log", ["request_id"])
     op.create_index("idx_validator_log_inserted_at", "validator_log", ["inserted_at"])
@@ -37,3 +41,5 @@ def downgrade() -> None:
     op.drop_index("idx_request_log_inserted_at", table_name="request_log")
     op.drop_index("idx_request_log_status", table_name="request_log")
     op.drop_index("idx_request_log_request_id", table_name="request_log")
+    op.drop_index("idx_request_log_organization_id", table_name="request_log")
+    op.drop_index("idx_request_log_project_id", table_name="request_log")

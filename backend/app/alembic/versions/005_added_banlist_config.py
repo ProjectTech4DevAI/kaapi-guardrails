@@ -1,7 +1,7 @@
 """Added ban_list table
 
-Revision ID: 004
-Revises: 003
+Revision ID: 005
+Revises: 004
 Create Date: 2026-02-05 09:42:54.128852
 
 """
@@ -12,8 +12,8 @@ from sqlalchemy.dialects import postgresql
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision: str = '004'
-down_revision = '003'
+revision: str = "005"
+down_revision = "004"
 branch_labels = None
 depends_on = None
 
