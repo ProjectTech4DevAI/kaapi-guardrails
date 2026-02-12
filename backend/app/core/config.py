@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import re
 from typing import Any, ClassVar, Literal
 import warnings
 
@@ -75,9 +76,16 @@ class Settings(BaseSettings):
             else:
                 raise ValueError(message)
 
+    def _validate_auth_token_hash(self) -> None:
+        if not re.fullmatch(r"^[0-9a-f]{64}$", self.AUTH_TOKEN):
+            raise ValueError(
+                "AUTH_TOKEN must be a SHA-256 hex digest (64 lowercase hex characters)."
+            )
+
     @model_validator(mode="after")
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
+        self._validate_auth_token_hash()
         return self
 
 

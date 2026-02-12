@@ -35,6 +35,11 @@ jobs:
       - name: Making env file
         run: |
           cp .env.test.example .env.test
+          AUTH_TOKEN_HASH="${{ secrets.AUTH_TOKEN_SHA256 }}"
+          if [ -z "$AUTH_TOKEN_HASH" ]; then
+            AUTH_TOKEN_HASH="$(echo -n "ci-test-token" | sha256sum | awk '{print $1}')"
+          fi
+          sed -i "s|AUTH_TOKEN=\"<ADD-HASH-TOKEN>\"|AUTH_TOKEN=\"${AUTH_TOKEN_HASH}\"|" .env.test
           sed -i "s|GUARDRAILS_HUB_API_KEY=\"<ADD-KEY>\"|GUARDRAILS_HUB_API_KEY=\"${{ secrets.GUARDRAILS_HUB_API_KEY }}\"|" .env.test
           cp .env.test .env
 
@@ -49,6 +54,8 @@ jobs:
         working-directory: backend
 
       - name: Install Guardrails hub validators
+        env:
+          GUARDRAILS_HUB_API_KEY: ${{ secrets.GUARDRAILS_HUB_API_KEY }}
         run: |
           source .venv/bin/activate
           chmod +x scripts/install_guardrails_from_hub.sh

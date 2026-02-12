@@ -13,8 +13,7 @@ mock_validator_log_crud = MagicMock()
 mock_request_log_id = uuid4()
 
 
-@pytest.mark.asyncio
-async def test_validate_with_guard_success():
+def test_validate_with_guard_success():
     class MockGuard:
         def validate(self, data):
             return MockResult(validated_output="clean text")
@@ -23,7 +22,7 @@ async def test_validate_with_guard_success():
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
-        response = await _validate_with_guard(
+        response = _validate_with_guard(
             data="hello",
             validators=[],
             request_log_crud=mock_request_log_crud,
@@ -37,8 +36,7 @@ async def test_validate_with_guard_success():
     assert response.data.response_id is not None
 
 
-@pytest.mark.asyncio
-async def test_validate_with_guard_validation_error():
+def test_validate_with_guard_validation_error():
     class MockGuard:
         def validate(self, data):
             return MockResult(validated_output=None)
@@ -47,7 +45,7 @@ async def test_validate_with_guard_validation_error():
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
-        response = await _validate_with_guard(
+        response = _validate_with_guard(
             data="bad text",
             validators=[],
             request_log_crud=mock_request_log_crud,
@@ -61,13 +59,12 @@ async def test_validate_with_guard_validation_error():
     assert response.error
 
 
-@pytest.mark.asyncio
-async def test_validate_with_guard_exception():
+def test_validate_with_guard_exception():
     with patch(
         "app.api.routes.guardrails.build_guard",
         side_effect=Exception("Invalid config"),
     ):
-        response = await _validate_with_guard(
+        response = _validate_with_guard(
             data="text",
             validators=[],
             request_log_crud=mock_request_log_crud,
