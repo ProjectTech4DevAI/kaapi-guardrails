@@ -1,3 +1,4 @@
+import logging
 from typing import Any, List, Optional
 from uuid import UUID
 
@@ -9,6 +10,8 @@ from app.core.enum import Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
 from app.schemas.validator_config import ValidatorBatchCreate, ValidatorCreate
 from app.utils import now, split_validator_payload
+
+logger = logging.getLogger(__name__)
 
 
 class ValidatorConfigCrud:
@@ -66,8 +69,10 @@ class ValidatorConfigCrud:
                 objs.append(obj)
 
             session.add_all(objs)
-        except Exception as e:
-            print(e)
+        except Exception:
+            session.rollback()
+            logger.exception("Failed to construct/add validator batch")
+            raise
 
         try:
             session.commit()
@@ -77,6 +82,9 @@ class ValidatorConfigCrud:
                 400,
                 "Validator batch creation failed",
             )
+        except Exception:
+            session.rollback()
+            raise
 
         for obj in objs:
             session.refresh(obj)
