@@ -13,12 +13,17 @@ class ValidatorBase(SQLModel):
 
     type: ValidatorType
     stage: Stage
-    on_fail_action: GuardrailOnFail
+    on_fail_action: GuardrailOnFail = GuardrailOnFail.Fix
     is_enabled: bool = True
 
 
 class ValidatorCreate(ValidatorBase):
     pass
+
+
+class ValidatorBatchCreate(SQLModel):
+    validators: list[ValidatorCreate]
+    config_id: UUID
 
 
 class ValidatorUpdate(SQLModel):
@@ -31,4 +36,7 @@ class ValidatorUpdate(SQLModel):
 
 
 class ValidatorResponse(ValidatorBase):
-    pass
+    id: UUID
+    config_id: UUID
+    created_at: datetime
+    updated_at: datetime

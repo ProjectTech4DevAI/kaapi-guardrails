@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from app.api.deps import AuthDep, SessionDep
 from app.core.enum import Stage, ValidatorType
 from app.schemas.validator_config import (
+    ValidatorBatchCreate,
     ValidatorCreate,
     ValidatorResponse,
     ValidatorUpdate,
@@ -34,6 +35,20 @@ def create_validator(
     return APIResponse.success_response(data=response_model)
 
 
+@router.post("/batch", response_model=APIResponse[list[ValidatorResponse]])
+def create_validators_batch(
+    payload: ValidatorBatchCreate,
+    session: SessionDep,
+    organization_id: int,
+    project_id: int,
+    _: AuthDep,
+):
+    response_model = validator_config_crud.create_many(
+        session, organization_id, project_id, payload
+    )
+    return APIResponse.success_response(data=response_model)
+
+
 @router.get("/", response_model=APIResponse[list[ValidatorResponse]])
 def list_validators(
     organization_id: int,
@@ -45,6 +60,20 @@ def list_validators(
 ):
     response_model = validator_config_crud.list(
         session, organization_id, project_id, stage, type
+    )
+    return APIResponse.success_response(data=response_model)
+
+
+@router.get("{config_id}", response_model=APIResponse[list[ValidatorResponse]])
+def list_validators_by_config_id(
+    config_id: UUID,
+    organization_id: int,
+    project_id: int,
+    session: SessionDep,
+    _: AuthDep,
+):
+    response_model = validator_config_crud.list_by_config_id(
+        session, organization_id, project_id, config_id
     )
     return APIResponse.success_response(data=response_model)
 

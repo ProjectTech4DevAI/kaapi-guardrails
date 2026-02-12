@@ -134,3 +134,28 @@ class TestUpdate:
 
         assert result["languages"] == ["en", "hi"]
         assert result["severity"] == "all"
+
+
+class TestListByConfigId:
+    def test_list_by_config_id_returns_flattened_rows(
+        self, sample_validator, mock_session
+    ):
+        sample_validator.config_id = uuid.uuid4()
+        sample_validator.config = {"severity": "high"}
+
+        mock_exec_result = MagicMock()
+        mock_exec_result.all.return_value = [sample_validator]
+        mock_session.exec.return_value = mock_exec_result
+
+        result = validator_config_crud.list_by_config_id(
+            mock_session,
+            TEST_ORGANIZATION_ID,
+            TEST_PROJECT_ID,
+            sample_validator.config_id,
+        )
+
+        assert len(result) == 1
+        assert result[0]["id"] == TEST_VALIDATOR_ID
+        assert result[0]["severity"] == "high"
+        assert "config" not in result[0]
+        mock_session.exec.assert_called_once()

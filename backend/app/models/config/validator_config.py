@@ -33,6 +33,11 @@ class ValidatorConfig(SQLModel, table=True):
         sa_column_kwargs={"comment": "Identifier for the project"},
     )
 
+    config_id: UUID = Field(
+        default_factory=uuid4,
+        sa_column_kwargs={"comment": "Unique identifier for the configuration"},
+    )
+
     type: ValidatorType = Field(
         nullable=False,
         sa_column_kwargs={"comment": "Type of the validator"},
@@ -86,6 +91,7 @@ class ValidatorConfig(SQLModel, table=True):
         UniqueConstraint(
             "organization_id",
             "project_id",
+            "config_id",
             "type",
             "stage",
             name="uq_validator_identity",

@@ -2,6 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.core.enum import GuardrailOnFail
+from app.schemas.guardrail_config import GuardrailRequest
 from app.tests.guardrails_mocks import MockResult
 from app.tests.utils.constants import SAFE_TEXT_FIELD, VALIDATE_API_PATH
 
@@ -89,34 +91,55 @@ def test_guardrails_internal_error(client, mock_crud):
     assert "Invalid validator config" in body["error"]
 
 
-def test_validate_guardrails_accepts_validator_config_payload_shape(client):
-    class MockGuard:
-        def validate(self, data):
-            return MockResult(validated_output="clean text")
+def test_guardrail_request_normalizes_validator_config_payload():
+    payload = {
+        "request_id": request_id,
+        "input": "hello world",
+        "validators": [
+            {
+                "type": "uli_slur_match",
+                "stage": "input",
+                "on_fail_action": "fix",
+                "is_enabled": True,
+                "id": "55ddfc03-1b70-453b-80c8-a1de449a02ee",
+                "config_id": "15c0f5bc-5e6c-412c-979b-f9b988334d1e",
+                "created_at": "2026-02-12T14:50:30.936285",
+                "updated_at": "2026-02-12T14:50:30.936294",
+                "organization_id": 1,
+                "project_id": 1,
+                "severity": "high",
+            }
+        ],
+    }
 
-    with patch(build_guard_path, return_value=MockGuard()):
-        response = client.post(
-            VALIDATE_API_PATH,
-            json={
-                "request_id": request_id,
-                "input": "Mai thak gayi hu saala, you slut cunt faggot.",
-                "validators": [
-                    {
-                        "type": "uli_slur_match",
-                        "stage": "input",
-                        "on_fail_action": "fix",
-                        "is_enabled": True,
-                        "id": "028b1442-7414-4a4a-b484-f66d511709d3",
-                        "organization_id": 1,
-                        "project_id": 1,
-                        "created_at": "2026-02-11T05:49:55.000814",
-                        "updated_at": "2026-02-11T07:47:30.429505",
-                    }
-                ],
-            },
-        )
+    request = GuardrailRequest.model_validate(payload)
+    validator = request.validators[0]
+    validator_dump = validator.model_dump()
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["success"] is True
-    assert body["data"][SAFE_TEXT_FIELD] == "clean text"
+    assert validator_dump["type"] == "uli_slur_match"
+    assert validator_dump["on_fail"] == GuardrailOnFail.Fix
+    assert validator_dump["severity"] == "high"
+    assert "config_id" not in validator_dump
+    assert "id" not in validator_dump
+    assert "organization_id" not in validator_dump
+    assert "project_id" not in validator_dump
+
+
+def test_guardrail_request_preserves_on_fail_when_present():
+    payload = {
+        "request_id": request_id,
+        "input": "hello world",
+        "validators": [
+            {
+                "type": "pii_remover",
+                "on_fail": "rephrase",
+                "on_fail_action": "fix",
+            }
+        ],
+    }
+
+    request = GuardrailRequest.model_validate(payload)
+    validator_dump = request.validators[0].model_dump()
+
+    assert validator_dump["type"] == "pii_remover"
+    assert validator_dump["on_fail"] == GuardrailOnFail.Rephrase

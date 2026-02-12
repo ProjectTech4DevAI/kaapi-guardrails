@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 
 from app.core.enum import Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
-from app.schemas.validator_config import ValidatorCreate
+from app.schemas.validator_config import ValidatorBatchCreate, ValidatorCreate
 from app.utils import now, split_validator_payload
 
 
@@ -43,6 +43,45 @@ class ValidatorConfigCrud:
         session.refresh(obj)
         return self.flatten(obj)
 
+    def create_many(
+        self,
+        session: Session,
+        organization_id: int,
+        project_id: int,
+        payloads: ValidatorBatchCreate,
+    ) -> list[dict]:
+        objs = []
+
+        try:
+            for payload in payloads.validators:
+                data = payload.model_dump()
+                model_fields, config_fields = split_validator_payload(data)
+                obj = ValidatorConfig(
+                    organization_id=organization_id,
+                    project_id=project_id,
+                    config_id=payloads.config_id,
+                    config=config_fields,
+                    **model_fields,
+                )
+                objs.append(obj)
+
+            session.add_all(objs)
+        except Exception as e:
+            print(e)
+
+        try:
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            raise HTTPException(
+                400,
+                "Validator batch creation failed",
+            )
+
+        for obj in objs:
+            session.refresh(obj)
+        return [self.flatten(r) for r in objs]
+
     def list(
         self,
         session: Session,
@@ -50,7 +89,7 @@ class ValidatorConfigCrud:
         project_id: int,
         stage: Optional[Stage] = None,
         type: Optional[ValidatorType] = None,
-    ) -> list[dict]:
+    ) -> List[dict]:
         query = select(ValidatorConfig).where(
             ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,
@@ -62,6 +101,21 @@ class ValidatorConfigCrud:
         if type:
             query = query.where(ValidatorConfig.type == type)
 
+        rows = session.exec(query).all()
+        return [self.flatten(r) for r in rows]
+
+    def list_by_config_id(
+        self,
+        session: Session,
+        organization_id: int,
+        project_id: int,
+        config_id: UUID,
+    ) -> List[dict]:
+        query = select(ValidatorConfig).where(
+            ValidatorConfig.organization_id == organization_id,
+            ValidatorConfig.project_id == project_id,
+            ValidatorConfig.config_id == config_id,
+        )
         rows = session.exec(query).all()
         return [self.flatten(r) for r in rows]
 
@@ -118,7 +172,8 @@ class ValidatorConfigCrud:
 
     def flatten(self, row: ValidatorConfig) -> dict:
         base = row.model_dump(exclude={"config"})
-        return {**base, **(row.config or {})}
+        config = row.config or {}
+        return {**base, **config}
 
 
 validator_config_crud = ValidatorConfigCrud()

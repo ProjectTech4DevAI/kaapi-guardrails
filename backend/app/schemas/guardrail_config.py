@@ -56,6 +56,7 @@ class GuardrailRequest(SQLModel):
 
         drop_fields = {
             "id",
+            "config_id",
             "organization_id",
             "project_id",
             "stage",

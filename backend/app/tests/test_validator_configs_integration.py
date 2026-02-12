@@ -77,6 +77,15 @@ class BaseValidatorTest:
             params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
         return client.get(f"{BASE_URL}{params_str}")
 
+    def list_validators_by_config_id(self, client, config_id, **query_params):
+        """Helper to list validators by config_id."""
+        params_str = (
+            f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
+        )
+        if query_params:
+            params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
+        return client.get(f"{BASE_URL}by-config/{config_id}{params_str}")
+
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
         return client.patch(
@@ -103,17 +112,21 @@ class TestCreateValidator(BaseValidatorTest):
         assert data["languages"] == ["en", "hi"]
         assert "id" in data
 
-    def test_create_validator_duplicate_raises_400(
+    def test_create_validator_duplicate_payload_allows_new_config_id(
         self, integration_client, clear_database
     ):
-        """Test that creating duplicate validator raises 400."""
+        """Same payload should succeed because create() generates a new config_id."""
         # First request should succeed
         response1 = self.create_validator(integration_client, "minimal")
         assert response1.status_code == 200
 
-        # Second request with same unique keys should fail
+        # Second request with same payload should also succeed
         response2 = self.create_validator(integration_client, "minimal")
-        assert response2.status_code == 400
+        assert response2.status_code == 200
+        assert (
+            response1.json()["data"]["config_id"]
+            != response2.json()["data"]["config_id"]
+        )
 
     def test_create_validator_missing_required_fields(
         self, integration_client, clear_database
@@ -215,6 +228,45 @@ class TestGetValidator(BaseValidatorTest):
         )
 
         assert response.status_code == 404
+
+
+class TestListValidatorsByConfigId(BaseValidatorTest):
+    """Tests for GET /guardrails/validators/configs/by-config/{config_id} endpoint."""
+
+    def test_list_validators_by_config_id_success(
+        self, integration_client, clear_database
+    ):
+        config_id = str(uuid.uuid4())
+        payload = {
+            "config_id": config_id,
+            "validators": [
+                VALIDATOR_PAYLOADS["lexical_slur"],
+                VALIDATOR_PAYLOADS["pii_remover_input"],
+            ],
+        }
+
+        create_response = integration_client.post(
+            f"{BASE_URL}batch{DEFAULT_QUERY_PARAMS}",
+            json=payload,
+        )
+        assert create_response.status_code == 200
+
+        response = self.list_validators_by_config_id(integration_client, config_id)
+        assert response.status_code == 200
+
+        data = response.json()["data"]
+        assert len(data) == 2
+        assert all(item["config_id"] == config_id for item in data)
+        assert all("config" not in item for item in data)
+
+    def test_list_validators_by_config_id_empty(
+        self, integration_client, clear_database
+    ):
+        response = self.list_validators_by_config_id(
+            integration_client, str(uuid.uuid4())
+        )
+        assert response.status_code == 200
+        assert response.json()["data"] == []
 
 
 class TestUpdateValidator(BaseValidatorTest):
