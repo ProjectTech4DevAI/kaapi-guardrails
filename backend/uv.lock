@@ -247,7 +247,7 @@ requires-dist = [
     { name = "emoji" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.114.2,<1.0.0" },
     { name = "ftfy" },
-    { name = "guardrails-ai", specifier = ">=0.7.2" },
+    { name = "guardrails-ai", specifier = ">=0.8.0" },
     { name = "httpx", specifier = ">=0.25.1,<1.0.0" },
     { name = "jinja2", specifier = ">=3.1.4,<4.0.0" },
     { name = "numpy", specifier = ">=1.24.0" },
@@ -1368,9 +1368,9 @@ dependencies = [
     { name = "typer" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/a3/a0789e51cee89c1d9eb52460e1000108904c733ab9fa4c1447787a0a5e5c/guardrails_ai-0.7.2.tar.gz", hash = "sha256:49b7dd6dffc26959cb8a44a6ca8ec165c4b3da188dd8890664c0820bbf311838", size = 170503 }
+sdist = { url = "https://files.pythonhosted.org/packages/67/e6/056cfec910981fcf22f54bdd96a58f8794b7d38f0455dbbe760e26963696/guardrails_ai-0.8.0.tar.gz", hash = "sha256:8795d3c636f9e63edf6f86ffce11c86d38041884408e83d94411f0e902356adf", size = 170771, upload-time = "2026-02-06T18:36:13.438Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/b5/de811fc009df3cc314428fd2099db71d893f8596c0401f27259ca81abe64/guardrails_ai-0.7.2-py3-none-any.whl", hash = "sha256:7559baf6218fbca273b3d41a56ca97facbcbce61d524dc510bc3829237710029", size = 236103 },
+    { url = "https://files.pythonhosted.org/packages/bb/d6/6cf5979efc08e9cf9e1ac528e3792d2f5dbb299807b96224af4938c214ca/guardrails_ai-0.8.0-py3-none-any.whl", hash = "sha256:2f8189cff6eb9ff75ebeb9ca3507de3c4dc0a1c243ebe854b4e82a6f5863bc68", size = 236321, upload-time = "2026-02-06T18:36:14.505Z" },
 ]
 
 [[package]]
