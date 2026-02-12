@@ -37,10 +37,9 @@ def run_guardrails(
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    request_log = request_log_crud.create(request_id, input_text=payload.input)
+    request_log = request_log_crud.create(request_id, payload)
     return _validate_with_guard(
-        payload.input,
-        payload.validators,
+        payload,
         request_log_crud,
         request_log.id,
         validator_log_crud,
@@ -79,8 +78,7 @@ def list_validators(_: AuthDep):
 
 
 def _validate_with_guard(
-    data: str,
-    validators: list,
+    payload: GuardrailRequest,
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
@@ -94,6 +92,8 @@ def _validate_with_guard(
     while still safely handling unexpected runtime errors.
     """
     response_id = uuid.uuid4()
+    data = payload.input
+    validators = payload.validators
     guard: Guard | None = None
 
     def _finalize(
@@ -125,7 +125,7 @@ def _validate_with_guard(
 
         if guard is not None:
             add_validator_logs(
-                guard, request_log_id, validator_log_crud, suppress_pass_logs
+                guard, request_log_id, validator_log_crud, payload, suppress_pass_logs
             )
 
         rephrase_needed = validated_output is not None and validated_output.startswith(
@@ -175,6 +175,7 @@ def add_validator_logs(
     guard: Guard,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
+    payload: GuardrailRequest,
     suppress_pass_logs: bool = False,
 ):
     history = getattr(guard, "history", None)
@@ -202,6 +203,8 @@ def add_validator_logs(
 
         validator_log = ValidatorLog(
             request_id=request_log_id,
+            organization_id=payload.organization_id,
+            project_id=payload.project_id,
             name=log.validator_name,
             input=str(log.value_before_validation),
             output=log.value_after_validation,

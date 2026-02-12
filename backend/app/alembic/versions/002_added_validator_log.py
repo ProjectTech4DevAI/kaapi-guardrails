@@ -23,6 +23,8 @@ def upgrade() -> None:
     op.create_table(
         "validator_log",
         sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("organization_id", sa.Integer(), nullable=False),
+        sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("request_id", sa.Uuid(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("input", sqlmodel.sql.sqltypes.AutoString(), nullable=False),

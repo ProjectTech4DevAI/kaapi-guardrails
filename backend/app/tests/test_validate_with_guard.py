@@ -4,13 +4,28 @@ from uuid import uuid4
 import pytest
 
 from app.api.routes.guardrails import _validate_with_guard
+from app.schemas.guardrail_config import GuardrailRequest
 from app.tests.guardrails_mocks import MockResult
+from app.tests.seed_data import (
+    VALIDATOR_TEST_ORGANIZATION_ID,
+    VALIDATOR_TEST_PROJECT_ID,
+)
 from app.utils import APIResponse
 
 
 mock_request_log_crud = MagicMock()
 mock_validator_log_crud = MagicMock()
 mock_request_log_id = uuid4()
+
+
+def _build_payload(input_text: str) -> GuardrailRequest:
+    return GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input=input_text,
+        validators=[],
+    )
 
 
 def test_validate_with_guard_success():
@@ -23,8 +38,7 @@ def test_validate_with_guard_success():
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            data="hello",
-            validators=[],
+            payload=_build_payload("hello"),
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -46,8 +60,7 @@ def test_validate_with_guard_validation_error():
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            data="bad text",
-            validators=[],
+            payload=_build_payload("bad text"),
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -65,8 +78,7 @@ def test_validate_with_guard_exception():
         side_effect=Exception("Invalid config"),
     ):
         response = _validate_with_guard(
-            data="text",
-            validators=[],
+            payload=_build_payload("text"),
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
