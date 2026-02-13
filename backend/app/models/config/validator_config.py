@@ -15,8 +15,7 @@ from app.utils import now
 class ValidatorConfig(SQLModel, table=True):
     __tablename__ = "validator_config"
 
-    id: UUID = Field(
-        default_factory=uuid4,
+    id: int = Field(
         primary_key=True,
         sa_column_kwargs={
             "comment": "Unique identifier for the validator configuration"
@@ -34,19 +33,40 @@ class ValidatorConfig(SQLModel, table=True):
     )
 
     type: ValidatorType = Field(
-        nullable=False,
-        sa_column_kwargs={"comment": "Type of the validator"},
+        sa_column=Column(
+            sa.Enum(
+                ValidatorType,
+                native_enum=False,
+                create_constraint=False,
+            ),
+            nullable=False,
+            comment="Type of the validator",
+        ),
     )
 
     stage: Stage = Field(
-        nullable=False,
-        sa_column_kwargs={"comment": "Stage at which the validator is applied"},
+        sa_column=Column(
+            sa.Enum(
+                Stage,
+                native_enum=False,
+                create_constraint=False,
+            ),
+            nullable=False,
+            comment="Stage at which the validator is applied",
+        ),
     )
 
     on_fail_action: GuardrailOnFail = Field(
         default=GuardrailOnFail.Fix,
-        nullable=False,
-        sa_column_kwargs={"comment": "Action to take when the validator fails"},
+        sa_column=Column(
+            sa.Enum(
+                GuardrailOnFail,
+                native_enum=False,
+                create_constraint=False,
+            ),
+            nullable=False,
+            comment="Action to take when the validator fails",
+        ),
     )
 
     config: dict[str, Any] = SQLField(

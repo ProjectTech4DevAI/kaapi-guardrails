@@ -1,5 +1,3 @@
-import uuid
-
 import pytest
 from sqlmodel import Session, delete
 
@@ -86,6 +84,67 @@ class BaseValidatorTest:
     def delete_validator(self, client, validator_id):
         """Helper to delete a validator."""
         return client.delete(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}")
+
+
+class TestBatchValidatorEndpoints(BaseValidatorTest):
+    """Tests for batch create/fetch validator endpoints."""
+
+    def test_create_validators_batch_success(self, integration_client, clear_database):
+        payload = {
+            "validators": [
+                {
+                    "type": "uli_slur_match",
+                    "stage": "input",
+                    "on_fail_action": "fix",
+                    "is_enabled": True,
+                    "severity": "all",
+                },
+                {
+                    "type": "pii_remover",
+                    "stage": "output",
+                    "on_fail_action": "fix",
+                    "is_enabled": True,
+                },
+            ]
+        }
+
+        response = integration_client.post(
+            f"{BASE_URL}batch{DEFAULT_QUERY_PARAMS}",
+            json=payload,
+        )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data) == 2
+        assert all(isinstance(item["id"], int) for item in data)
+
+    def test_fetch_validators_batch_success(self, integration_client, clear_database):
+        first = self.create_validator(integration_client, "lexical_slur")
+        second = self.create_validator(integration_client, "pii_remover_output")
+        first_data = first.json()["data"]
+        second_data = second.json()["data"]
+
+        payload = [
+            {
+                "validator_config": first_data["id"],
+                "validator_type": first_data["type"],
+            },
+            {
+                "validator_config": second_data["id"],
+                "validator_type": second_data["type"],
+            },
+        ]
+
+        response = integration_client.post(
+            f"{BASE_URL}batch/fetch{DEFAULT_QUERY_PARAMS}",
+            json=payload,
+        )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data) == 2
+        returned_ids = {item["id"] for item in data}
+        assert returned_ids == {first_data["id"], second_data["id"]}
 
 
 class TestCreateValidator(BaseValidatorTest):
@@ -198,7 +257,7 @@ class TestGetValidator(BaseValidatorTest):
 
     def test_get_validator_not_found(self, integration_client, clear_database):
         """Test retrieving non-existent validator returns 404."""
-        fake_id = uuid.uuid4()
+        fake_id = 999999
         response = self.get_validator(integration_client, fake_id)
 
         assert response.status_code == 404
@@ -263,7 +322,7 @@ class TestUpdateValidator(BaseValidatorTest):
 
     def test_update_validator_not_found(self, integration_client, clear_database):
         """Test updating non-existent validator returns 404."""
-        fake_id = uuid.uuid4()
+        fake_id = 999999
         update_payload = {"is_enabled": False}
 
         response = self.update_validator(integration_client, fake_id, update_payload)
@@ -292,7 +351,7 @@ class TestDeleteValidator(BaseValidatorTest):
 
     def test_delete_validator_not_found(self, integration_client, clear_database):
         """Test deleting non-existent validator returns 404."""
-        fake_id = uuid.uuid4()
+        fake_id = 999999
         response = self.delete_validator(integration_client, fake_id)
 
         assert response.status_code == 404
