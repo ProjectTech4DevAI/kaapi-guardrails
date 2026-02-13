@@ -1,6 +1,5 @@
 import logging
 from typing import Any, List, Optional
-from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +7,11 @@ from sqlmodel import Session, select
 
 from app.core.enum import Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
-from app.schemas.validator_config import ValidatorBatchCreate, ValidatorCreate
+from app.schemas.validator_config import (
+    ValidatorBatchCreate,
+    ValidatorBatchFetchItem,
+    ValidatorCreate,
+)
 from app.utils import now, split_validator_payload
 
 logger = logging.getLogger(__name__)
@@ -62,7 +65,6 @@ class ValidatorConfigCrud:
                 obj = ValidatorConfig(
                     organization_id=organization_id,
                     project_id=project_id,
-                    config_id=payloads.config_id,
                     config=config_fields,
                     **model_fields,
                 )
@@ -112,25 +114,41 @@ class ValidatorConfigCrud:
         rows = session.exec(query).all()
         return [self.flatten(r) for r in rows]
 
-    def list_by_config_id(
+    def list_by_batch_items(
         self,
         session: Session,
         organization_id: int,
         project_id: int,
-        config_id: UUID,
+        payload: List[ValidatorBatchFetchItem],
     ) -> List[dict]:
+        if not payload:
+            return []
+
+        ids = list({item.validator_config for item in payload})
         query = select(ValidatorConfig).where(
             ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,
-            ValidatorConfig.config_id == config_id,
+            ValidatorConfig.id.in_(ids),
         )
         rows = session.exec(query).all()
-        return [self.flatten(r) for r in rows]
+
+        flattened_rows = {}
+        for row in rows:
+            row_type = row.type.value if hasattr(row.type, "value") else str(row.type)
+            flattened_rows[(row.id, row_type)] = self.flatten(row)
+
+        response: List[dict] = []
+        for item in payload:
+            maybe_row = flattened_rows.get((item.validator_config, item.validator_type))
+            if maybe_row:
+                response.append(maybe_row)
+
+        return response
 
     def get(
         self,
         session: Session,
-        id: UUID,
+        id: int,
         organization_id: int,
         project_id: int,
     ) -> ValidatorConfig:

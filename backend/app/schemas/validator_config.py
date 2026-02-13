@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
 
 from pydantic import ConfigDict
 from sqlmodel import SQLModel
@@ -23,7 +22,11 @@ class ValidatorCreate(ValidatorBase):
 
 class ValidatorBatchCreate(SQLModel):
     validators: list[ValidatorCreate]
-    config_id: UUID
+
+
+class ValidatorBatchFetchItem(SQLModel):
+    validator_type: str
+    validator_config: int
 
 
 class ValidatorUpdate(SQLModel):
@@ -36,7 +39,6 @@ class ValidatorUpdate(SQLModel):
 
 
 class ValidatorResponse(ValidatorBase):
-    id: UUID
-    config_id: UUID
+    id: int
     created_at: datetime
     updated_at: datetime

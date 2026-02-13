@@ -1,5 +1,3 @@
-import uuid
-
 import pytest
 from sqlmodel import Session, delete
 
@@ -66,7 +64,7 @@ class BaseValidatorTest:
 
     def get_validator(self, client, validator_id):
         """Helper to get a specific validator."""
-        return client.get(f"{BASE_URL}{validator_id}{DEFAULT_QUERY_PARAMS}")
+        return client.get(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}")
 
     def list_validators(self, client, **query_params):
         """Helper to list validators with optional filters."""
@@ -77,15 +75,6 @@ class BaseValidatorTest:
             params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
         return client.get(f"{BASE_URL}{params_str}")
 
-    def list_validators_by_config_id(self, client, config_id, **query_params):
-        """Helper to list validators by config_id."""
-        params_str = (
-            f"?organization_id={TEST_ORGANIZATION_ID}&project_id={TEST_PROJECT_ID}"
-        )
-        if query_params:
-            params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
-        return client.get(f"{BASE_URL}{config_id}{params_str}")
-
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
         return client.patch(
@@ -95,6 +84,67 @@ class BaseValidatorTest:
     def delete_validator(self, client, validator_id):
         """Helper to delete a validator."""
         return client.delete(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}")
+
+
+class TestBatchValidatorEndpoints(BaseValidatorTest):
+    """Tests for batch create/fetch validator endpoints."""
+
+    def test_create_validators_batch_success(self, integration_client, clear_database):
+        payload = {
+            "validators": [
+                {
+                    "type": "uli_slur_match",
+                    "stage": "input",
+                    "on_fail_action": "fix",
+                    "is_enabled": True,
+                    "severity": "all",
+                },
+                {
+                    "type": "pii_remover",
+                    "stage": "output",
+                    "on_fail_action": "fix",
+                    "is_enabled": True,
+                },
+            ]
+        }
+
+        response = integration_client.post(
+            f"{BASE_URL}batch{DEFAULT_QUERY_PARAMS}",
+            json=payload,
+        )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data) == 2
+        assert all(isinstance(item["id"], int) for item in data)
+
+    def test_fetch_validators_batch_success(self, integration_client, clear_database):
+        first = self.create_validator(integration_client, "lexical_slur")
+        second = self.create_validator(integration_client, "pii_remover_output")
+        first_data = first.json()["data"]
+        second_data = second.json()["data"]
+
+        payload = [
+            {
+                "validator_config": first_data["id"],
+                "validator_type": first_data["type"],
+            },
+            {
+                "validator_config": second_data["id"],
+                "validator_type": second_data["type"],
+            },
+        ]
+
+        response = integration_client.post(
+            f"{BASE_URL}batch/fetch{DEFAULT_QUERY_PARAMS}",
+            json=payload,
+        )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data) == 2
+        returned_ids = {item["id"] for item in data}
+        assert returned_ids == {first_data["id"], second_data["id"]}
 
 
 class TestCreateValidator(BaseValidatorTest):
@@ -112,21 +162,17 @@ class TestCreateValidator(BaseValidatorTest):
         assert data["languages"] == ["en", "hi"]
         assert "id" in data
 
-    def test_create_validator_duplicate_payload_allows_new_config_id(
+    def test_create_validator_duplicate_raises_400(
         self, integration_client, clear_database
     ):
-        """Same payload should succeed because create() generates a new config_id."""
+        """Test that creating duplicate validator raises 400."""
         # First request should succeed
         response1 = self.create_validator(integration_client, "minimal")
         assert response1.status_code == 200
 
-        # Second request with same payload should also succeed
+        # Second request with same unique keys should fail
         response2 = self.create_validator(integration_client, "minimal")
-        assert response2.status_code == 200
-        assert (
-            response1.json()["data"]["config_id"]
-            != response2.json()["data"]["config_id"]
-        )
+        assert response2.status_code == 400
 
     def test_create_validator_missing_required_fields(
         self, integration_client, clear_database
@@ -194,84 +240,40 @@ class TestGetValidator(BaseValidatorTest):
     """Tests for GET /guardrails/validators/configs/{id} endpoint."""
 
     def test_get_validator_success(self, integration_client, clear_database):
-        """Test retrieval by config_id returns validators list."""
+        """Test successful validator retrieval."""
         # Create a validator
         create_response = self.create_validator(
             integration_client, "lexical_slur", severity="all"
         )
         validator_id = create_response.json()["data"]["id"]
-        config_id = create_response.json()["data"]["config_id"]
 
-        # Retrieve by config_id
-        response = self.get_validator(integration_client, config_id)
+        # Retrieve it
+        response = self.get_validator(integration_client, validator_id)
 
         assert response.status_code == 200
         data = response.json()["data"]
-        assert isinstance(data, list)
-        assert len(data) == 1
-        assert data[0]["id"] == validator_id
-        assert data[0]["severity"] == "all"
+        assert data["id"] == validator_id
+        assert data["severity"] == "all"
 
     def test_get_validator_not_found(self, integration_client, clear_database):
-        """Test retrieving non-existent config_id returns empty list."""
-        fake_id = uuid.uuid4()
+        """Test retrieving non-existent validator returns 404."""
+        fake_id = 999999
         response = self.get_validator(integration_client, fake_id)
 
-        assert response.status_code == 200
-        assert response.json()["data"] == []
+        assert response.status_code == 404
 
     def test_get_validator_wrong_org(self, integration_client, clear_database):
-        """Test that accessing from different org returns empty list."""
+        """Test that accessing validator from different org returns 404."""
         # Create a validator for org 1
         create_response = self.create_validator(integration_client, "minimal")
-        config_id = create_response.json()["data"]["config_id"]
+        validator_id = create_response.json()["data"]["id"]
 
         # Try to access it as different org
         response = integration_client.get(
-            f"{BASE_URL}{config_id}?organization_id=2&project_id=1",
+            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
         )
 
-        assert response.status_code == 200
-        assert response.json()["data"] == []
-
-
-class TestListValidatorsByConfigId(BaseValidatorTest):
-    """Tests for GET /guardrails/validators/configs/{config_id} endpoint."""
-
-    def test_list_validators_by_config_id_success(
-        self, integration_client, clear_database
-    ):
-        config_id = str(uuid.uuid4())
-        payload = {
-            "config_id": config_id,
-            "validators": [
-                VALIDATOR_PAYLOADS["lexical_slur"],
-                VALIDATOR_PAYLOADS["pii_remover_input"],
-            ],
-        }
-
-        create_response = integration_client.post(
-            f"{BASE_URL}batch{DEFAULT_QUERY_PARAMS}",
-            json=payload,
-        )
-        assert create_response.status_code == 200
-
-        response = self.list_validators_by_config_id(integration_client, config_id)
-        assert response.status_code == 200
-
-        data = response.json()["data"]
-        assert len(data) == 2
-        assert all(item["config_id"] == config_id for item in data)
-        assert all("config" not in item for item in data)
-
-    def test_list_validators_by_config_id_empty(
-        self, integration_client, clear_database
-    ):
-        response = self.list_validators_by_config_id(
-            integration_client, str(uuid.uuid4())
-        )
-        assert response.status_code == 200
-        assert response.json()["data"] == []
+        assert response.status_code == 404
 
 
 class TestUpdateValidator(BaseValidatorTest):
@@ -320,7 +322,7 @@ class TestUpdateValidator(BaseValidatorTest):
 
     def test_update_validator_not_found(self, integration_client, clear_database):
         """Test updating non-existent validator returns 404."""
-        fake_id = uuid.uuid4()
+        fake_id = 999999
         update_payload = {"is_enabled": False}
 
         response = self.update_validator(integration_client, fake_id, update_payload)
@@ -336,7 +338,6 @@ class TestDeleteValidator(BaseValidatorTest):
         # Create a validator
         create_response = self.create_validator(integration_client, "minimal")
         validator_id = create_response.json()["data"]["id"]
-        config_id = create_response.json()["data"]["config_id"]
 
         # Delete it
         response = self.delete_validator(integration_client, validator_id)
@@ -345,13 +346,12 @@ class TestDeleteValidator(BaseValidatorTest):
         assert response.json()["success"] is True
 
         # Verify it's deleted
-        get_response = self.get_validator(integration_client, config_id)
-        assert get_response.status_code == 200
-        assert get_response.json()["data"] == []
+        get_response = self.get_validator(integration_client, validator_id)
+        assert get_response.status_code == 404
 
     def test_delete_validator_not_found(self, integration_client, clear_database):
         """Test deleting non-existent validator returns 404."""
-        fake_id = uuid.uuid4()
+        fake_id = 999999
         response = self.delete_validator(integration_client, fake_id)
 
         assert response.status_code == 404

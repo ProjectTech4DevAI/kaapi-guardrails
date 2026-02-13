@@ -1,5 +1,4 @@
 from typing import Optional
-from uuid import UUID
 
 from fastapi import APIRouter
 
@@ -7,6 +6,7 @@ from app.api.deps import AuthDep, SessionDep
 from app.core.enum import Stage, ValidatorType
 from app.schemas.validator_config import (
     ValidatorBatchCreate,
+    ValidatorBatchFetchItem,
     ValidatorCreate,
     ValidatorResponse,
     ValidatorUpdate,
@@ -64,23 +64,23 @@ def list_validators(
     return APIResponse.success_response(data=response_model)
 
 
-@router.get("/{config_id}", response_model=APIResponse[list[ValidatorResponse]])
-def list_validators_by_config_id(
-    config_id: UUID,
+@router.post("/batch/fetch", response_model=APIResponse[list[ValidatorResponse]])
+def fetch_validators_batch(
+    payload: list[ValidatorBatchFetchItem],
     organization_id: int,
     project_id: int,
     session: SessionDep,
     _: AuthDep,
 ):
-    response_model = validator_config_crud.list_by_config_id(
-        session, organization_id, project_id, config_id
+    response_model = validator_config_crud.list_by_batch_items(
+        session, organization_id, project_id, payload
     )
     return APIResponse.success_response(data=response_model)
 
 
 @router.get("/{id}", response_model=APIResponse[ValidatorResponse])
 def get_validator(
-    id: UUID,
+    id: int,
     organization_id: int,
     project_id: int,
     session: SessionDep,
@@ -92,7 +92,7 @@ def get_validator(
 
 @router.patch("/{id}", response_model=APIResponse[ValidatorResponse])
 def update_validator(
-    id: UUID,
+    id: int,
     organization_id: int,
     project_id: int,
     payload: ValidatorUpdate,
@@ -108,7 +108,7 @@ def update_validator(
 
 @router.delete("/{id}", response_model=APIResponse[dict])
 def delete_validator(
-    id: UUID,
+    id: int,
     organization_id: int,
     project_id: int,
     session: SessionDep,

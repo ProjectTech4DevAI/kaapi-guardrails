@@ -1,4 +1,3 @@
-import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +10,7 @@ from app.models.config.validator_config import ValidatorConfig
 # Test data constants
 TEST_ORGANIZATION_ID = 1
 TEST_PROJECT_ID = 1
-TEST_VALIDATOR_ID = uuid.uuid4()
+TEST_VALIDATOR_ID = 1
 TEST_TYPE = ValidatorType.LexicalSlur
 TEST_STAGE = Stage.Input
 TEST_ON_FAIL = GuardrailOnFail.Fix
@@ -134,28 +133,3 @@ class TestUpdate:
 
         assert result["languages"] == ["en", "hi"]
         assert result["severity"] == "all"
-
-
-class TestListByConfigId:
-    def test_list_by_config_id_returns_flattened_rows(
-        self, sample_validator, mock_session
-    ):
-        sample_validator.config_id = uuid.uuid4()
-        sample_validator.config = {"severity": "high"}
-
-        mock_exec_result = MagicMock()
-        mock_exec_result.all.return_value = [sample_validator]
-        mock_session.exec.return_value = mock_exec_result
-
-        result = validator_config_crud.list_by_config_id(
-            mock_session,
-            TEST_ORGANIZATION_ID,
-            TEST_PROJECT_ID,
-            sample_validator.config_id,
-        )
-
-        assert len(result) == 1
-        assert result[0]["id"] == TEST_VALIDATOR_ID
-        assert result[0]["severity"] == "high"
-        assert "config" not in result[0]
-        mock_session.exec.assert_called_once()
