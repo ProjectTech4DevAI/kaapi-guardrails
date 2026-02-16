@@ -21,7 +21,7 @@ router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
 
 @router.post(
-    "/", response_model=APIResponse[GuardrailResponse], response_model_exclude_none=True
+    "", response_model=APIResponse[GuardrailResponse], response_model_exclude_none=True
 )
 def run_guardrails(
     payload: GuardrailRequest,
