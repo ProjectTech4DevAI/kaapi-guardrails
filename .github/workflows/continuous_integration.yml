@@ -50,9 +50,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: |
-          uv sync
-          uv sync --dev
+        run: uv sync
         working-directory: backend
 
       - name: Install Guardrails hub validators
