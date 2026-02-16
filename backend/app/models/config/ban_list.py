@@ -14,7 +14,6 @@ class BanList(SQLModel, table=True):
     id: UUID = Field(
         default_factory=uuid4,
         primary_key=True,
-        index=True,
         sa_column_kwargs={"comment": "Unique identifier for the ban list entry"},
     )
 
@@ -70,6 +69,7 @@ class BanList(SQLModel, table=True):
         default_factory=now,
         nullable=False,
         sa_column_kwargs={
-            "comment": "Timestamp when the ban list entry was last updated"
+            "comment": "Timestamp when the ban list entry was last updated",
+            "onupdate": now,
         },
     )

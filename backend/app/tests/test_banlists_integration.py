@@ -86,14 +86,14 @@ class TestCreateBanList(BaseBanListTest):
 
 
 class TestListBanLists(BaseBanListTest):
-    def test_list_success(self, integration_client, clear_database, seed_db):
+    def test_list_success(self, integration_client, seed_db):
         response = self.list(integration_client)
 
         assert response.status_code == 200
         data = response.json()["data"]
         assert len(data) == 4
 
-    def test_filter_by_domain(self, integration_client, clear_database, seed_db):
+    def test_filter_by_domain(self, integration_client, seed_db):
         response = self.list(integration_client, domain="health")
 
         data = response.json()["data"]
@@ -118,7 +118,7 @@ class TestPublicAccess(BaseBanListTest):
 
 
 class TestGetBanList(BaseBanListTest):
-    def test_get_success(self, integration_client, clear_database, seed_db):
+    def test_get_success(self, integration_client, seed_db):
         list_resp = self.list(integration_client)
         ban_id = list_resp.json()["data"][0]["id"]
 
@@ -133,9 +133,10 @@ class TestGetBanList(BaseBanListTest):
 
         assert response.status_code == 200
         assert body["success"] is False
+        assert body["metadata"]["status_code"] == 404
         assert "Ban list not found" in body["error"]
 
-    def test_get_wrong_owner_private(self, integration_client, clear_database, seed_db):
+    def test_get_wrong_owner_private(self, integration_client, seed_db):
         list_resp = self.list(integration_client)
         private_ban_list = next(
             item for item in list_resp.json()["data"] if not item["is_public"]
@@ -151,7 +152,7 @@ class TestGetBanList(BaseBanListTest):
 
 
 class TestUpdateBanList(BaseBanListTest):
-    def test_update_success(self, integration_client, clear_database, seed_db):
+    def test_update_success(self, integration_client, seed_db):
         list_resp = self.list(integration_client)
         ban_id = list_resp.json()["data"][0]["id"]
 
@@ -166,7 +167,7 @@ class TestUpdateBanList(BaseBanListTest):
         data = response.json()["data"]
         assert data["banned_words"] == ["bad", "worse"]
 
-    def test_partial_update(self, integration_client, clear_database, seed_db):
+    def test_partial_update(self, integration_client, seed_db):
         list_resp = self.list(integration_client)
         ban_id = list_resp.json()["data"][0]["id"]
 
@@ -200,7 +201,7 @@ class TestUpdateBanList(BaseBanListTest):
 
 
 class TestDeleteBanList(BaseBanListTest):
-    def test_delete_success(self, integration_client, clear_database, seed_db):
+    def test_delete_success(self, integration_client, seed_db):
         list_resp = self.list(integration_client)
         ban_id = list_resp.json()["data"][0]["id"]
 
@@ -219,7 +220,7 @@ class TestDeleteBanList(BaseBanListTest):
         assert body["success"] is False
         assert "Ban list not found" in body["error"]
 
-    def test_delete_wrong_owner(self, integration_client, clear_database, seed_db):
+    def test_delete_wrong_owner(self, integration_client, seed_db):
         list_resp = self.list(integration_client)
         private_ban_list = next(
             item for item in list_resp.json()["data"] if not item["is_public"]

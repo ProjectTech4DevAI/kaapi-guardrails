@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlmodel import Session
 
@@ -11,7 +11,8 @@ class RequestLogCrud:
     def __init__(self, session: Session):
         self.session = session
 
-    def create(self, request_id: UUID, payload: GuardrailRequest) -> RequestLog:
+    def create(self, payload: GuardrailRequest) -> RequestLog:
+        request_id = UUID(payload.request_id)
         create_request_log = RequestLog(
             request_id=request_id,
             request_text=payload.input,

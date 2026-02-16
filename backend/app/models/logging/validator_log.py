@@ -22,7 +22,7 @@ class ValidatorLog(SQLModel, table=True):
     )
 
     organization_id: int = Field(
-        index=True,
+        nullable=False,
         sa_column_kwargs={"comment": "Identifier for the organization"},
     )
 

@@ -41,7 +41,7 @@ class BaseValidatorTest:
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
         return client.patch(
-            f"{BASE_URL}{validator_id}{DEFAULT_QUERY_PARAMS}", json=payload
+            f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}", json=payload
         )
 
     def delete_validator(self, client, validator_id):
@@ -91,7 +91,7 @@ class TestCreateValidator(BaseValidatorTest):
 class TestListValidators(BaseValidatorTest):
     """Tests for GET /guardrails/validators/configs endpoint."""
 
-    def test_list_validators_success(self, integration_client, clear_database, seed_db):
+    def test_list_validators_success(self, integration_client, seed_db):
         """Test successful validator listing."""
 
         response = self.list_validators(integration_client)
@@ -100,9 +100,7 @@ class TestListValidators(BaseValidatorTest):
         data = response.json()["data"]
         assert len(data) == 4
 
-    def test_list_validators_filter_by_stage(
-        self, integration_client, clear_database, seed_db
-    ):
+    def test_list_validators_filter_by_stage(self, integration_client, seed_db):
         """Test filtering validators by stage."""
 
         response = self.list_validators(integration_client, stage="input")
@@ -112,9 +110,7 @@ class TestListValidators(BaseValidatorTest):
         assert len(data) == 3
         assert data[0]["stage"] == "input"
 
-    def test_list_validators_filter_by_type(
-        self, integration_client, clear_database, seed_db
-    ):
+    def test_list_validators_filter_by_type(self, integration_client, seed_db):
         """Test filtering validators by type."""
 
         response = self.list_validators(integration_client, type="pii_remover")
@@ -184,7 +180,7 @@ class TestListValidators(BaseValidatorTest):
 class TestGetValidator(BaseValidatorTest):
     """Tests for GET /guardrails/validators/configs/{id} endpoint."""
 
-    def test_get_validator_success(self, integration_client, clear_database, seed_db):
+    def test_get_validator_success(self, integration_client, seed_db):
         """Test successful validator retrieval."""
         list_response = self.list_validators(integration_client)
         validator_id = list_response.json()["data"][0]["id"]
@@ -230,9 +226,7 @@ class TestGetValidator(BaseValidatorTest):
 class TestUpdateValidator(BaseValidatorTest):
     """Tests for PATCH /guardrails/validators/configs/{id} endpoint."""
 
-    def test_update_validator_success(
-        self, integration_client, clear_database, seed_db
-    ):
+    def test_update_validator_success(self, integration_client, seed_db):
         """Test successful validator update."""
         list_response = self.list_validators(integration_client)
         validator_id = list_response.json()["data"][0]["id"]
@@ -248,9 +242,7 @@ class TestUpdateValidator(BaseValidatorTest):
         assert data["on_fail_action"] == "exception"
         assert data["is_enabled"] is False
 
-    def test_update_validator_partial(
-        self, integration_client, clear_database, seed_db
-    ):
+    def test_update_validator_partial(self, integration_client, seed_db):
         """Test partial update preserves original fields."""
         list_response = self.list_validators(integration_client)
         validator_id = list_response.json()["data"][0]["id"]
@@ -279,9 +271,7 @@ class TestUpdateValidator(BaseValidatorTest):
 class TestDeleteValidator(BaseValidatorTest):
     """Tests for DELETE /guardrails/validators/configs/{id} endpoint."""
 
-    def test_delete_validator_success(
-        self, integration_client, clear_database, seed_db
-    ):
+    def test_delete_validator_success(self, integration_client, seed_db):
         """Test successful validator deletion."""
         list_response = self.list_validators(integration_client)
         validator_id = list_response.json()["data"][0]["id"]
@@ -303,9 +293,7 @@ class TestDeleteValidator(BaseValidatorTest):
 
         assert response.status_code == 404
 
-    def test_delete_validator_wrong_org(
-        self, integration_client, clear_database, seed_db
-    ):
+    def test_delete_validator_wrong_org(self, integration_client, seed_db):
         """Test that deleting validator from different org returns 404."""
         list_response = self.list_validators(integration_client)
         validator_id = list_response.json()["data"][0]["id"]

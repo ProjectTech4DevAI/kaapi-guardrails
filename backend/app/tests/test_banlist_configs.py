@@ -82,7 +82,6 @@ def test_get_success(mock_session, sample_ban_list):
 
 def test_update_success(mock_session, sample_ban_list):
     with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
-        crud.get.return_value = sample_ban_list
         crud.update.return_value = sample_ban_list
 
         result = update_ban_list(
@@ -94,6 +93,12 @@ def test_update_success(mock_session, sample_ban_list):
             _=None,
         )
 
+        crud.update.assert_called_once()
+        _, kwargs = crud.update.call_args
+        assert kwargs["id"] == BAN_LIST_TEST_ID
+        assert kwargs["organization_id"] == BAN_LIST_TEST_ORGANIZATION_ID
+        assert kwargs["project_id"] == BAN_LIST_TEST_PROJECT_ID
+        assert kwargs["data"].name == "new"
         assert result.data == sample_ban_list
 
 
@@ -109,4 +114,12 @@ def test_delete_success(mock_session, sample_ban_list):
             _=None,
         )
 
+        crud.get.assert_called_once_with(
+            mock_session,
+            BAN_LIST_TEST_ID,
+            BAN_LIST_TEST_ORGANIZATION_ID,
+            BAN_LIST_TEST_PROJECT_ID,
+            require_owner=True,
+        )
+        crud.delete.assert_called_once_with(mock_session, sample_ban_list)
         assert result.success is True

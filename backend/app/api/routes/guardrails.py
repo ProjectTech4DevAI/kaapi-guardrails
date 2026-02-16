@@ -33,11 +33,10 @@ def run_guardrails(
     validator_log_crud = ValidatorLogCrud(session=session)
 
     try:
-        request_id = UUID(payload.request_id)
+        request_log = request_log_crud.create(payload)
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    request_log = request_log_crud.create(request_id, payload)
     return _validate_with_guard(
         payload,
         request_log_crud,

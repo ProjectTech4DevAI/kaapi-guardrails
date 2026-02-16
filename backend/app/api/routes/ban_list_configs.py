@@ -25,7 +25,9 @@ def create_ban_list(
         )
         return APIResponse.success_response(data=response_model)
     except HTTPException as exc:
-        return APIResponse.failure_response(error=str(exc.detail))
+        return APIResponse.failure_response(
+            error=str(exc.detail), metadata={"status_code": exc.status_code}
+        )
     except Exception as exc:
         return APIResponse.failure_response(error=str(exc))
 
@@ -44,7 +46,9 @@ def list_ban_lists(
         )
         return APIResponse.success_response(data=response_model)
     except HTTPException as exc:
-        return APIResponse.failure_response(error=str(exc.detail))
+        return APIResponse.failure_response(
+            error=str(exc.detail), metadata={"status_code": exc.status_code}
+        )
     except Exception as exc:
         return APIResponse.failure_response(error=str(exc))
 
@@ -61,7 +65,9 @@ def get_ban_list(
         obj = ban_list_crud.get(session, id, organization_id, project_id)
         return APIResponse.success_response(data=obj)
     except HTTPException as exc:
-        return APIResponse.failure_response(error=str(exc.detail))
+        return APIResponse.failure_response(
+            error=str(exc.detail), metadata={"status_code": exc.status_code}
+        )
     except Exception as exc:
         return APIResponse.failure_response(error=str(exc))
 
@@ -85,7 +91,9 @@ def update_ban_list(
         )
         return APIResponse.success_response(data=response_model)
     except HTTPException as exc:
-        return APIResponse.failure_response(error=str(exc.detail))
+        return APIResponse.failure_response(
+            error=str(exc.detail), metadata={"status_code": exc.status_code}
+        )
     except Exception as exc:
         return APIResponse.failure_response(error=str(exc))
 
@@ -107,6 +115,8 @@ def delete_ban_list(
             data={"message": "Ban list deleted successfully"}
         )
     except HTTPException as exc:
-        return APIResponse.failure_response(error=str(exc.detail))
+        return APIResponse.failure_response(
+            error=str(exc.detail), metadata={"status_code": exc.status_code}
+        )
     except Exception as exc:
         return APIResponse.failure_response(error=str(exc))

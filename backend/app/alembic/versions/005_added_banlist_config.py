@@ -49,7 +49,12 @@ def upgrade() -> None:
     op.create_index("idx_banlist_organization", "ban_list", ["organization_id"])
     op.create_index("idx_banlist_project", "ban_list", ["project_id"])
     op.create_index("idx_banlist_domain", "ban_list", ["domain"])
-    op.create_index("idx_banlist_is_public", "ban_list", ["is_public"])
+    op.create_index(
+        "idx_banlist_is_public_true",
+        "ban_list",
+        ["is_public"],
+        postgresql_where=sa.text("is_public = true"),
+    )
 
 
 def downgrade() -> None:

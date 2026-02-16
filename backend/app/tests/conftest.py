@@ -5,7 +5,7 @@ os.environ["ENVIRONMENT"] = "testing"
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlmodel import Session, create_engine, SQLModel, delete
+from sqlmodel import Session, create_engine, SQLModel
 
 from app.main import app
 from app.api.deps import SessionDep, verify_bearer_token
@@ -59,8 +59,6 @@ def seed_test_data(session: Session) -> None:
             )
         )
 
-    session.commit()
-
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
@@ -91,27 +89,15 @@ def override_dependencies():
 @pytest.fixture(scope="function")
 def seed_db():
     with Session(test_engine) as session:
-        session.exec(delete(BanList))
-        session.exec(delete(ValidatorConfig))
-        session.commit()
         seed_test_data(session)
+        session.commit()
         yield
 
 
 @pytest.fixture
 def clear_database():
-    """Clear key config tables before and after each test."""
-    with Session(test_engine) as session:
-        session.exec(delete(BanList))
-        session.exec(delete(ValidatorConfig))
-        session.commit()
-
+    """Compatibility fixture; database cleanup is handled by clean_db."""
     yield
-
-    with Session(test_engine) as session:
-        session.exec(delete(BanList))
-        session.exec(delete(ValidatorConfig))
-        session.commit()
 
 
 @pytest.fixture(scope="function")
