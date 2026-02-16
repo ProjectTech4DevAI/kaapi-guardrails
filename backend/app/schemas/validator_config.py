@@ -21,10 +21,6 @@ class ValidatorCreate(ValidatorBase):
     pass
 
 
-class ValidatorBatchCreate(SQLModel):
-    validators: list[ValidatorCreate]
-
-
 class ValidatorBatchFetchItem(SQLModel):
     validator_config_id: UUID
 
@@ -40,5 +36,3 @@ class ValidatorUpdate(SQLModel):
 
 class ValidatorResponse(ValidatorBase):
     id: UUID
-    created_at: datetime
-    updated_at: datetime

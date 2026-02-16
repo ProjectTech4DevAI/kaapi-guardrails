@@ -9,7 +9,6 @@ from sqlmodel import Session, select
 from app.core.enum import Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
 from app.schemas.validator_config import (
-    ValidatorBatchCreate,
     ValidatorBatchFetchItem,
     ValidatorCreate,
 )
@@ -55,6 +54,7 @@ class ValidatorConfigCrud:
         session: Session,
         organization_id: int,
         project_id: int,
+        ids: Optional[list[UUID]] = None,
         stage: Optional[Stage] = None,
         type: Optional[ValidatorType] = None,
     ) -> List[dict]:
@@ -62,6 +62,9 @@ class ValidatorConfigCrud:
             ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,
         )
+
+        if ids:
+            query = query.where(ValidatorConfig.id.in_(ids))
 
         if stage:
             query = query.where(ValidatorConfig.stage == stage)
@@ -71,34 +74,6 @@ class ValidatorConfigCrud:
 
         rows = session.exec(query).all()
         return [self.flatten(r) for r in rows]
-
-    def list_by_batch_items(
-        self,
-        session: Session,
-        organization_id: int,
-        project_id: int,
-        payload: List[ValidatorBatchFetchItem],
-    ) -> List[dict]:
-        if not payload:
-            return []
-
-        ids = list({item.validator_config_id for item in payload})
-        query = select(ValidatorConfig).where(
-            ValidatorConfig.organization_id == organization_id,
-            ValidatorConfig.project_id == project_id,
-            ValidatorConfig.id.in_(ids),
-        )
-        rows = session.exec(query).all()
-
-        flattened_rows = {row.id: self.flatten(row) for row in rows}
-
-        response: List[dict] = []
-        for item in payload:
-            maybe_row = flattened_rows.get(item.validator_config_id)
-            if maybe_row:
-                response.append(maybe_row)
-
-        return response
 
     def get(
         self,
