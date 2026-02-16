@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from fastapi import APIRouter
 
@@ -35,20 +36,6 @@ def create_validator(
     return APIResponse.success_response(data=response_model)
 
 
-@router.post("/batch", response_model=APIResponse[list[ValidatorResponse]])
-def create_validators_batch(
-    payload: ValidatorBatchCreate,
-    session: SessionDep,
-    organization_id: int,
-    project_id: int,
-    _: AuthDep,
-):
-    response_model = validator_config_crud.create_many(
-        session, organization_id, project_id, payload
-    )
-    return APIResponse.success_response(data=response_model)
-
-
 @router.get("/", response_model=APIResponse[list[ValidatorResponse]])
 def list_validators(
     organization_id: int,
@@ -80,7 +67,7 @@ def fetch_validators_batch(
 
 @router.get("/{id}", response_model=APIResponse[ValidatorResponse])
 def get_validator(
-    id: int,
+    id: UUID,
     organization_id: int,
     project_id: int,
     session: SessionDep,
@@ -92,7 +79,7 @@ def get_validator(
 
 @router.patch("/{id}", response_model=APIResponse[ValidatorResponse])
 def update_validator(
-    id: int,
+    id: UUID,
     organization_id: int,
     project_id: int,
     payload: ValidatorUpdate,
@@ -108,7 +95,7 @@ def update_validator(
 
 @router.delete("/{id}", response_model=APIResponse[dict])
 def delete_validator(
-    id: int,
+    id: UUID,
     organization_id: int,
     project_id: int,
     session: SessionDep,

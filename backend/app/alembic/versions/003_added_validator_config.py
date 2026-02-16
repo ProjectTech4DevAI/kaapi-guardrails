@@ -21,7 +21,7 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "validator_config",
-        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("organization_id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("type", sa.String(), nullable=False),

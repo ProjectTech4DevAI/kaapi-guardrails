@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,7 +11,7 @@ from app.models.config.validator_config import ValidatorConfig
 # Test data constants
 TEST_ORGANIZATION_ID = 1
 TEST_PROJECT_ID = 1
-TEST_VALIDATOR_ID = 1
+TEST_VALIDATOR_ID = uuid.uuid4()
 TEST_TYPE = ValidatorType.LexicalSlur
 TEST_STAGE = Stage.Input
 TEST_ON_FAIL = GuardrailOnFail.Fix

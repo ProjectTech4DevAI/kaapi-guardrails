@@ -1,5 +1,6 @@
 import logging
 from typing import Any, List, Optional
+from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
@@ -48,49 +49,6 @@ class ValidatorConfigCrud:
 
         session.refresh(obj)
         return self.flatten(obj)
-
-    def create_many(
-        self,
-        session: Session,
-        organization_id: int,
-        project_id: int,
-        payloads: ValidatorBatchCreate,
-    ) -> list[dict]:
-        objs = []
-
-        try:
-            for payload in payloads.validators:
-                data = payload.model_dump()
-                model_fields, config_fields = split_validator_payload(data)
-                obj = ValidatorConfig(
-                    organization_id=organization_id,
-                    project_id=project_id,
-                    config=config_fields,
-                    **model_fields,
-                )
-                objs.append(obj)
-
-            session.add_all(objs)
-        except Exception:
-            session.rollback()
-            logger.exception("Failed to construct/add validator batch")
-            raise
-
-        try:
-            session.commit()
-        except IntegrityError:
-            session.rollback()
-            raise HTTPException(
-                400,
-                "Validator batch creation failed",
-            )
-        except Exception:
-            session.rollback()
-            raise
-
-        for obj in objs:
-            session.refresh(obj)
-        return [self.flatten(r) for r in objs]
 
     def list(
         self,
@@ -145,7 +103,7 @@ class ValidatorConfigCrud:
     def get(
         self,
         session: Session,
-        id: int,
+        id: UUID,
         organization_id: int,
         project_id: int,
     ) -> ValidatorConfig:

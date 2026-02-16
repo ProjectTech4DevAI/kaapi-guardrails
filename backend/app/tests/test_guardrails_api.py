@@ -2,8 +2,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.core.enum import GuardrailOnFail
-from app.schemas.guardrail_config import GuardrailRequest
 from app.tests.guardrails_mocks import MockResult
 from app.tests.utils.constants import SAFE_TEXT_FIELD, VALIDATE_API_PATH
 

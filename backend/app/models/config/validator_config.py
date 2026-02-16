@@ -15,7 +15,8 @@ from app.utils import now
 class ValidatorConfig(SQLModel, table=True):
     __tablename__ = "validator_config"
 
-    id: int = Field(
+    id: UUID = Field(
+        default_factory=uuid4,
         primary_key=True,
         sa_column_kwargs={
             "comment": "Unique identifier for the validator configuration"

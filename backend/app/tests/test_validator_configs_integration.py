@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from sqlmodel import Session, delete
 
@@ -88,35 +90,6 @@ class BaseValidatorTest:
 
 class TestBatchValidatorEndpoints(BaseValidatorTest):
     """Tests for batch create/fetch validator endpoints."""
-
-    def test_create_validators_batch_success(self, integration_client, clear_database):
-        payload = {
-            "validators": [
-                {
-                    "type": "uli_slur_match",
-                    "stage": "input",
-                    "on_fail_action": "fix",
-                    "is_enabled": True,
-                    "severity": "all",
-                },
-                {
-                    "type": "pii_remover",
-                    "stage": "output",
-                    "on_fail_action": "fix",
-                    "is_enabled": True,
-                },
-            ]
-        }
-
-        response = integration_client.post(
-            f"{BASE_URL}batch{DEFAULT_QUERY_PARAMS}",
-            json=payload,
-        )
-
-        assert response.status_code == 200
-        data = response.json()["data"]
-        assert len(data) == 2
-        assert all(isinstance(item["id"], int) for item in data)
 
     def test_fetch_validators_batch_success(self, integration_client, clear_database):
         first = self.create_validator(integration_client, "lexical_slur")
@@ -255,7 +228,7 @@ class TestGetValidator(BaseValidatorTest):
 
     def test_get_validator_not_found(self, integration_client, clear_database):
         """Test retrieving non-existent validator returns 404."""
-        fake_id = 999999
+        fake_id = uuid.uuid4()
         response = self.get_validator(integration_client, fake_id)
 
         assert response.status_code == 404
@@ -320,7 +293,7 @@ class TestUpdateValidator(BaseValidatorTest):
 
     def test_update_validator_not_found(self, integration_client, clear_database):
         """Test updating non-existent validator returns 404."""
-        fake_id = 999999
+        fake_id = uuid.uuid4()
         update_payload = {"is_enabled": False}
 
         response = self.update_validator(integration_client, fake_id, update_payload)
@@ -349,7 +322,7 @@ class TestDeleteValidator(BaseValidatorTest):
 
     def test_delete_validator_not_found(self, integration_client, clear_database):
         """Test deleting non-existent validator returns 404."""
-        fake_id = 999999
+        fake_id = uuid.uuid4()
         response = self.delete_validator(integration_client, fake_id)
 
         assert response.status_code == 404
