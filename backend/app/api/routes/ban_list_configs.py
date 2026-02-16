@@ -26,6 +26,8 @@ def create_ban_list(
         )
         return APIResponse.success_response(data=response_model)
     except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
         return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
@@ -43,6 +45,8 @@ def list_ban_lists(
         )
         return APIResponse.success_response(data=response_model)
     except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
         return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
@@ -58,6 +62,8 @@ def get_ban_list(
         obj = ban_list_crud.get(session, id, organization_id, project_id)
         return APIResponse.success_response(data=obj)
     except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
         return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
@@ -80,6 +86,8 @@ def update_ban_list(
         )
         return APIResponse.success_response(data=response_model)
     except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
         return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
@@ -100,4 +108,6 @@ def delete_ban_list(
             data={"message": "Ban list deleted successfully"}
         )
     except Exception as exc:
+        if isinstance(exc, HTTPException):
+            raise exc
         return APIResponse.failure_response(error=_safe_error_message(exc))

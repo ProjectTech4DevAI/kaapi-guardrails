@@ -131,7 +131,7 @@ class TestGetBanList(BaseBanListTest):
         response = self.get(integration_client, fake)
         body = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 404
         assert body["success"] is False
         assert body["metadata"] is None
         assert "Ban list not found" in body["error"]
@@ -146,7 +146,7 @@ class TestGetBanList(BaseBanListTest):
         response = self.get(integration_client, ban_id, org=2, project=2)
         body = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 403
         assert body["success"] is False
         assert "permission" in body["error"].lower()
 
@@ -181,7 +181,7 @@ class TestUpdateBanList(BaseBanListTest):
         response = self.update(integration_client, fake, {"name": "x"})
         body = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 404
         assert body["success"] is False
         assert "Ban list not found" in body["error"]
 
@@ -195,7 +195,7 @@ class TestUpdateBanList(BaseBanListTest):
         )
         body = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 403
         assert body["success"] is False
         assert "permission" in body["error"].lower()
 
@@ -216,7 +216,7 @@ class TestDeleteBanList(BaseBanListTest):
         response = self.delete(integration_client, fake)
         body = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 404
         assert body["success"] is False
         assert "Ban list not found" in body["error"]
 
@@ -232,7 +232,7 @@ class TestDeleteBanList(BaseBanListTest):
         )
         body = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 403
         assert body["success"] is False
         assert "permission" in body["error"].lower()
 
@@ -245,6 +245,6 @@ class TestDeleteBanList(BaseBanListTest):
         )
         body = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 403
         assert body["success"] is False
         assert "permission" in body["error"].lower()
