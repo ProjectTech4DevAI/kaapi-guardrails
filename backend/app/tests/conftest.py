@@ -11,11 +11,11 @@ from app.main import app
 from app.api.deps import SessionDep, verify_bearer_token
 from app.core.config import settings
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
-from app.models.config.banlist import BanList
+from app.models.config.ban_list import BanList
 from app.models.config.validator_config import ValidatorConfig
 from app.tests.seed_data import (
-    BANLIST_INTEGRATION_ORGANIZATION_ID,
-    BANLIST_INTEGRATION_PROJECT_ID,
+    BAN_LIST_INTEGRATION_ORGANIZATION_ID,
+    BAN_LIST_INTEGRATION_PROJECT_ID,
     BAN_LIST_PAYLOADS,
     VALIDATOR_INTEGRATION_ORGANIZATION_ID,
     VALIDATOR_INTEGRATION_PROJECT_ID,
@@ -40,8 +40,8 @@ def seed_test_data(session: Session) -> None:
         session.add(
             BanList(
                 **payload,
-                organization_id=BANLIST_INTEGRATION_ORGANIZATION_ID,
-                project_id=BANLIST_INTEGRATION_PROJECT_ID,
+                organization_id=BAN_LIST_INTEGRATION_ORGANIZATION_ID,
+                project_id=BAN_LIST_INTEGRATION_PROJECT_ID,
             )
         )
 

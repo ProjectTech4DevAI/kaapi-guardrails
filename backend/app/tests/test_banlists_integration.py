@@ -1,18 +1,19 @@
 import uuid
 import pytest
+from app.schemas.ban_list import MAX_BANNED_WORD_LENGTH, MAX_BANNED_WORDS_ITEMS
 from app.tests.seed_data import (
-    BANLIST_INTEGRATION_ORGANIZATION_ID,
-    BANLIST_INTEGRATION_PROJECT_ID,
+    BAN_LIST_INTEGRATION_ORGANIZATION_ID,
+    BAN_LIST_INTEGRATION_PROJECT_ID,
     BAN_LIST_PAYLOADS,
 )
 
 pytestmark = pytest.mark.integration
 
 
-BASE_URL = "/api/v1/guardrails/ban-lists/"
+BASE_URL = "/api/v1/guardrails/ban_lists/"
 DEFAULT_QUERY = (
-    f"?organization_id={BANLIST_INTEGRATION_ORGANIZATION_ID}"
-    f"&project_id={BANLIST_INTEGRATION_PROJECT_ID}"
+    f"?organization_id={BAN_LIST_INTEGRATION_ORGANIZATION_ID}"
+    f"&project_id={BAN_LIST_INTEGRATION_PROJECT_ID}"
 )
 
 
@@ -31,8 +32,8 @@ class BaseBanListTest:
         self,
         client,
         id,
-        org=BANLIST_INTEGRATION_ORGANIZATION_ID,
-        project=BANLIST_INTEGRATION_PROJECT_ID,
+        org=BAN_LIST_INTEGRATION_ORGANIZATION_ID,
+        project=BAN_LIST_INTEGRATION_PROJECT_ID,
     ):
         return client.get(f"{BASE_URL}{id}/?organization_id={org}&project_id={project}")
 
@@ -57,6 +58,28 @@ class TestCreateBanList(BaseBanListTest):
         response = integration_client.post(
             f"{BASE_URL}{DEFAULT_QUERY}",
             json={"name": "missing words"},
+        )
+
+        assert response.status_code == 422
+
+    def test_create_validation_error_banned_word_too_long(
+        self, integration_client, clear_database
+    ):
+        response = self.create(
+            integration_client,
+            "minimal",
+            banned_words=["a" * (MAX_BANNED_WORD_LENGTH + 1)],
+        )
+
+        assert response.status_code == 422
+
+    def test_create_validation_error_too_many_banned_words(
+        self, integration_client, clear_database
+    ):
+        response = self.create(
+            integration_client,
+            "minimal",
+            banned_words=["x"] * (MAX_BANNED_WORDS_ITEMS + 1),
         )
 
         assert response.status_code == 422
@@ -110,14 +133,14 @@ class TestGetBanList(BaseBanListTest):
 
         assert response.status_code == 200
         assert body["success"] is False
-        assert "Banlist not found" in body["error"]
+        assert "Ban list not found" in body["error"]
 
     def test_get_wrong_owner_private(self, integration_client, clear_database, seed_db):
         list_resp = self.list(integration_client)
-        private_banlist = next(
+        private_ban_list = next(
             item for item in list_resp.json()["data"] if not item["is_public"]
         )
-        ban_id = private_banlist["id"]
+        ban_id = private_ban_list["id"]
 
         response = self.get(integration_client, ban_id, org=2, project=2)
         body = response.json()
@@ -159,7 +182,7 @@ class TestUpdateBanList(BaseBanListTest):
 
         assert response.status_code == 200
         assert body["success"] is False
-        assert "Banlist not found" in body["error"]
+        assert "Ban list not found" in body["error"]
 
 
 class TestDeleteBanList(BaseBanListTest):
@@ -180,14 +203,14 @@ class TestDeleteBanList(BaseBanListTest):
 
         assert response.status_code == 200
         assert body["success"] is False
-        assert "Banlist not found" in body["error"]
+        assert "Ban list not found" in body["error"]
 
     def test_delete_wrong_owner(self, integration_client, clear_database, seed_db):
         list_resp = self.list(integration_client)
-        private_banlist = next(
+        private_ban_list = next(
             item for item in list_resp.json()["data"] if not item["is_public"]
         )
-        ban_id = private_banlist["id"]
+        ban_id = private_ban_list["id"]
 
         response = integration_client.delete(
             f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999"

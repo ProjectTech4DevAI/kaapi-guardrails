@@ -13,7 +13,7 @@ organization_id = VALIDATOR_INTEGRATION_ORGANIZATION_ID
 project_id = VALIDATOR_INTEGRATION_PROJECT_ID
 
 
-def test_input_guardrails_with_real_banlist(integration_client):
+def test_input_guardrails_with_real_ban_list(integration_client):
     response = integration_client.post(
         VALIDATE_API_PATH,
         json={

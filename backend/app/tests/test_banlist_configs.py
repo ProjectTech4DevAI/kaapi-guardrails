@@ -4,20 +4,20 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlmodel import Session
 
-from app.api.routes.banlist_configs import (
-    create_banlist,
-    list_banlists,
-    get_banlist,
-    update_banlist,
-    delete_banlist,
+from app.api.routes.ban_list_configs import (
+    create_ban_list,
+    list_ban_lists,
+    get_ban_list,
+    update_ban_list,
+    delete_ban_list,
 )
-from app.schemas.banlist import BanListUpdate
+from app.schemas.ban_list import BanListUpdate
 from app.tests.seed_data import (
-    BANLIST_TEST_ID,
-    BANLIST_TEST_ORGANIZATION_ID,
-    BANLIST_TEST_PROJECT_ID,
-    build_banlist_create_payload,
-    build_sample_banlist_mock,
+    BAN_LIST_TEST_ID,
+    BAN_LIST_TEST_ORGANIZATION_ID,
+    BAN_LIST_TEST_PROJECT_ID,
+    build_ban_list_create_payload,
+    build_sample_ban_list_mock,
 )
 
 
@@ -27,37 +27,37 @@ def mock_session():
 
 
 @pytest.fixture
-def sample_banlist():
-    return build_sample_banlist_mock()
+def sample_ban_list():
+    return build_sample_ban_list_mock()
 
 
 @pytest.fixture
 def create_payload():
-    return build_banlist_create_payload()
+    return build_ban_list_create_payload()
 
 
-def test_create_calls_crud(mock_session, create_payload, sample_banlist):
-    with patch("app.api.routes.banlist_configs.banlist_crud") as crud:
-        crud.create.return_value = sample_banlist
+def test_create_calls_crud(mock_session, create_payload, sample_ban_list):
+    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+        crud.create.return_value = sample_ban_list
 
-        result = create_banlist(
+        result = create_ban_list(
             payload=create_payload,
             session=mock_session,
-            organization_id=BANLIST_TEST_ORGANIZATION_ID,
-            project_id=BANLIST_TEST_PROJECT_ID,
+            organization_id=BAN_LIST_TEST_ORGANIZATION_ID,
+            project_id=BAN_LIST_TEST_PROJECT_ID,
             _=None,
         )
 
-        assert result.data == sample_banlist
+        assert result.data == sample_ban_list
 
 
-def test_list_returns_data(mock_session, sample_banlist):
-    with patch("app.api.routes.banlist_configs.banlist_crud") as crud:
-        crud.list.return_value = [sample_banlist]
+def test_list_returns_data(mock_session, sample_ban_list):
+    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+        crud.list.return_value = [sample_ban_list]
 
-        result = list_banlists(
-            organization_id=BANLIST_TEST_ORGANIZATION_ID,
-            project_id=BANLIST_TEST_PROJECT_ID,
+        result = list_ban_lists(
+            organization_id=BAN_LIST_TEST_ORGANIZATION_ID,
+            project_id=BAN_LIST_TEST_PROJECT_ID,
             session=mock_session,
             _=None,
         )
@@ -65,46 +65,46 @@ def test_list_returns_data(mock_session, sample_banlist):
         assert len(result.data) == 1
 
 
-def test_get_success(mock_session, sample_banlist):
-    with patch("app.api.routes.banlist_configs.banlist_crud") as crud:
-        crud.get.return_value = sample_banlist
+def test_get_success(mock_session, sample_ban_list):
+    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+        crud.get.return_value = sample_ban_list
 
-        result = get_banlist(
-            id=BANLIST_TEST_ID,
-            organization_id=BANLIST_TEST_ORGANIZATION_ID,
-            project_id=BANLIST_TEST_PROJECT_ID,
+        result = get_ban_list(
+            id=BAN_LIST_TEST_ID,
+            organization_id=BAN_LIST_TEST_ORGANIZATION_ID,
+            project_id=BAN_LIST_TEST_PROJECT_ID,
             session=mock_session,
             _=None,
         )
 
-        assert result.data == sample_banlist
+        assert result.data == sample_ban_list
 
 
-def test_update_success(mock_session, sample_banlist):
-    with patch("app.api.routes.banlist_configs.banlist_crud") as crud:
-        crud.get.return_value = sample_banlist
-        crud.update.return_value = sample_banlist
+def test_update_success(mock_session, sample_ban_list):
+    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+        crud.get.return_value = sample_ban_list
+        crud.update.return_value = sample_ban_list
 
-        result = update_banlist(
-            id=BANLIST_TEST_ID,
-            organization_id=BANLIST_TEST_ORGANIZATION_ID,
-            project_id=BANLIST_TEST_PROJECT_ID,
+        result = update_ban_list(
+            id=BAN_LIST_TEST_ID,
+            organization_id=BAN_LIST_TEST_ORGANIZATION_ID,
+            project_id=BAN_LIST_TEST_PROJECT_ID,
             payload=BanListUpdate(name="new"),
             session=mock_session,
             _=None,
         )
 
-        assert result.data == sample_banlist
+        assert result.data == sample_ban_list
 
 
-def test_delete_success(mock_session, sample_banlist):
-    with patch("app.api.routes.banlist_configs.banlist_crud") as crud:
-        crud.get.return_value = sample_banlist
+def test_delete_success(mock_session, sample_ban_list):
+    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+        crud.get.return_value = sample_ban_list
 
-        result = delete_banlist(
-            id=BANLIST_TEST_ID,
-            organization_id=BANLIST_TEST_ORGANIZATION_ID,
-            project_id=BANLIST_TEST_PROJECT_ID,
+        result = delete_ban_list(
+            id=BAN_LIST_TEST_ID,
+            organization_id=BAN_LIST_TEST_ORGANIZATION_ID,
+            project_id=BAN_LIST_TEST_PROJECT_ID,
             session=mock_session,
             _=None,
         )

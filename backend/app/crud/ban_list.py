@@ -5,8 +5,8 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from app.models.config.banlist import BanList
-from app.schemas.banlist import BanListCreate, BanListUpdate
+from app.models.config.ban_list import BanList
+from app.schemas.ban_list import BanListCreate, BanListUpdate
 from app.utils import now
 
 
@@ -30,7 +30,7 @@ class BanListCrud:
         except IntegrityError:
             session.rollback()
             raise HTTPException(
-                400, "Banlist already exists for the given configuration"
+                400, "Ban list already exists for the given configuration"
             )
         except Exception:
             session.rollback()
@@ -45,7 +45,7 @@ class BanListCrud:
         obj = session.get(BanList, id)
 
         if obj is None:
-            raise HTTPException(status_code=404, detail="Banlist not found")
+            raise HTTPException(status_code=404, detail="Ban list not found")
 
         if not obj.is_public:
             self.check_owner(obj, organization_id, project_id)
@@ -94,7 +94,7 @@ class BanListCrud:
         except IntegrityError:
             session.rollback()
             raise HTTPException(
-                400, "Banlist already exists for the given configuration"
+                400, "Ban list already exists for the given configuration"
             )
         except Exception:
             session.rollback()
@@ -123,4 +123,4 @@ class BanListCrud:
             )
 
 
-banlist_crud = BanListCrud()
+ban_list_crud = BanListCrud()

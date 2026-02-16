@@ -30,7 +30,7 @@ def upgrade() -> None:
         sa.Column("is_public", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column(
             "banned_words",
-            postgresql.ARRAY(sa.String()),
+            postgresql.ARRAY(sa.String(length=100)),
             nullable=False,
             server_default="{}",
         ),
@@ -39,6 +39,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "name", "organization_id", "project_id", name="uq_banlist_name_org_project"
+        ),
+        sa.CheckConstraint(
+            "coalesce(array_length(banned_words, 1), 0) <= 1000",
+            name="ck_banlist_banned_words_max_items",
         ),
     )
 

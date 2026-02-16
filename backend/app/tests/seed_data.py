@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
-from app.schemas.banlist import BanListCreate
+from app.schemas.ban_list import BanListCreate
 
 SEED_DATA_PATH = Path(__file__).with_name("seed_data.json")
 
@@ -17,19 +17,19 @@ def _load_seed_data() -> dict:
 
 DATA = _load_seed_data()
 
-BANLIST_UNIT = DATA["banlist"]["unit"]
-BANLIST_INTEGRATION = DATA["banlist"]["integration"]
+BAN_LIST_UNIT = DATA["ban_list"]["unit"]
+BAN_LIST_INTEGRATION = DATA["ban_list"]["integration"]
 
 VALIDATOR_UNIT = DATA["validator"]["unit"]
 VALIDATOR_INTEGRATION = DATA["validator"]["integration"]
 
-BANLIST_TEST_ID = uuid.UUID(BANLIST_UNIT["test_id"])
-BANLIST_TEST_ORGANIZATION_ID = BANLIST_UNIT["organization_id"]
-BANLIST_TEST_PROJECT_ID = BANLIST_UNIT["project_id"]
+BAN_LIST_TEST_ID = uuid.UUID(BAN_LIST_UNIT["test_id"])
+BAN_LIST_TEST_ORGANIZATION_ID = BAN_LIST_UNIT["organization_id"]
+BAN_LIST_TEST_PROJECT_ID = BAN_LIST_UNIT["project_id"]
 
-BANLIST_INTEGRATION_ORGANIZATION_ID = BANLIST_INTEGRATION["organization_id"]
-BANLIST_INTEGRATION_PROJECT_ID = BANLIST_INTEGRATION["project_id"]
-BAN_LIST_PAYLOADS = BANLIST_INTEGRATION["payloads"]
+BAN_LIST_INTEGRATION_ORGANIZATION_ID = BAN_LIST_INTEGRATION["organization_id"]
+BAN_LIST_INTEGRATION_PROJECT_ID = BAN_LIST_INTEGRATION["project_id"]
+BAN_LIST_PAYLOADS = BAN_LIST_INTEGRATION["payloads"]
 
 VALIDATOR_TEST_ID = uuid.UUID(VALIDATOR_UNIT["validator_id"])
 VALIDATOR_TEST_ORGANIZATION_ID = VALIDATOR_UNIT["organization_id"]
@@ -45,20 +45,20 @@ VALIDATOR_INTEGRATION_PROJECT_ID = VALIDATOR_INTEGRATION["project_id"]
 VALIDATOR_PAYLOADS = VALIDATOR_INTEGRATION["payloads"]
 
 
-def build_banlist_create_payload() -> BanListCreate:
-    return BanListCreate(**BANLIST_UNIT["sample"])
+def build_ban_list_create_payload() -> BanListCreate:
+    return BanListCreate(**BAN_LIST_UNIT["sample"])
 
 
-def build_sample_banlist_mock() -> MagicMock:
+def build_sample_ban_list_mock() -> MagicMock:
     obj = MagicMock()
-    obj.id = BANLIST_TEST_ID
-    obj.name = BANLIST_UNIT["sample"]["name"]
-    obj.description = BANLIST_UNIT["sample"]["description"]
-    obj.banned_words = BANLIST_UNIT["sample"]["banned_words"]
-    obj.organization_id = BANLIST_TEST_ORGANIZATION_ID
-    obj.project_id = BANLIST_TEST_PROJECT_ID
-    obj.domain = BANLIST_UNIT["sample"]["domain"]
-    obj.is_public = BANLIST_UNIT["sample"].get("is_public", False)
+    obj.id = BAN_LIST_TEST_ID
+    obj.name = BAN_LIST_UNIT["sample"]["name"]
+    obj.description = BAN_LIST_UNIT["sample"]["description"]
+    obj.banned_words = BAN_LIST_UNIT["sample"]["banned_words"]
+    obj.organization_id = BAN_LIST_TEST_ORGANIZATION_ID
+    obj.project_id = BAN_LIST_TEST_PROJECT_ID
+    obj.domain = BAN_LIST_UNIT["sample"]["domain"]
+    obj.is_public = BAN_LIST_UNIT["sample"].get("is_public", False)
     return obj
 
 

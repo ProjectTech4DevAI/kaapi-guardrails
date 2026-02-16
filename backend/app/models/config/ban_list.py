@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import Column, String
@@ -10,7 +9,7 @@ from app.utils import now
 
 
 class BanList(SQLModel, table=True):
-    __tablename__ = "banlist"
+    __tablename__ = "ban_list"
 
     id: UUID = Field(
         default_factory=uuid4,
