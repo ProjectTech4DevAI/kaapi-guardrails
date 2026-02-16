@@ -126,12 +126,10 @@ class TestBatchValidatorEndpoints(BaseValidatorTest):
 
         payload = [
             {
-                "validator_config": first_data["id"],
-                "validator_type": first_data["type"],
+                "validator_config_id": first_data["id"],
             },
             {
-                "validator_config": second_data["id"],
-                "validator_type": second_data["type"],
+                "validator_config_id": second_data["id"],
             },
         ]
 

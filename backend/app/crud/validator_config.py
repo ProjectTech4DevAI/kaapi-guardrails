@@ -124,7 +124,7 @@ class ValidatorConfigCrud:
         if not payload:
             return []
 
-        ids = list({item.validator_config for item in payload})
+        ids = list({item.validator_config_id for item in payload})
         query = select(ValidatorConfig).where(
             ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,
@@ -132,14 +132,11 @@ class ValidatorConfigCrud:
         )
         rows = session.exec(query).all()
 
-        flattened_rows = {}
-        for row in rows:
-            row_type = row.type.value if hasattr(row.type, "value") else str(row.type)
-            flattened_rows[(row.id, row_type)] = self.flatten(row)
+        flattened_rows = {row.id: self.flatten(row) for row in rows}
 
         response: List[dict] = []
         for item in payload:
-            maybe_row = flattened_rows.get((item.validator_config, item.validator_type))
+            maybe_row = flattened_rows.get(item.validator_config_id)
             if maybe_row:
                 response.append(maybe_row)
 

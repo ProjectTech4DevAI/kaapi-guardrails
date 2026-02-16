@@ -25,8 +25,7 @@ class ValidatorBatchCreate(SQLModel):
 
 
 class ValidatorBatchFetchItem(SQLModel):
-    validator_type: str
-    validator_config: int
+    validator_config_id: int
 
 
 class ValidatorUpdate(SQLModel):
