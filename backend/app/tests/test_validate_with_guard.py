@@ -3,7 +3,10 @@ from uuid import uuid4
 
 import pytest
 
-from app.api.routes.guardrails import _validate_with_guard
+from app.api.routes.guardrails import (
+    _resolve_ban_list_banned_words,
+    _validate_with_guard,
+)
 from app.schemas.guardrail_config import GuardrailRequest
 from app.tests.guardrails_mocks import MockResult
 from app.tests.seed_data import (
@@ -88,3 +91,45 @@ def test_validate_with_guard_exception():
     assert response.success is False
     assert response.data.safe_text is None
     assert response.error == "Invalid config"
+
+
+def test_resolve_ban_list_banned_words_from_ban_list_id():
+    ban_list_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[{"type": "ban_list", "ban_list_id": ban_list_id}],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.ban_list_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(banned_words=["foo", "bar"])
+        _resolve_ban_list_banned_words(payload, mock_session)
+
+    assert payload.validators[0].banned_words == ["foo", "bar"]
+    mock_get.assert_called_once_with(
+        mock_session,
+        id=payload.validators[0].ban_list_id,
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+    )
+
+
+def test_resolve_ban_list_banned_words_skips_lookup_when_banned_words_provided():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {"type": "ban_list", "ban_list_id": str(uuid4()), "banned_words": ["foo"]}
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.ban_list_crud.get") as mock_get:
+        _resolve_ban_list_banned_words(payload, mock_session)
+
+    mock_get.assert_not_called()

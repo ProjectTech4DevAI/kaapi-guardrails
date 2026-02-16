@@ -4,12 +4,17 @@ import uuid
 from fastapi import APIRouter
 from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
+from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep
-from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.constants import BAN_LIST, REPHRASE_ON_FAIL_PREFIX
 from app.core.config import settings
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
+from app.core.validators.config.ban_list_safety_validator_config import (
+    BanListSafetyValidatorConfig,
+)
+from app.crud.ban_list import ban_list_crud
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
@@ -31,6 +36,8 @@ def run_guardrails(
 ):
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
+
+    _resolve_ban_list_banned_words(payload, session)
 
     try:
         request_log = request_log_crud.create(payload)
@@ -74,6 +81,23 @@ def list_validators(_: AuthDep):
             )
 
     return {"validators": validators}
+
+
+def _resolve_ban_list_banned_words(payload: GuardrailRequest, session: Session) -> None:
+    for validator in payload.validators:
+        if not isinstance(validator, BanListSafetyValidatorConfig):
+            continue
+
+        if validator.type != BAN_LIST or validator.banned_words is not None:
+            continue
+
+        ban_list = ban_list_crud.get(
+            session,
+            id=validator.ban_list_id,
+            organization_id=payload.organization_id,
+            project_id=payload.project_id,
+        )
+        validator.banned_words = ban_list.banned_words
 
 
 def _validate_with_guard(
