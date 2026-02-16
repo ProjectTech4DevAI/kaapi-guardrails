@@ -40,14 +40,19 @@ class BanListCrud:
         return obj
 
     def get(
-        self, session: Session, id: UUID, organization_id: int, project_id: int
+        self,
+        session: Session,
+        id: UUID,
+        organization_id: int,
+        project_id: int,
+        require_owner: bool = False,
     ) -> BanList:
         obj = session.get(BanList, id)
 
         if obj is None:
             raise HTTPException(status_code=404, detail="Ban list not found")
 
-        if not obj.is_public:
+        if require_owner or not obj.is_public:
             self.check_owner(obj, organization_id, project_id)
 
         return obj
@@ -80,7 +85,13 @@ class BanListCrud:
         project_id: int,
         data: BanListUpdate,
     ) -> BanList:
-        obj = self.get(session, id, organization_id, project_id)
+        obj = self.get(
+            session,
+            id,
+            organization_id,
+            project_id,
+            require_owner=True,
+        )
         update_data = data.model_dump(exclude_unset=True)
 
         for k, v in update_data.items():

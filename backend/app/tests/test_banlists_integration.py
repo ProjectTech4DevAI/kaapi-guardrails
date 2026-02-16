@@ -184,6 +184,20 @@ class TestUpdateBanList(BaseBanListTest):
         assert body["success"] is False
         assert "Ban list not found" in body["error"]
 
+    def test_update_public_wrong_owner_fails(self, integration_client, clear_database):
+        create_resp = self.create(integration_client, "public")
+        ban_id = create_resp.json()["data"]["id"]
+
+        response = integration_client.patch(
+            f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999",
+            json={"name": "updated-by-other-org"},
+        )
+        body = response.json()
+
+        assert response.status_code == 200
+        assert body["success"] is False
+        assert "permission" in body["error"].lower()
+
 
 class TestDeleteBanList(BaseBanListTest):
     def test_delete_success(self, integration_client, clear_database, seed_db):
@@ -211,6 +225,19 @@ class TestDeleteBanList(BaseBanListTest):
             item for item in list_resp.json()["data"] if not item["is_public"]
         )
         ban_id = private_ban_list["id"]
+
+        response = integration_client.delete(
+            f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999"
+        )
+        body = response.json()
+
+        assert response.status_code == 200
+        assert body["success"] is False
+        assert "permission" in body["error"].lower()
+
+    def test_delete_public_wrong_owner_fails(self, integration_client, clear_database):
+        create_resp = self.create(integration_client, "public")
+        ban_id = create_resp.json()["data"]["id"]
 
         response = integration_client.delete(
             f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999"

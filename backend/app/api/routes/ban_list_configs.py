@@ -99,7 +99,9 @@ def delete_ban_list(
     _: AuthDep,
 ):
     try:
-        obj = ban_list_crud.get(session, id, organization_id, project_id)
+        obj = ban_list_crud.get(
+            session, id, organization_id, project_id, require_owner=True
+        )
         ban_list_crud.delete(session, obj)
         return APIResponse.success_response(
             data={"message": "Ban list deleted successfully"}
