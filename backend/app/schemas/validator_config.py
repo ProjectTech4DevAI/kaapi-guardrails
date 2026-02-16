@@ -31,4 +31,4 @@ class ValidatorUpdate(SQLModel):
 
 
 class ValidatorResponse(ValidatorBase):
-    id: UUID
+    pass
