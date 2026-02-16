@@ -52,7 +52,17 @@ def upgrade() -> None:
     op.create_index("idx_validator_project", "validator_config", ["project_id"])
     op.create_index("idx_validator_type", "validator_config", ["type"])
     op.create_index("idx_validator_stage", "validator_config", ["stage"])
+    op.create_index(
+        "idx_validator_on_fail_action", "validator_config", ["on_fail_action"]
+    )
+    op.create_index("idx_validator_is_enabled", "validator_config", ["is_enabled"])
 
 
 def downgrade() -> None:
+    op.drop_index("idx_validator_is_enabled", table_name="validator_config")
+    op.drop_index("idx_validator_on_fail_action", table_name="validator_config")
+    op.drop_index("idx_validator_stage", table_name="validator_config")
+    op.drop_index("idx_validator_type", table_name="validator_config")
+    op.drop_index("idx_validator_project", table_name="validator_config")
+    op.drop_index("idx_validator_organization", table_name="validator_config")
     op.drop_table("validator_config")

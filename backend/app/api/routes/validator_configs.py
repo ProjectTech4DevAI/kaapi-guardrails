@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.api.deps import AuthDep, SessionDep
 from app.core.enum import Stage, ValidatorType
@@ -40,11 +40,12 @@ def list_validators(
     project_id: int,
     session: SessionDep,
     _: AuthDep,
+    ids: Optional[list[UUID]] = Query(None),
     stage: Optional[Stage] = None,
     type: Optional[ValidatorType] = None,
 ):
     response_model = validator_config_crud.list(
-        session, organization_id, project_id, stage, type
+        session, organization_id, project_id, ids, stage, type
     )
     return APIResponse.success_response(data=response_model)
 

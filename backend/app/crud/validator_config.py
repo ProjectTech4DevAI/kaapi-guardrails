@@ -1,4 +1,5 @@
-from typing import Optional
+import logging
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -9,6 +10,8 @@ from app.core.enum import Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
 from app.schemas.validator_config import ValidatorCreate
 from app.utils import now, split_validator_payload
+
+logger = logging.getLogger(__name__)
 
 
 class ValidatorConfigCrud:
@@ -48,13 +51,17 @@ class ValidatorConfigCrud:
         session: Session,
         organization_id: int,
         project_id: int,
+        ids: Optional[list[UUID]] = None,
         stage: Optional[Stage] = None,
         type: Optional[ValidatorType] = None,
-    ) -> list[dict]:
+    ) -> List[dict]:
         query = select(ValidatorConfig).where(
             ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,
         )
+
+        if ids:
+            query = query.where(ValidatorConfig.id.in_(ids))
 
         if stage:
             query = query.where(ValidatorConfig.stage == stage)
@@ -118,7 +125,8 @@ class ValidatorConfigCrud:
 
     def flatten(self, row: ValidatorConfig) -> dict:
         base = row.model_dump(exclude={"config"})
-        return {**base, **(row.config or {})}
+        config = row.config or {}
+        return {**base, **config}
 
 
 validator_config_crud = ValidatorConfigCrud()
