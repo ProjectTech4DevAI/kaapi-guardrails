@@ -37,19 +37,16 @@ class BanList(SQLModel, table=True):
     )
 
     organization_id: int = Field(
-        index=True,
         nullable=False,
         sa_column_kwargs={"comment": "Identifier for the organization"},
     )
 
     project_id: int = Field(
-        index=True,
         nullable=False,
         sa_column_kwargs={"comment": "Identifier for the project"},
     )
 
     domain: str = Field(
-        index=False,
         nullable=False,
         sa_column_kwargs={"comment": "Domain or context for the ban list entry"},
     )

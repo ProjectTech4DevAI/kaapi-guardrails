@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 
 from app.api.deps import AuthDep, SessionDep
+from app.core.exception_handlers import _safe_error_message
 from app.crud.ban_list import ban_list_crud
 from app.schemas.ban_list import BanListCreate, BanListUpdate, BanListResponse
 from app.utils import APIResponse
@@ -24,12 +25,8 @@ def create_ban_list(
             session, payload, organization_id, project_id
         )
         return APIResponse.success_response(data=response_model)
-    except HTTPException as exc:
-        return APIResponse.failure_response(
-            error=str(exc.detail), metadata={"status_code": exc.status_code}
-        )
     except Exception as exc:
-        return APIResponse.failure_response(error=str(exc))
+        return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
 @router.get("/", response_model=APIResponse[list[BanListResponse]])
@@ -45,12 +42,8 @@ def list_ban_lists(
             session, organization_id, project_id, domain
         )
         return APIResponse.success_response(data=response_model)
-    except HTTPException as exc:
-        return APIResponse.failure_response(
-            error=str(exc.detail), metadata={"status_code": exc.status_code}
-        )
     except Exception as exc:
-        return APIResponse.failure_response(error=str(exc))
+        return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
 @router.get("/{id}", response_model=APIResponse[BanListResponse])
@@ -64,12 +57,8 @@ def get_ban_list(
     try:
         obj = ban_list_crud.get(session, id, organization_id, project_id)
         return APIResponse.success_response(data=obj)
-    except HTTPException as exc:
-        return APIResponse.failure_response(
-            error=str(exc.detail), metadata={"status_code": exc.status_code}
-        )
     except Exception as exc:
-        return APIResponse.failure_response(error=str(exc))
+        return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
 @router.patch("/{id}", response_model=APIResponse[BanListResponse])
@@ -90,12 +79,8 @@ def update_ban_list(
             data=payload,
         )
         return APIResponse.success_response(data=response_model)
-    except HTTPException as exc:
-        return APIResponse.failure_response(
-            error=str(exc.detail), metadata={"status_code": exc.status_code}
-        )
     except Exception as exc:
-        return APIResponse.failure_response(error=str(exc))
+        return APIResponse.failure_response(error=_safe_error_message(exc))
 
 
 @router.delete("/{id}", response_model=APIResponse[dict])
@@ -114,9 +99,5 @@ def delete_ban_list(
         return APIResponse.success_response(
             data={"message": "Ban list deleted successfully"}
         )
-    except HTTPException as exc:
-        return APIResponse.failure_response(
-            error=str(exc.detail), metadata={"status_code": exc.status_code}
-        )
     except Exception as exc:
-        return APIResponse.failure_response(error=str(exc))
+        return APIResponse.failure_response(error=_safe_error_message(exc))
