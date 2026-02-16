@@ -37,13 +37,12 @@ def run_guardrails(
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
 
-    _resolve_ban_list_banned_words(payload, session)
-
     try:
         request_log = request_log_crud.create(payload)
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
+    _resolve_ban_list_banned_words(payload, session)
     return _validate_with_guard(
         payload,
         request_log_crud,

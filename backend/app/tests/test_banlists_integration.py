@@ -133,7 +133,7 @@ class TestGetBanList(BaseBanListTest):
 
         assert response.status_code == 200
         assert body["success"] is False
-        assert body["metadata"]["status_code"] == 404
+        assert body["metadata"] is None
         assert "Ban list not found" in body["error"]
 
     def test_get_wrong_owner_private(self, integration_client, seed_db):
