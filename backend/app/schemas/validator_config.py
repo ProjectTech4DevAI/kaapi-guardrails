@@ -21,10 +21,6 @@ class ValidatorCreate(ValidatorBase):
     pass
 
 
-class ValidatorBatchFetchItem(SQLModel):
-    validator_config_id: UUID
-
-
 class ValidatorUpdate(SQLModel):
     model_config = ConfigDict(extra="forbid")
 

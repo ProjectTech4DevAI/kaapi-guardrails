@@ -6,7 +6,6 @@ from fastapi import APIRouter, Query
 from app.api.deps import AuthDep, SessionDep
 from app.core.enum import Stage, ValidatorType
 from app.schemas.validator_config import (
-    ValidatorBatchFetchItem,
     ValidatorCreate,
     ValidatorResponse,
     ValidatorUpdate,

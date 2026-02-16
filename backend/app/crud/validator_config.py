@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, Optional
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -8,10 +8,7 @@ from sqlmodel import Session, select
 
 from app.core.enum import Stage, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
-from app.schemas.validator_config import (
-    ValidatorBatchFetchItem,
-    ValidatorCreate,
-)
+from app.schemas.validator_config import ValidatorCreate
 from app.utils import now, split_validator_payload
 
 logger = logging.getLogger(__name__)
