@@ -13,7 +13,7 @@ class ValidatorBase(SQLModel):
 
     type: ValidatorType
     stage: Stage
-    on_fail_action: GuardrailOnFail
+    on_fail_action: GuardrailOnFail = GuardrailOnFail.Fix
     is_enabled: bool = True
 
 

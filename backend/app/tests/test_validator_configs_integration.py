@@ -166,6 +166,52 @@ class TestListValidators(BaseValidatorTest):
         assert len(data) == 1
         assert data[0]["type"] == "pii_remover"
 
+    def test_list_validators_filter_by_ids(self, integration_client, clear_database):
+        """Test filtering validators by ids query parameter."""
+        first = self.create_validator(integration_client, "lexical_slur")
+        second = self.create_validator(integration_client, "pii_remover_input")
+        first_id = first.json()["data"]["id"]
+        second_id = second.json()["data"]["id"]
+
+        response = integration_client.get(
+            f"{BASE_URL}{DEFAULT_QUERY_PARAMS}&ids={first_id}",
+        )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data) == 1
+        assert data[0]["id"] == first_id
+        assert data[0]["id"] != second_id
+
+    def test_list_validators_filter_by_multiple_ids(
+        self, integration_client, clear_database
+    ):
+        """Test filtering validators by multiple ids query parameters."""
+        first = self.create_validator(integration_client, "lexical_slur")
+        second = self.create_validator(integration_client, "pii_remover_input")
+        first_id = first.json()["data"]["id"]
+        second_id = second.json()["data"]["id"]
+
+        response = integration_client.get(
+            f"{BASE_URL}{DEFAULT_QUERY_PARAMS}&ids={first_id}&ids={second_id}",
+        )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data) == 2
+        returned_ids = {item["id"] for item in data}
+        assert returned_ids == {first_id, second_id}
+
+    def test_list_validators_invalid_ids_query_returns_422(
+        self, integration_client, clear_database
+    ):
+        """Test invalid UUID in ids query returns validation error."""
+        response = integration_client.get(
+            f"{BASE_URL}{DEFAULT_QUERY_PARAMS}&ids=not-a-uuid",
+        )
+
+        assert response.status_code == 422
+
     def test_list_validators_empty(self, integration_client, clear_database):
         """Test listing validators when none exist."""
         response = integration_client.get(
@@ -202,6 +248,16 @@ class TestGetValidator(BaseValidatorTest):
         response = self.get_validator(integration_client, fake_id)
 
         assert response.status_code == 404
+
+    def test_get_validator_invalid_id_returns_422(
+        self, integration_client, clear_database
+    ):
+        """Test invalid UUID path param returns validation error."""
+        response = integration_client.get(
+            f"{BASE_URL}not-a-uuid/{DEFAULT_QUERY_PARAMS}",
+        )
+
+        assert response.status_code == 422
 
     def test_get_validator_wrong_org(self, integration_client, clear_database):
         """Test that accessing validator from different org returns 404."""
