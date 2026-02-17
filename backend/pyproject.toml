@@ -27,8 +27,6 @@ dependencies = [
     "ftfy",
     "presidio_analyzer>=2.2.360",
     "presidio_anonymizer>=2.2.360",
-    "transformers",
-    "torch",
     "pandas>=2.3.2",
     "numpy>=1.24.0",
     "python-dotenv<2.0.0,>=1.0.0",
