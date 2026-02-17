@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.api.deps import MultitenantAuthDep, SessionDep
 from app.crud.ban_list import ban_list_crud
@@ -28,9 +28,16 @@ def list_ban_lists(
     session: SessionDep,
     auth: MultitenantAuthDep,
     domain: Optional[str] = None,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int | None, Query(ge=1, le=100)] = None,
 ):
     response_model = ban_list_crud.list(
-        session, auth.organization_id, auth.project_id, domain
+        session,
+        auth.organization_id,
+        auth.project_id,
+        domain,
+        offset=offset,
+        limit=limit,
     )
     return APIResponse.success_response(data=response_model)
 

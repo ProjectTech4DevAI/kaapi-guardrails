@@ -1,6 +1,11 @@
 import uuid
 import pytest
-from app.schemas.ban_list import MAX_BANNED_WORD_LENGTH, MAX_BANNED_WORDS_ITEMS
+from app.schemas.ban_list import (
+    MAX_BANNED_WORD_LENGTH,
+    MAX_BANNED_WORDS_ITEMS,
+    MAX_BAN_LIST_DESCRIPTION_LENGTH,
+    MAX_BAN_LIST_NAME_LENGTH,
+)
 from app.tests.seed_data import BAN_LIST_PAYLOADS
 
 pytestmark = pytest.mark.integration
@@ -78,6 +83,28 @@ class TestCreateBanList(BaseBanListTest):
 
         assert response.status_code == 422
 
+    def test_create_validation_error_name_too_long(
+        self, integration_client, clear_database
+    ):
+        response = self.create(
+            integration_client,
+            "minimal",
+            name="n" * (MAX_BAN_LIST_NAME_LENGTH + 1),
+        )
+
+        assert response.status_code == 422
+
+    def test_create_validation_error_description_too_long(
+        self, integration_client, clear_database
+    ):
+        response = self.create(
+            integration_client,
+            "minimal",
+            description="d" * (MAX_BAN_LIST_DESCRIPTION_LENGTH + 1),
+        )
+
+        assert response.status_code == 422
+
 
 class TestListBanLists(BaseBanListTest):
     def test_list_success(self, integration_client, seed_db):
@@ -99,6 +126,26 @@ class TestListBanLists(BaseBanListTest):
         response = self.list(integration_client)
 
         assert response.json()["data"] == []
+
+    def test_list_pagination_with_limit(self, integration_client, seed_db):
+        response = self.list(integration_client, limit=2)
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert len(data) == 2
+
+    def test_list_pagination_with_offset_and_limit(self, integration_client, seed_db):
+        full_response = self.list(integration_client)
+        full_data = full_response.json()["data"]
+
+        response = self.list(integration_client, offset=2, limit=2)
+
+        assert response.status_code == 200
+        paged_data = response.json()["data"]
+        assert len(paged_data) == 2
+        assert [item["id"] for item in paged_data] == [
+            item["id"] for item in full_data[2:4]
+        ]
 
 
 class TestPublicAccess(BaseBanListTest):

@@ -18,12 +18,12 @@ class BanListCrud:
         organization_id: int,
         project_id: int,
     ) -> BanList:
-        obj = BanList(
+        ban_list = BanList(
             **data.model_dump(),
             organization_id=organization_id,
             project_id=project_id,
         )
-        session.add(obj)
+        session.add(ban_list)
 
         try:
             session.commit()
@@ -36,8 +36,8 @@ class BanListCrud:
             session.rollback()
             raise
 
-        session.refresh(obj)
-        return obj
+        session.refresh(ban_list)
+        return ban_list
 
     def get(
         self,
@@ -47,15 +47,15 @@ class BanListCrud:
         project_id: int,
         require_owner: bool = False,
     ) -> BanList:
-        obj = session.get(BanList, id)
+        ban_list = session.get(BanList, id)
 
-        if obj is None:
+        if ban_list is None:
             raise HTTPException(status_code=404, detail="Ban list not found")
 
-        if require_owner or not obj.is_public:
-            self.check_owner(obj, organization_id, project_id)
+        if require_owner or not ban_list.is_public:
+            self.check_owner(ban_list, organization_id, project_id)
 
-        return obj
+        return ban_list
 
     def list(
         self,
@@ -63,8 +63,10 @@ class BanListCrud:
         organization_id: int,
         project_id: int,
         domain: Optional[str] = None,
+        offset: int = 0,
+        limit: int | None = None,
     ) -> List[BanList]:
-        stmt = select(BanList).where(
+        query = select(BanList).where(
             (
                 (BanList.organization_id == organization_id)
                 & (BanList.project_id == project_id)
@@ -73,9 +75,16 @@ class BanListCrud:
         )
 
         if domain:
-            stmt = stmt.where(BanList.domain == domain)
+            query = query.where(BanList.domain == domain)
 
-        return list(session.exec(stmt))
+        query = query.order_by(BanList.created_at.desc(), BanList.id.desc())
+
+        if offset:
+            query = query.offset(offset)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return list(session.exec(query))
 
     def update(
         self,
@@ -85,7 +94,7 @@ class BanListCrud:
         project_id: int,
         data: BanListUpdate,
     ) -> BanList:
-        obj = self.get(
+        ban_list = self.get(
             session,
             id,
             organization_id,
@@ -94,12 +103,12 @@ class BanListCrud:
         )
         update_data = data.model_dump(exclude_unset=True)
 
-        for k, v in update_data.items():
-            setattr(obj, k, v)
+        for field_name, field_value in update_data.items():
+            setattr(ban_list, field_name, field_value)
 
-        obj.updated_at = now()
+        ban_list.updated_at = now()
 
-        session.add(obj)
+        session.add(ban_list)
         try:
             session.commit()
         except IntegrityError:
@@ -111,20 +120,23 @@ class BanListCrud:
             session.rollback()
             raise
 
-        session.refresh(obj)
-        return obj
+        session.refresh(ban_list)
+        return ban_list
 
-    def delete(self, session: Session, obj: BanList):
-        session.delete(obj)
+    def delete(self, session: Session, ban_list: BanList):
+        session.delete(ban_list)
         try:
             session.commit()
         except Exception:
             session.rollback()
             raise
 
-    def check_owner(self, obj: BanList, organization_id: int, project_id: int) -> None:
+    def check_owner(
+        self, ban_list: BanList, organization_id: int, project_id: int
+    ) -> None:
         is_owner = (
-            obj.organization_id == organization_id and obj.project_id == project_id
+            ban_list.organization_id == organization_id
+            and ban_list.project_id == project_id
         )
 
         if not is_owner:

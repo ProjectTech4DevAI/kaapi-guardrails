@@ -67,6 +67,16 @@ def _normalize_error_detail(detail: object) -> str | list:
     return str(detail)
 
 
+def _http_error_response(exc: StarletteHTTPException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=APIResponse.failure_response(
+            _normalize_error_detail(exc.detail)
+        ).model_dump(),
+        headers=exc.headers,
+    )
+
+
 def register_exception_handlers(app: FastAPI):
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(request: Request, exc: RequestValidationError):
@@ -80,25 +90,13 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content=APIResponse.failure_response(
-                _normalize_error_detail(exc.detail)
-            ).model_dump(),
-            headers=exc.headers,
-        )
+        return _http_error_response(exc)
 
     @app.exception_handler(StarletteHTTPException)
     async def starlette_http_exception_handler(
         request: Request, exc: StarletteHTTPException
     ):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content=APIResponse.failure_response(
-                _normalize_error_detail(exc.detail)
-            ).model_dump(),
-            headers=exc.headers,
-        )
+        return _http_error_response(exc)
 
     @app.exception_handler(ResponseValidationError)
     async def response_validation_error_handler(

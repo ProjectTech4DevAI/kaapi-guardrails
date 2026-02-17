@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 from typing import Annotated, Optional
 
@@ -7,6 +8,25 @@ from sqlmodel import SQLModel
 
 MAX_BANNED_WORD_LENGTH = 100
 MAX_BANNED_WORDS_ITEMS = 1000
+MAX_BAN_LIST_NAME_LENGTH = 100
+MAX_BAN_LIST_DESCRIPTION_LENGTH = 500
+
+BanListName = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=MAX_BAN_LIST_NAME_LENGTH,
+    ),
+]
+BanListDescription = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=MAX_BAN_LIST_DESCRIPTION_LENGTH,
+    ),
+]
 
 BannedWord = Annotated[
     str,
@@ -18,8 +38,8 @@ BannedWords = Annotated[list[BannedWord], Field(max_length=MAX_BANNED_WORDS_ITEM
 
 
 class BanListBase(SQLModel):
-    name: str
-    description: str
+    name: BanListName
+    description: BanListDescription
     banned_words: BannedWords
     domain: str
     is_public: bool = False
@@ -30,8 +50,8 @@ class BanListCreate(BanListBase):
 
 
 class BanListUpdate(SQLModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: Optional[BanListName] = None
+    description: Optional[BanListDescription] = None
     banned_words: Optional[BannedWords] = None
     domain: Optional[str] = None
     is_public: Optional[bool] = None
@@ -39,3 +59,5 @@ class BanListUpdate(SQLModel):
 
 class BanListResponse(BanListBase):
     id: UUID
+    created_at: datetime
+    updated_at: datetime

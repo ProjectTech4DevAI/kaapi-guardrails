@@ -67,6 +67,14 @@ def test_list_returns_data(mock_session, sample_ban_list, auth_context):
             auth=auth_context,
         )
 
+        crud.list.assert_called_once_with(
+            mock_session,
+            BAN_LIST_TEST_ORGANIZATION_ID,
+            BAN_LIST_TEST_PROJECT_ID,
+            None,
+            offset=0,
+            limit=None,
+        )
         assert len(result.data) == 1
 
 
