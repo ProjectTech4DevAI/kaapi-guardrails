@@ -1,47 +1,40 @@
 import uuid
 import pytest
 from app.schemas.ban_list import MAX_BANNED_WORD_LENGTH, MAX_BANNED_WORDS_ITEMS
-from app.tests.seed_data import (
-    BAN_LIST_INTEGRATION_ORGANIZATION_ID,
-    BAN_LIST_INTEGRATION_PROJECT_ID,
-    BAN_LIST_PAYLOADS,
-)
+from app.tests.seed_data import BAN_LIST_PAYLOADS
 
 pytestmark = pytest.mark.integration
 
 
 BASE_URL = "/api/v1/guardrails/ban_lists/"
-DEFAULT_QUERY = (
-    f"?organization_id={BAN_LIST_INTEGRATION_ORGANIZATION_ID}"
-    f"&project_id={BAN_LIST_INTEGRATION_PROJECT_ID}"
-)
+DEFAULT_API_KEY = "org1_project1"
+ALT_API_KEY_999 = "org999_project999"
+ALT_API_KEY_2 = "org2_project2"
 
 
 class BaseBanListTest:
-    def create(self, client, payload_key="minimal", **kwargs):
+    def _headers(self, api_key=DEFAULT_API_KEY):
+        return {"X-API-Key": api_key}
+
+    def create(self, client, payload_key="minimal", api_key=DEFAULT_API_KEY, **kwargs):
         payload = {**BAN_LIST_PAYLOADS[payload_key], **kwargs}
-        return client.post(f"{BASE_URL}{DEFAULT_QUERY}", json=payload)
+        return client.post(BASE_URL, json=payload, headers=self._headers(api_key))
 
-    def list(self, client, **filters):
-        params = DEFAULT_QUERY
-        if filters:
-            params += "&" + "&".join(f"{k}={v}" for k, v in filters.items())
-        return client.get(f"{BASE_URL}{params}")
+    def list(self, client, api_key=DEFAULT_API_KEY, **filters):
+        return client.get(BASE_URL, params=filters, headers=self._headers(api_key))
 
-    def get(
-        self,
-        client,
-        id,
-        org=BAN_LIST_INTEGRATION_ORGANIZATION_ID,
-        project=BAN_LIST_INTEGRATION_PROJECT_ID,
-    ):
-        return client.get(f"{BASE_URL}{id}/?organization_id={org}&project_id={project}")
+    def get(self, client, id, api_key=DEFAULT_API_KEY):
+        return client.get(f"{BASE_URL}{id}/", headers=self._headers(api_key))
 
-    def update(self, client, id, payload):
-        return client.patch(f"{BASE_URL}{id}/{DEFAULT_QUERY}", json=payload)
+    def update(self, client, id, payload, api_key=DEFAULT_API_KEY):
+        return client.patch(
+            f"{BASE_URL}{id}/",
+            json=payload,
+            headers=self._headers(api_key),
+        )
 
-    def delete(self, client, id):
-        return client.delete(f"{BASE_URL}{id}/{DEFAULT_QUERY}")
+    def delete(self, client, id, api_key=DEFAULT_API_KEY):
+        return client.delete(f"{BASE_URL}{id}/", headers=self._headers(api_key))
 
 
 class TestCreateBanList(BaseBanListTest):
@@ -56,8 +49,9 @@ class TestCreateBanList(BaseBanListTest):
 
     def test_create_validation_error(self, integration_client, clear_database):
         response = integration_client.post(
-            f"{BASE_URL}{DEFAULT_QUERY}",
+            BASE_URL,
             json={"name": "missing words"},
+            headers=self._headers(),
         )
 
         assert response.status_code == 422
@@ -112,7 +106,7 @@ class TestPublicAccess(BaseBanListTest):
         create_resp = self.create(integration_client, "public")
         ban_id = create_resp.json()["data"]["id"]
 
-        response = self.get(integration_client, ban_id, org=999, project=999)
+        response = self.get(integration_client, ban_id, api_key=ALT_API_KEY_999)
 
         assert response.status_code == 200
 
@@ -143,7 +137,7 @@ class TestGetBanList(BaseBanListTest):
         )
         ban_id = private_ban_list["id"]
 
-        response = self.get(integration_client, ban_id, org=2, project=2)
+        response = self.get(integration_client, ban_id, api_key=ALT_API_KEY_2)
         body = response.json()
 
         assert response.status_code == 403
@@ -189,9 +183,11 @@ class TestUpdateBanList(BaseBanListTest):
         create_resp = self.create(integration_client, "public")
         ban_id = create_resp.json()["data"]["id"]
 
-        response = integration_client.patch(
-            f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999",
-            json={"name": "updated-by-other-org"},
+        response = self.update(
+            integration_client,
+            ban_id,
+            {"name": "updated-by-other-org"},
+            api_key=ALT_API_KEY_999,
         )
         body = response.json()
 
@@ -227,8 +223,10 @@ class TestDeleteBanList(BaseBanListTest):
         )
         ban_id = private_ban_list["id"]
 
-        response = integration_client.delete(
-            f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999"
+        response = self.delete(
+            integration_client,
+            ban_id,
+            api_key=ALT_API_KEY_999,
         )
         body = response.json()
 
@@ -240,8 +238,10 @@ class TestDeleteBanList(BaseBanListTest):
         create_resp = self.create(integration_client, "public")
         ban_id = create_resp.json()["data"]["id"]
 
-        response = integration_client.delete(
-            f"{BASE_URL}{ban_id}/?organization_id=999&project_id=999"
+        response = self.delete(
+            integration_client,
+            ban_id,
+            api_key=ALT_API_KEY_999,
         )
         body = response.json()
 

@@ -8,7 +8,12 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, create_engine, SQLModel
 
 from app.main import app
-from app.api.deps import SessionDep, verify_bearer_token
+from app.api.deps import (
+    SessionDep,
+    TenantContext,
+    validate_multitenant_key,
+    verify_bearer_token,
+)
 from app.core.config import settings
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.models.config.ban_list import BanList
@@ -78,6 +83,28 @@ def clean_db():
 @pytest.fixture(scope="function", autouse=True)
 def override_dependencies():
     app.dependency_overrides[verify_bearer_token] = lambda: True
+    default_scope = TenantContext(
+        organization_id=BAN_LIST_INTEGRATION_ORGANIZATION_ID,
+        project_id=BAN_LIST_INTEGRATION_PROJECT_ID,
+    )
+
+    def override_multitenant_key(x_api_key: str | None = None):
+        if not x_api_key:
+            return default_scope
+
+        token = x_api_key.strip()
+        if token.lower().startswith("apikey "):
+            token = token.split(" ", 1)[1].strip()
+
+        if token == "org999_project999":
+            return TenantContext(organization_id=999, project_id=999)
+
+        if token == "org2_project2":
+            return TenantContext(organization_id=2, project_id=2)
+
+        return default_scope
+
+    app.dependency_overrides[validate_multitenant_key] = override_multitenant_key
 
     app.dependency_overrides[SessionDep] = override_session
 
