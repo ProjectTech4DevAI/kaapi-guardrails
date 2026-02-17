@@ -66,9 +66,9 @@ class PIIRemover(Validator):
         self.entity_types = entity_types or ALL_ENTITY_TYPES
         self.threshold = threshold
         self.on_fail = on_fail
-        os.environ[
-            "TOKENIZERS_PARALLELISM"
-        ] = "false"  # Disables huggingface/tokenizers warning
+        os.environ["TOKENIZERS_PARALLELISM"] = (
+            "false"  # Disables huggingface/tokenizers warning
+        )
 
         self.analyzer = AnalyzerEngine()
 

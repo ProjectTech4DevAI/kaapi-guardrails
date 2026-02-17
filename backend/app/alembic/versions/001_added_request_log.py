@@ -1,16 +1,16 @@
 """Added request log
 
 Revision ID: 001
-Revises: 
+Revises:
 Create Date: 2026-01-07 09:42:54.128852
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-
 
 # revision identifiers, used by Alembic.
 revision: str = "001"

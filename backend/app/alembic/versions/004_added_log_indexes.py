@@ -5,10 +5,10 @@ Revises: 003
 Create Date: 2026-02-11 10:45:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
-
 
 # revision identifiers, used by Alembic.
 revision: str = "004"

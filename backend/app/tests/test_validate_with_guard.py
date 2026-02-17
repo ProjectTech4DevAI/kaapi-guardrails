@@ -15,7 +15,6 @@ from app.tests.seed_data import (
 )
 from app.utils import APIResponse
 
-
 mock_request_log_crud = MagicMock()
 mock_validator_log_crud = MagicMock()
 mock_request_log_id = uuid4()

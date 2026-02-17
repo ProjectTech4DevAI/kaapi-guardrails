@@ -41,7 +41,7 @@ def verify_bearer_token(
     credentials: Annotated[
         HTTPAuthorizationCredentials | None,
         Security(security),
-    ]
+    ],
 ) -> bool:
     if credentials is None:
         raise _unauthorized("Missing Authorization header")
