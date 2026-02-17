@@ -67,7 +67,7 @@ AuthDep = Annotated[bool, Depends(verify_bearer_token)]
 
 
 # ============================================================
-# Multitenant API Key Authentication (For Ban list)
+# Multitenant API Key Authentication (For managing reusable resources like ban list words)
 # ============================================================
 
 
