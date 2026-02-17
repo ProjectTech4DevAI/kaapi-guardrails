@@ -4,6 +4,7 @@ import os
 os.environ["ENVIRONMENT"] = "testing"
 
 import pytest
+from fastapi import Header
 from fastapi.testclient import TestClient
 from sqlmodel import Session, create_engine, SQLModel
 
@@ -88,7 +89,9 @@ def override_dependencies():
         project_id=BAN_LIST_INTEGRATION_PROJECT_ID,
     )
 
-    def override_multitenant_key(x_api_key: str | None = None):
+    def override_multitenant_key(
+        x_api_key: str | None = Header(default=None, alias="X-API-KEY"),
+    ):
         if not x_api_key:
             return default_scope
 

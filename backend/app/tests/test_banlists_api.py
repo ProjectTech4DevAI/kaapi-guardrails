@@ -5,7 +5,7 @@ import pytest
 from sqlmodel import Session
 
 from app.api.deps import TenantContext
-from app.api.routes.ban_list_configs import (
+from app.api.routes.ban_lists import (
     create_ban_list,
     list_ban_lists,
     get_ban_list,
@@ -46,7 +46,7 @@ def auth_context():
 
 
 def test_create_calls_crud(mock_session, create_payload, sample_ban_list, auth_context):
-    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+    with patch("app.api.routes.ban_lists.ban_list_crud") as crud:
         crud.create.return_value = sample_ban_list
 
         result = create_ban_list(
@@ -59,7 +59,7 @@ def test_create_calls_crud(mock_session, create_payload, sample_ban_list, auth_c
 
 
 def test_list_returns_data(mock_session, sample_ban_list, auth_context):
-    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+    with patch("app.api.routes.ban_lists.ban_list_crud") as crud:
         crud.list.return_value = [sample_ban_list]
 
         result = list_ban_lists(
@@ -71,7 +71,7 @@ def test_list_returns_data(mock_session, sample_ban_list, auth_context):
 
 
 def test_get_success(mock_session, sample_ban_list, auth_context):
-    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+    with patch("app.api.routes.ban_lists.ban_list_crud") as crud:
         crud.get.return_value = sample_ban_list
 
         result = get_ban_list(
@@ -84,7 +84,7 @@ def test_get_success(mock_session, sample_ban_list, auth_context):
 
 
 def test_update_success(mock_session, sample_ban_list, auth_context):
-    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+    with patch("app.api.routes.ban_lists.ban_list_crud") as crud:
         crud.update.return_value = sample_ban_list
 
         result = update_ban_list(
@@ -104,7 +104,7 @@ def test_update_success(mock_session, sample_ban_list, auth_context):
 
 
 def test_delete_success(mock_session, sample_ban_list, auth_context):
-    with patch("app.api.routes.ban_list_configs.ban_list_crud") as crud:
+    with patch("app.api.routes.ban_lists.ban_list_crud") as crud:
         crud.get.return_value = sample_ban_list
 
         result = delete_ban_list(

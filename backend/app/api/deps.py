@@ -78,15 +78,15 @@ class TenantContext:
 
 
 def _fetch_tenant_from_backend(token: str) -> TenantContext:
-    if not settings.KAAPI_BACKEND_CREDENTIAL_URL:
+    if not settings.KAAPI_AUTH_URL:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="KAAPI_BACKEND_CREDENTIAL_URL is not configured",
+            detail="KAAPI_AUTH_URL is not configured",
         )
 
     try:
         response = httpx.get(
-            settings.KAAPI_BACKEND_CREDENTIAL_URL,
+            f"{settings.KAAPI_AUTH_URL}/apikeys/verify",
             headers={"X-API-KEY": f"ApiKey {token}"},
             timeout=5,
         )
@@ -99,27 +99,23 @@ def _fetch_tenant_from_backend(token: str) -> TenantContext:
     if response.status_code != 200:
         raise _unauthorized("Invalid API key")
 
-    try:
-        data = response.json()
-    except ValueError:
+    data = response.json()
+    if not isinstance(data, dict) or data.get("success") is not True:
         raise _unauthorized("Invalid API key")
 
-    if not isinstance(data, dict) or not data.get("success"):
+    record = data.get("data")
+    if not isinstance(record, dict):
         raise _unauthorized("Invalid API key")
 
-    records = data.get("data")
-    if not isinstance(records, list) or not records:
+    organization_id = record.get("organization_id")
+    project_id = record.get("project_id")
+    if not isinstance(organization_id, int) or not isinstance(project_id, int):
         raise _unauthorized("Invalid API key")
 
-    record = records[0]
-
-    try:
-        return TenantContext(
-            organization_id=int(record["organization_id"]),
-            project_id=int(record["project_id"]),
-        )
-    except (KeyError, TypeError, ValueError):
-        raise _unauthorized("Invalid API key")
+    return TenantContext(
+        organization_id=organization_id,
+        project_id=project_id,
+    )
 
 
 def validate_multitenant_key(
