@@ -1,5 +1,7 @@
 import logging
+import functools as ft
 from datetime import datetime, timezone
+from pathlib import Path
 from pydantic import BaseModel
 from typing import Any, Dict, Generic, Optional, TypeVar
 
@@ -30,6 +32,20 @@ def split_validator_payload(data: dict):
         raise ValueError(f"Config keys conflict with reserved field names: {overlap}")
 
     return model_fields, config_fields
+
+
+@ft.singledispatch
+def load_description(filename: Path) -> str:
+    if not filename.exists():
+        this = Path(__file__)
+        filename = this.parent.joinpath("api", "docs", filename)
+
+    return filename.read_text()
+
+
+@load_description.register
+def _(filename: str) -> str:
+    return load_description(Path(filename))
 
 
 class APIResponse(BaseModel, Generic[T]):

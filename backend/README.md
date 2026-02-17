@@ -89,7 +89,7 @@ To test the backend run:
 $ bash ./scripts/test.sh
 ```
 
-The tests run with Pytest, modify and add tests to `./backend/tests/`.
+The tests run with Pytest, modify and add tests to `./backend/app/tests/`.
 
 If you use GitHub Actions the tests will run automatically.
 
@@ -140,6 +140,16 @@ predictions.csv contains original text, anonymized output, ground-truth masked t
 
 metrics.json contains entity-level precision, recall, and F1 per PII type.
 
+## Validator configuration guide
+
+Detailed validator configuration reference:
+`backend/app/core/validators/README.md`
+
+## API usage guide
+
+Detailed API usage and end-to-end request examples:
+`backend/app/api/API_USAGE.md`
+
 ### Test running stack
 
 If your stack is already up and you just want to run the tests, you can use:
@@ -172,7 +182,7 @@ Make sure you create a "revision" of your models and that you "upgrade" your dat
 $ docker compose exec backend bash
 ```
 
-* Alembic is already configured to import your SQLModel models from `./backend/app/models.py`.
+* Alembic is configured with SQLModel models under `./backend/app/models/`.
 
 * After changing a model (for example, adding a column), inside the container, create a revision, e.g.:
 
@@ -254,13 +264,13 @@ guardrails hub install hub://guardrails/ban_list
 ## Adding a new validator from Guardrails Hub
 To add a new validator from the Guardrails Hub to this project, follow the steps below.
 
-1. In the `backend/app/models` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
+1. In the `backend/app/core/validators/config` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
 
 ```
 from guardrails.hub import # validator name from Guardrails Hub
 from typing import List, Literal
 
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["<validator-name>"]
@@ -276,7 +286,7 @@ For example, this is the code for [BanList validator](https://guardrailsai.com/h
 from guardrails.hub import BanList
 from typing import List, Literal
 
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 
 class BanListSafetyValidatorConfig(BaseValidatorConfig):
@@ -291,7 +301,7 @@ class BanListSafetyValidatorConfig(BaseValidatorConfig):
 
 ```
 
-2. In `backend/app/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
+2. In `backend/app/schemas/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
 
 ## How to add custom validators?
 To add a custom validator to this project, follow the steps below.
@@ -324,12 +334,12 @@ class <Validator-Name>(Validator):
         # add logic for validation
 ```
 
-2. In the `backend/app/models` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
+2. In the `backend/app/core/validators/config` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
 
 ```
 from typing import List, Literal
 
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["<validator-name>"]
@@ -343,7 +353,7 @@ For example, this is the code for GenderAssumptionBias validator.
 
 ```
 from typing import ClassVar, List, Literal, Optional
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 from app.core.enum import BiasCategories
 from app.core.validators.gender_assumption_bias import GenderAssumptionBias
 
@@ -358,4 +368,4 @@ class GenderAssumptionBiasSafetyValidatorConfig(BaseValidatorConfig):
         )
 ```
 
-2. In `backend/app/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
+2. In `backend/app/schemas/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.

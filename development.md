@@ -10,11 +10,9 @@ docker compose watch
 
 * Now you can open your browser and interact with these URLs:
 
-Backend, JSON based web API based on OpenAPI: <http://localhost:8000>
+Backend, JSON based web API based on OpenAPI: <http://localhost:8001>
 
-Automatic interactive documentation with Swagger UI (from the OpenAPI backend): <http://localhost:8000/docs>
-
-Adminer, database web administration: <http://localhost:8080>
+Automatic interactive documentation with Swagger UI (from the OpenAPI backend): <http://localhost:8001/docs>
 
 **Note**: The first time you start your stack, it might take a minute for it to be ready. While the backend waits for the database to be ready and configures everything. You can check the logs to monitor it.
 
@@ -34,7 +32,7 @@ docker compose logs backend
 
 The Docker Compose files are configured so that each of the services is available in a different port in `localhost`.
 
-For the backend, we use the same port that would be used by their local development server, so, the backend is at `http://localhost:8000`.
+For the backend, Docker maps container port `8000` to host port `8001`, so the backend is at `http://localhost:8001`.
 
 This way, you could turn off a Docker Compose service and start its local development service, and everything would keep working, because it all uses the same ports.
 
@@ -47,12 +45,12 @@ And then you can run the local development server for the backend:
 
 ```bash
 cd backend
-fastapi dev app/main.py
+fastapi dev app/main.py --port 8001
 ```
 
 ## Docker Compose in `localhost.tiangolo.com`
 
-When you start the Docker Compose stack, it uses `localhost` by default, with different ports for each service (backend, frontend, adminer, etc).
+When you start the Docker Compose stack, it uses `localhost` by default, with mapped ports for the backend services defined in `docker-compose.yml`.
 
 When you deploy it to production (or staging), it will deploy each service in a different subdomain, like `api.example.com` for the backend.
 
@@ -62,9 +60,9 @@ If you want to test that it's all working locally, you can edit the local `.env`
 DOMAIN=localhost.tiangolo.com
 ```
 
-That will be used by the Docker Compose files to configure the base domain for the services.
+This variable exists in the template, but subdomain routing via `localhost.tiangolo.com` is not currently wired in this repository's compose stack.
 
-The domain `localhost.tiangolo.com` is a special domain that is configured (with all its subdomains) to point to `127.0.0.1`. This way you can use that for your local development.
+Use `localhost` and mapped ports for local development unless you add your own reverse proxy/domain routing.
 
 After you update it, run again:
 
@@ -148,22 +146,14 @@ The production or staging URLs would use these same paths, but with your own dom
 
 Development URLs, for local development.
 
-Backend: <http://localhost:8000>
+Backend: <http://localhost:8001>
 
-Automatic Interactive Docs (Swagger UI): <http://localhost:8000/docs>
+Automatic Interactive Docs (Swagger UI): <http://localhost:8001/docs>
 
-Automatic Alternative Docs (ReDoc): <http://localhost:8000/redoc>
-
-Adminer: <http://localhost:8080>
+Automatic Alternative Docs (ReDoc): <http://localhost:8001/redoc>
 
 ### Development URLs with `localhost.tiangolo.com` Configured
 
 Development URLs, for local development.
 
-Backend: <http://api.localhost.tiangolo.com>
-
-Automatic Interactive Docs (Swagger UI): <http://api.localhost.tiangolo.com/docs>
-
-Automatic Alternative Docs (ReDoc): <http://api.localhost.tiangolo.com/redoc>
-
-Adminer: <http://localhost.tiangolo.com:8080>
+These URLs require custom local proxy/domain routing, which is not included by default in this repository.

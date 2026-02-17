@@ -33,22 +33,24 @@ You can then update configs in the `.env` files to customize your configurations
 
 ## Bootstrap & development mode
 
-You have two options to start this dockerized setup, depending on whether you want to reset the database:
-### Option A: Run migrations & seed data (will reset DB)
+You have two options to start this dockerized setup:
+### Option A: Run migrations & seed data
 
 Use the prestart profile to automatically run database migrations and seed data.
-This profile also resets the database, so use it only when you want a fresh start.
+This does **not** reset/drop the database.
 ```bash
-docker compose --profile prestart up
+docker compose --profile prestart up prestart
 ```
 
-### Option B: Start normally without resetting DB
+### Option B: Start normally
 
-If you don't want to reset the database, start the project directly:
+Start the project directly:
 ```bash
 docker compose watch
 ```
 This will start all services in watch mode for development — ideal for local iterations.
+
+Backend is exposed at `http://localhost:8001` (container port `8000` mapped to host `8001`).
 
 ### Rebuilding Images
 
@@ -77,7 +79,7 @@ This includes using Docker Compose, custom local domains, `.env` configurations,
 
 ## Release Notes
 
-Check the file [release-notes.md](./release-notes.md).
+Release notes file is not currently maintained in this repository.
 
 ## Credits
 

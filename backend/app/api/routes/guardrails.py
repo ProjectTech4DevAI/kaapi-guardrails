@@ -15,13 +15,16 @@ from app.crud.validator_log import ValidatorLogCrud
 from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
-from app.utils import APIResponse
+from app.utils import APIResponse, load_description
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
 
 @router.post(
-    "/", response_model=APIResponse[GuardrailResponse], response_model_exclude_none=True
+    "/",
+    description=load_description("guardrails/run_guardrails.md"),
+    response_model=APIResponse[GuardrailResponse],
+    response_model_exclude_none=True,
 )
 def run_guardrails(
     payload: GuardrailRequest,
@@ -48,7 +51,7 @@ def run_guardrails(
     )
 
 
-@router.get("/")
+@router.get("/", description=load_description("guardrails/list_validators.md"))
 def list_validators(_: AuthDep):
     """
     Lists all validators and their parameters directly.
