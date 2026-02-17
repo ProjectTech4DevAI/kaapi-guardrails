@@ -17,10 +17,10 @@ def create_ban_list(
     session: SessionDep,
     auth: MultitenantAuthDep,
 ):
-    response_model = ban_list_crud.create(
+    ban_list = ban_list_crud.create(
         session, payload, auth.organization_id, auth.project_id
     )
-    return APIResponse.success_response(data=response_model)
+    return APIResponse.success_response(data=ban_list)
 
 
 @router.get("/", response_model=APIResponse[list[BanListResponse]])
@@ -31,7 +31,7 @@ def list_ban_lists(
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
 ):
-    response_model = ban_list_crud.list(
+    ban_lists = ban_list_crud.list(
         session,
         auth.organization_id,
         auth.project_id,
@@ -39,7 +39,7 @@ def list_ban_lists(
         offset=offset,
         limit=limit,
     )
-    return APIResponse.success_response(data=response_model)
+    return APIResponse.success_response(data=ban_lists)
 
 
 @router.get("/{id}", response_model=APIResponse[BanListResponse])
@@ -59,14 +59,14 @@ def update_ban_list(
     session: SessionDep,
     auth: MultitenantAuthDep,
 ):
-    response_model = ban_list_crud.update(
+    ban_list = ban_list_crud.update(
         session,
         id=id,
         organization_id=auth.organization_id,
         project_id=auth.project_id,
         data=payload,
     )
-    return APIResponse.success_response(data=response_model)
+    return APIResponse.success_response(data=ban_list)
 
 
 @router.delete("/{id}", response_model=APIResponse[dict])

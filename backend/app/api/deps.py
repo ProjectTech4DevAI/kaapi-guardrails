@@ -14,11 +14,6 @@ from app.core.config import settings
 from app.core.db import engine
 
 
-# ============================================================
-# Database Dependency
-# ============================================================
-
-
 def get_db() -> Generator[Session, None, None]:
     with Session(engine) as session:
         yield session
@@ -27,10 +22,7 @@ def get_db() -> Generator[Session, None, None]:
 SessionDep = Annotated[Session, Depends(get_db)]
 
 
-# ============================================================
-# Static Bearer Token Authentication
-# ============================================================
-
+# Static bearer token auth for internal routes.
 security = HTTPBearer(auto_error=False)
 
 
@@ -66,11 +58,7 @@ def verify_bearer_token(
 AuthDep = Annotated[bool, Depends(verify_bearer_token)]
 
 
-# ============================================================
-# Multitenant API Key Authentication (For managing reusable resources like ban list words)
-# ============================================================
-
-
+# Multitenant auth context resolved from X-API-KEY.
 @dataclass
 class TenantContext:
     organization_id: int
@@ -88,7 +76,7 @@ def _fetch_tenant_from_backend(token: str) -> TenantContext:
         response = httpx.get(
             f"{settings.KAAPI_AUTH_URL}/apikeys/verify",
             headers={"X-API-KEY": f"ApiKey {token}"},
-            timeout=5,
+            timeout=settings.KAAPI_AUTH_TIMEOUT,
         )
     except httpx.RequestError:
         raise HTTPException(

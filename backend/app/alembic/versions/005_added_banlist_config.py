@@ -38,19 +38,19 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name", "organization_id", "project_id", name="uq_banlist_name_org_project"
+            "name", "organization_id", "project_id", name="uq_ban_list_name_org_project"
         ),
         sa.CheckConstraint(
             "coalesce(array_length(banned_words, 1), 0) <= 1000",
-            name="ck_banlist_banned_words_max_items",
+            name="ck_ban_list_banned_words_max_items",
         ),
     )
 
-    op.create_index("idx_banlist_organization", "ban_list", ["organization_id"])
-    op.create_index("idx_banlist_project", "ban_list", ["project_id"])
-    op.create_index("idx_banlist_domain", "ban_list", ["domain"])
+    op.create_index("idx_ban_list_organization", "ban_list", ["organization_id"])
+    op.create_index("idx_ban_list_project", "ban_list", ["project_id"])
+    op.create_index("idx_ban_list_domain", "ban_list", ["domain"])
     op.create_index(
-        "idx_banlist_is_public_true",
+        "idx_ban_list_is_public_true",
         "ban_list",
         ["is_public"],
         postgresql_where=sa.text("is_public = true"),

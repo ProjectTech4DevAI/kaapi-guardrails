@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlmodel import Session
 
 from app.models.logging.request_log import RequestLog, RequestLogUpdate, RequestStatus
-from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
+from app.schemas.guardrail_config import GuardrailRequest
 from app.utils import now
 
 

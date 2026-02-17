@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = ""
     GUARDRAILS_HUB_API_KEY: str | None = None
     KAAPI_AUTH_URL: str = ""
+    KAAPI_AUTH_TIMEOUT: int
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
 
     SLUR_LIST_FILENAME: ClassVar[str] = "curated_slurlist_hi_en.csv"
