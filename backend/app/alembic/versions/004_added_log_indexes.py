@@ -5,10 +5,10 @@ Revises: 003
 Create Date: 2026-02-11 10:45:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
-
 
 # revision identifiers, used by Alembic.
 revision: str = "004"
@@ -21,11 +21,19 @@ def upgrade() -> None:
     op.create_index("idx_request_log_request_id", "request_log", ["request_id"])
     op.create_index("idx_request_log_status", "request_log", ["status"])
     op.create_index("idx_request_log_inserted_at", "request_log", ["inserted_at"])
+    op.create_index(
+        "idx_request_log_organization_id", "request_log", ["organization_id"]
+    )
+    op.create_index("idx_request_log_project_id", "request_log", ["project_id"])
 
     op.create_index("idx_validator_log_request_id", "validator_log", ["request_id"])
     op.create_index("idx_validator_log_inserted_at", "validator_log", ["inserted_at"])
     op.create_index("idx_validator_log_outcome", "validator_log", ["outcome"])
     op.create_index("idx_validator_log_name", "validator_log", ["name"])
+    op.create_index(
+        "idx_validator_log_organization_id", "validator_log", ["organization_id"]
+    )
+    op.create_index("idx_validator_log_project_id", "validator_log", ["project_id"])
 
 
 def downgrade() -> None:
@@ -33,7 +41,11 @@ def downgrade() -> None:
     op.drop_index("idx_validator_log_request_id", table_name="validator_log")
     op.drop_index("idx_validator_log_outcome", table_name="validator_log")
     op.drop_index("idx_validator_log_name", table_name="validator_log")
+    op.drop_index("idx_validator_log_project_id", table_name="validator_log")
+    op.drop_index("idx_validator_log_organization_id", table_name="validator_log")
 
     op.drop_index("idx_request_log_inserted_at", table_name="request_log")
     op.drop_index("idx_request_log_status", table_name="request_log")
     op.drop_index("idx_request_log_request_id", table_name="request_log")
+    op.drop_index("idx_request_log_organization_id", table_name="request_log")
+    op.drop_index("idx_request_log_project_id", table_name="request_log")

@@ -6,7 +6,6 @@ from sqlmodel import SQLModel
 from app.core.enum import GuardrailOnFail
 from app.core.on_fail_actions import rephrase_query_on_fail
 
-
 _ON_FAIL_MAP = {
     GuardrailOnFail.Fix: OnFailAction.FIX,
     GuardrailOnFail.Exception: OnFailAction.EXCEPTION,

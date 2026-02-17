@@ -21,6 +21,16 @@ class ValidatorLog(SQLModel, table=True):
         sa_column_kwargs={"comment": "Unique identifier for the validator log entry"},
     )
 
+    organization_id: int = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Identifier for the organization"},
+    )
+
+    project_id: int = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Identifier for the project"},
+    )
+
     request_id: UUID = Field(
         foreign_key="request_log.id",
         nullable=False,

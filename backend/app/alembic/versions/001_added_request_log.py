@@ -1,16 +1,16 @@
 """Added request log
 
 Revision ID: 001
-Revises: 
+Revises:
 Create Date: 2026-01-07 09:42:54.128852
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-
 
 # revision identifiers, used by Alembic.
 revision: str = "001"
@@ -23,6 +23,8 @@ def upgrade() -> None:
     op.create_table(
         "request_log",
         sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("organization_id", sa.Integer(), nullable=False),
+        sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("request_id", sa.Uuid(), nullable=False),
         sa.Column("response_id", sa.Uuid(), nullable=True),
         sa.Column(

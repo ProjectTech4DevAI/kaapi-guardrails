@@ -24,6 +24,16 @@ class RequestLog(SQLModel, table=True):
         sa_column_kwargs={"comment": "Unique identifier for the request log entry"},
     )
 
+    organization_id: int = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Identifier for the organization"},
+    )
+
+    project_id: int = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Identifier for the project"},
+    )
+
     request_id: UUID = Field(
         nullable=False,
         sa_column_kwargs={"comment": "Identifier for the request"},

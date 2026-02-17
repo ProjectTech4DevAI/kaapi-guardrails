@@ -4,12 +4,17 @@ import uuid
 from fastapi import APIRouter
 from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
+from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep
-from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.constants import BAN_LIST, REPHRASE_ON_FAIL_PREFIX
 from app.core.config import settings
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
+from app.core.validators.config.ban_list_safety_validator_config import (
+    BanListSafetyValidatorConfig,
+)
+from app.crud.ban_list import ban_list_crud
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
@@ -33,14 +38,13 @@ def run_guardrails(
     validator_log_crud = ValidatorLogCrud(session=session)
 
     try:
-        request_id = UUID(payload.request_id)
+        request_log = request_log_crud.create(payload)
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    request_log = request_log_crud.create(request_id, input_text=payload.input)
+    _resolve_ban_list_banned_words(payload, session)
     return _validate_with_guard(
-        payload.input,
-        payload.validators,
+        payload,
         request_log_crud,
         request_log.id,
         validator_log_crud,
@@ -78,9 +82,25 @@ def list_validators(_: AuthDep):
     return {"validators": validators}
 
 
+def _resolve_ban_list_banned_words(payload: GuardrailRequest, session: Session) -> None:
+    for validator in payload.validators:
+        if not isinstance(validator, BanListSafetyValidatorConfig):
+            continue
+
+        if validator.type != BAN_LIST or validator.banned_words is not None:
+            continue
+
+        ban_list = ban_list_crud.get(
+            session,
+            id=validator.ban_list_id,
+            organization_id=payload.organization_id,
+            project_id=payload.project_id,
+        )
+        validator.banned_words = ban_list.banned_words
+
+
 def _validate_with_guard(
-    data: str,
-    validators: list,
+    payload: GuardrailRequest,
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
@@ -94,6 +114,8 @@ def _validate_with_guard(
     while still safely handling unexpected runtime errors.
     """
     response_id = uuid.uuid4()
+    data = payload.input
+    validators = payload.validators
     guard: Guard | None = None
 
     def _finalize(
@@ -125,7 +147,7 @@ def _validate_with_guard(
 
         if guard is not None:
             add_validator_logs(
-                guard, request_log_id, validator_log_crud, suppress_pass_logs
+                guard, request_log_id, validator_log_crud, payload, suppress_pass_logs
             )
 
         rephrase_needed = validated_output is not None and validated_output.startswith(
@@ -175,6 +197,7 @@ def add_validator_logs(
     guard: Guard,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
+    payload: GuardrailRequest,
     suppress_pass_logs: bool = False,
 ):
     history = getattr(guard, "history", None)
@@ -202,6 +225,8 @@ def add_validator_logs(
 
         validator_log = ValidatorLog(
             request_id=request_log_id,
+            organization_id=payload.organization_id,
+            project_id=payload.project_id,
             name=log.validator_name,
             input=str(log.value_before_validation),
             output=log.value_after_validation,

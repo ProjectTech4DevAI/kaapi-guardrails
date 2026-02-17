@@ -5,12 +5,12 @@ Revises: 001
 Create Date: 2026-01-07 09:43:48.002351
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-
 
 # revision identifiers, used by Alembic.
 revision: str = "002"
@@ -23,6 +23,8 @@ def upgrade() -> None:
     op.create_table(
         "validator_log",
         sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("organization_id", sa.Integer(), nullable=False),
+        sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("request_id", sa.Uuid(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("input", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
