@@ -69,6 +69,10 @@ class ValidatorConfigCrud:
         if type:
             query = query.where(ValidatorConfig.type == type)
 
+        query = query.order_by(
+            ValidatorConfig.created_at.asc(), ValidatorConfig.id.asc()
+        )
+
         rows = session.exec(query).all()
         return [self.flatten(r) for r in rows]
 
