@@ -42,7 +42,7 @@ def test_validate_multitenant_key_parses_credentials_shape(monkeypatch):
     assert isinstance(context, TenantContext)
     assert (context.organization_id, context.project_id) == (10, 20)
     assert captured["url"] == VERIFY_URL
-    assert captured["headers"]["X-API-KEY"] == "ApiKey abc123"
+    assert captured["headers"]["X-API-KEY"] == "abc123"
     assert captured["timeout"] == 5
 
 
@@ -139,7 +139,7 @@ def test_validate_multitenant_key_accepts_raw_header_value(monkeypatch):
     assert context.organization_id == 1
     assert context.project_id == 1
     assert captured["url"] == "http://localhost:8000/api/v1/apikeys/verify"
-    assert captured["headers"]["X-API-KEY"] == "ApiKey No3x47A5"
+    assert captured["headers"]["X-API-KEY"] == "No3x47A5"
     assert captured["timeout"] == 5
 
 
