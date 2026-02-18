@@ -5,6 +5,7 @@ This guide explains how to use the current API surface for:
 - Validator configuration CRUD
 - Runtime validator discovery
 - Guardrail execution
+- Ban list CRUD for multitenant projects
 
 ## Base URL and Version
 
@@ -16,14 +17,16 @@ Example local base URL:
 
 ## Authentication
 
-Most endpoints require bearer auth:
+This API currently uses two auth modes:
 
-```http
-Authorization: Bearer <plain-text-token>
-```
+1. Bearer token auth (`Authorization: Bearer <plain-text-token>`)
+   - Used by validator config and guardrails endpoints.
+   - The server validates your plaintext bearer token against a SHA-256 digest stored in `AUTH_TOKEN`.
+2. Multitenant API key auth (`X-API-KEY: <token>`)
+   - Used by ban list endpoints.
+   - The API key is verified against `KAAPI_AUTH_URL` and resolves tenant scope (`organization_id`, `project_id`).
 
 Notes:
-- The server validates your plaintext bearer token against a SHA-256 digest stored in `AUTH_TOKEN`.
 - `GET /utils/health-check/` is public.
 
 ## Response Shape
@@ -172,6 +175,8 @@ Query params:
 
 Request fields:
 - `request_id` (UUID string)
+- `organization_id` (int)
+- `project_id` (int)
 - `input` (text to validate)
 - `validators` (runtime validator configs)
 
@@ -187,6 +192,8 @@ curl -X POST "http://localhost:8001/api/v1/guardrails/?suppress_pass_logs=true" 
   -H "Content-Type: application/json" \
   -d '{
     "request_id": "2a6f6d5c-5b9f-4f6b-92e4-cf7d67f87932",
+    "organization_id": 1,
+    "project_id": 101,
     "input": "Amit Gupta phone number is 919611188278",
     "validators": [
       {
@@ -235,7 +242,87 @@ Possible failure response:
 }
 ```
 
-## 5) End-to-End Usage Pattern
+## 5) Ban List APIs (Multitenant)
+
+These endpoints manage tenant-scoped ban lists and use `X-API-KEY` auth.
+
+Base path:
+- `/api/v1/guardrails/ban_lists`
+
+## 5.1 Create ban list
+
+Endpoint:
+- `POST /api/v1/guardrails/ban_lists/`
+
+Example:
+
+```bash
+curl -X POST "http://localhost:8001/api/v1/guardrails/ban_lists/" \
+  -H "X-API-KEY: <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Safety Banned Terms",
+    "description": "Terms not allowed for this tenant policy",
+    "domain": "abuse",
+    "is_public": false,
+    "banned_words": ["slur_a", "slur_b"]
+  }'
+```
+
+## 5.2 List ban lists
+
+Endpoint:
+- `GET /api/v1/guardrails/ban_lists/?domain=abuse&offset=0&limit=20`
+
+Example:
+
+```bash
+curl -X GET "http://localhost:8001/api/v1/guardrails/ban_lists/?offset=0&limit=20" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 5.3 Get ban list by id
+
+Endpoint:
+- `GET /api/v1/guardrails/ban_lists/{id}`
+
+Example:
+
+```bash
+curl -X GET "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 5.4 Update ban list
+
+Endpoint:
+- `PATCH /api/v1/guardrails/ban_lists/{id}`
+
+Example:
+
+```bash
+curl -X PATCH "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>" \
+  -H "X-API-KEY: <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Updated description",
+    "banned_words": ["slur_a", "slur_b", "slur_c"]
+  }'
+```
+
+## 5.5 Delete ban list
+
+Endpoint:
+- `DELETE /api/v1/guardrails/ban_lists/{id}`
+
+Example:
+
+```bash
+curl -X DELETE "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 6) End-to-End Usage Pattern
 
 Recommended request flow:
 1. Create/update validator configs via `/guardrails/validators/configs`.
@@ -243,13 +330,18 @@ Recommended request flow:
 3. Send selected validators in `POST /guardrails/`.
 4. Use `safe_text` as downstream text.
 5. If `rephrase_needed=true`, ask user to rephrase.
+6. For `ban_list` validators without inline `banned_words`, create/manage a ban list first and pass `ban_list_id`.
 
-## 6) Common Errors
+## 7) Common Errors
 
 - `401 Missing Authorization header`
   - Add `Authorization: Bearer <token>`.
 - `401 Invalid authorization token`
   - Verify plaintext token matches server-side hash.
+- `401 Missing X-API-KEY header`
+  - Add `X-API-KEY: <api-key>` for ban list endpoints.
+- `401 Invalid API key`
+  - Verify the API key is valid in the upstream Kaapi auth service.
 - `Invalid request_id`
   - Ensure `request_id` is a valid UUID string.
 - `Validator already exists for this type and stage`
@@ -257,7 +349,7 @@ Recommended request flow:
 - `Validator not found`
   - Confirm `id`, `organization_id`, and `project_id` match.
 
-## 7) Current Validator Types
+## 8) Current Validator Types
 
 From `validators.json`:
 - `uli_slur_match`

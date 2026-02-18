@@ -16,11 +16,14 @@ Requires `Authorization: Bearer <token>`.
 ## Request Body
 - `request_id` (`string`, required)
   - Must be a valid UUID string.
+- `organization_id` (`int`, required)
+- `project_id` (`int`, required)
 - `input` (`string`, required)
   - Raw user text to validate.
 - `validators` (`array`, required)
   - Validator configuration objects.
   - Runtime format uses `on_fail`; config API format using `on_fail_action` is also accepted and normalized.
+  - For `ban_list` validator, pass either `banned_words` or `ban_list_id`.
   - Supported validator `type` values are discovered from configured validator models.
 
 ## Successful Response

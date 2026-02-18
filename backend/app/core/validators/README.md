@@ -173,12 +173,15 @@ Recommended stage:
 - `input` and `output`
 
 Parameters / customization:
-- `banned_words: list[str]` (required)
+- `banned_words: list[str]` (optional if `ban_list_id` is provided)
+- `ban_list_id: UUID` (optional if `banned_words` is provided)
 - `on_fail`
 
 Notes / limitations:
 - Exact-list approach requires ongoing maintenance.
 - Contextual false positives can occur for ambiguous terms.
+- Runtime validation requires at least one of `banned_words` or `ban_list_id`.
+- If `ban_list_id` is used, banned words are resolved from the tenant-scoped Ban List APIs.
 
 ## Example Config Payloads
 
