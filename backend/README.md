@@ -226,6 +226,20 @@ echo -n "your-plain-text-token" | shasum -a 256
 
 Set the resulting digest as `AUTH_TOKEN` in your `.env` / `.env.test`.
 
+## Multitenant API Key Configuration
+
+Ban List APIs use `X-API-KEY` auth instead of bearer token auth.
+
+Required environment variables:
+- `KAAPI_AUTH_URL`: Base URL of the Kaapi auth service used to verify API keys.
+- `KAAPI_AUTH_TIMEOUT`: Timeout in seconds for auth verification calls.
+
+At runtime, the backend calls:
+- `GET {KAAPI_AUTH_URL}/apikeys/verify`
+- Header: `X-API-KEY: ApiKey <token>`
+
+If verification succeeds, tenant scope (`organization_id`, `project_id`) is resolved from the auth response and applied to Ban List CRUD operations.
+
 ## Guardrails AI Setup
 1. Ensure that the .env file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
 
@@ -368,4 +382,4 @@ class GenderAssumptionBiasSafetyValidatorConfig(BaseValidatorConfig):
         )
 ```
 
-2. In `backend/app/schemas/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
+3. In `backend/app/schemas/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
