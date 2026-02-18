@@ -1,8 +1,9 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from sqlmodel import Session
 
 from app.models.logging.request_log import RequestLog, RequestLogUpdate, RequestStatus
+from app.schemas.guardrail_config import GuardrailRequest
 from app.utils import now
 
 
@@ -10,10 +11,13 @@ class RequestLogCrud:
     def __init__(self, session: Session):
         self.session = session
 
-    def create(self, request_id: UUID, input_text: str) -> RequestLog:
+    def create(self, payload: GuardrailRequest) -> RequestLog:
+        request_id = UUID(payload.request_id)
         create_request_log = RequestLog(
             request_id=request_id,
-            request_text=input_text,
+            request_text=payload.input,
+            organization_id=payload.organization_id,
+            project_id=payload.project_id,
         )
         self.session.add(create_request_log)
         self.session.commit()

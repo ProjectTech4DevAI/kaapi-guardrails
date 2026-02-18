@@ -4,7 +4,6 @@ import pytest
 
 from app.core.validators.pii_remover import ALL_ENTITY_TYPES, PIIRemover
 
-
 # -------------------------------
 # Fixtures
 # -------------------------------

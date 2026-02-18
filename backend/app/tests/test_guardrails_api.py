@@ -3,12 +3,18 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.tests.guardrails_mocks import MockResult
+from app.tests.seed_data import (
+    VALIDATOR_TEST_ORGANIZATION_ID,
+    VALIDATOR_TEST_PROJECT_ID,
+)
 from app.tests.utils.constants import SAFE_TEXT_FIELD, VALIDATE_API_PATH
 
 build_guard_path = "app.api.routes.guardrails.build_guard"
 crud_path = "app.api.routes.guardrails.RequestLogCrud"
 
 request_id = "123e4567-e89b-12d3-a456-426614174000"
+organization_id = VALIDATOR_TEST_ORGANIZATION_ID
+project_id = VALIDATOR_TEST_PROJECT_ID
 
 
 @pytest.fixture
@@ -34,6 +40,8 @@ def test_validate_guardrails_success(client):
             VALIDATE_API_PATH,
             json={
                 "request_id": request_id,
+                "organization_id": organization_id,
+                "project_id": project_id,
                 "input": "hello world",
                 "validators": [],
             },
@@ -57,6 +65,8 @@ def test_validate_guardrails_failure(client, mock_crud):
             VALIDATE_API_PATH,
             json={
                 "request_id": request_id,
+                "organization_id": organization_id,
+                "project_id": project_id,
                 "input": "my phone is 999999",
                 "validators": [],
             },
@@ -76,6 +86,8 @@ def test_guardrails_internal_error(client, mock_crud):
             VALIDATE_API_PATH,
             json={
                 "request_id": request_id,
+                "organization_id": organization_id,
+                "project_id": project_id,
                 "input": "text",
                 "validators": [],
             },

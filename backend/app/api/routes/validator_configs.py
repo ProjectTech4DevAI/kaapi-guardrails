@@ -13,7 +13,6 @@ from app.schemas.validator_config import (
 from app.crud.validator_config import validator_config_crud
 from app.utils import APIResponse, load_description
 
-
 router = APIRouter(
     prefix="/guardrails/validators/configs",
     tags=["validator configs"],

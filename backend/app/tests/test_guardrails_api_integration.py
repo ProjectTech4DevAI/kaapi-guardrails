@@ -1,17 +1,25 @@
 import pytest
 
+from app.tests.seed_data import (
+    VALIDATOR_INTEGRATION_ORGANIZATION_ID,
+    VALIDATOR_INTEGRATION_PROJECT_ID,
+)
 from app.tests.utils.constants import SAFE_TEXT_FIELD, VALIDATE_API_PATH
 
 pytestmark = pytest.mark.integration
 
 request_id = "123e4567-e89b-12d3-a456-426614174000"
+organization_id = VALIDATOR_INTEGRATION_ORGANIZATION_ID
+project_id = VALIDATOR_INTEGRATION_PROJECT_ID
 
 
-def test_input_guardrails_with_real_banlist(integration_client):
+def test_input_guardrails_with_real_ban_list(integration_client):
     response = integration_client.post(
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": "this contains badword",
             "validators": [
                 {
@@ -34,6 +42,8 @@ def test_input_guardrails_passes_clean_text(integration_client):
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": "this is clean",
             "validators": [
                 {
@@ -56,6 +66,8 @@ def test_input_guardrails_with_lexical_slur(integration_client):
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": "This sentence contains chakki.",
             "validators": [
                 {
@@ -78,6 +90,8 @@ def test_input_guardrails_with_lexical_slur_clean_text(integration_client):
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": "This is a completely safe sentence",
             "validators": [
                 {
@@ -100,6 +114,8 @@ def test_input_guardrails_with_multiple_validators(integration_client):
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": (
                 "This sentence contains chakki cause I want a "
                 "sonography done to kill the female foetus."
@@ -132,6 +148,8 @@ def test_input_guardrails_with_incorrect_validator_config(integration_client):
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": "This sentence contains chakki.",
             "validators": [
                 {
@@ -155,6 +173,8 @@ def test_input_guardrails_with_validator_actions_exception(integration_client):
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": "This sentence contains chakki.",
             "validators": [
                 {
@@ -179,6 +199,8 @@ def test_input_guardrails_with_validator_actions_rephrase(integration_client):
         VALIDATE_API_PATH,
         json={
             "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
             "input": "This sentence contains chakki.",
             "validators": [
                 {
