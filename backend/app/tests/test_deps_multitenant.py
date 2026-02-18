@@ -37,7 +37,7 @@ def test_validate_multitenant_key_parses_credentials_shape(monkeypatch):
 
     monkeypatch.setattr(httpx, "get", fake_get)
 
-    context = validate_multitenant_key("abc123")
+    context = validate_multitenant_key("ApiKey abc123")
 
     assert isinstance(context, TenantContext)
     assert (context.organization_id, context.project_id) == (10, 20)
@@ -133,7 +133,7 @@ def test_validate_multitenant_key_accepts_raw_header_value(monkeypatch):
 
     monkeypatch.setattr(httpx, "get", fake_get)
 
-    context = validate_multitenant_key("No3x47A5")
+    context = validate_multitenant_key("ApiKey No3x47A5")
 
     assert isinstance(context, TenantContext)
     assert context.organization_id == 1
