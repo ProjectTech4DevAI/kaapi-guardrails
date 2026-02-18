@@ -19,6 +19,9 @@ Each item includes:
 - `type`: validator identifier
 - `config`: full JSON schema for that validator model
 
+Note:
+- Success responses from this endpoint are plain objects (`{"validators": [...]}`), not the `APIResponse` wrapper.
+
 ## Failure Behavior
 Returns `APIResponse` failure when schema extraction fails for any validator model.
 

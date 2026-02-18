@@ -357,5 +357,9 @@ From `validators.json`:
 - `gender_assumption_bias`
 - `ban_list`
 
+Source of truth:
+- `backend/app/core/validators/validators.json`
+- `GET /api/v1/guardrails/` (runtime-discovered schemas/types)
+
 See detailed configuration notes in:
 - `backend/app/core/validators/README.md`

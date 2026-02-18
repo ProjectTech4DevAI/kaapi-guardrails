@@ -12,7 +12,7 @@ Requires `X-API-KEY: <token>`.
 ## Query Parameters
 - `domain` (`string`, optional)
 - `offset` (`int`, optional, default: `0`, min: `0`)
-- `limit` (`int`, optional, min: `1`, max: `100`)
+- `limit` (`int`, optional, default: `null` (no limit), min: `1`, max: `100`)
 
 ## Successful Response
 Returns `APIResponse[list[BanListResponse]]`.

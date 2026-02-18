@@ -268,7 +268,7 @@ Enter API Key below leave empty if you want to keep existing token [HBPo]
 ```
 
 To install any validator from Guardrails Hub:
-```
+```bash
 guardrails hub install hub://guardrails/<validator-name>
 
 Example -
@@ -280,7 +280,7 @@ To add a new validator from the Guardrails Hub to this project, follow the steps
 
 1. In the `backend/app/core/validators/config` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
 
-```
+```python
 from guardrails.hub import # validator name from Guardrails Hub
 from typing import List, Literal
 
@@ -296,7 +296,7 @@ class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
 
 For example, this is the code for [BanList validator](https://guardrailsai.com/hub/validator/guardrails/ban_list).
 
-```
+```python
 from guardrails.hub import BanList
 from typing import List, Literal
 
@@ -322,7 +322,7 @@ To add a custom validator to this project, follow the steps below.
 
 1. Create the custom validator class. Take a look at the `backend/app/core/validators/gender_assumption_bias.py` as an example. Each custom validator should contain an `__init__` and `_validator` method. For example,
 
-```
+```python
 from guardrails import OnFailAction
 from guardrails.validators import (
     FailResult,
@@ -350,7 +350,7 @@ class <Validator-Name>(Validator):
 
 2. In the `backend/app/core/validators/config` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
 
-```
+```python
 from typing import List, Literal
 
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
@@ -365,7 +365,7 @@ class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
 
 For example, this is the code for GenderAssumptionBias validator.
 
-```
+```python
 from typing import ClassVar, List, Literal, Optional
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 from app.core.enum import BiasCategories

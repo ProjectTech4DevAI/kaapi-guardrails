@@ -40,7 +40,7 @@ There are two config shapes used in this project:
 
 ## Validator Details
 
-## 1) Lexical Slur Validator (`uli_slur_match`)
+### 1) Lexical Slur Validator (`uli_slur_match`)
 
 Code:
 - Config: `backend/app/core/validators/config/lexical_slur_safety_validator_config.py`
@@ -78,7 +78,7 @@ Evaluation notes from project documentation:
   - `0` = non-abusive comment
 - Project notes call out acronym/context ambiguity (example: terms that can be abusive in one context but domain-specific neutral in another), so deployment-specific filtering is required.
 
-## 2) PII Remover Validator (`pii_remover`)
+### 2) PII Remover Validator (`pii_remover`)
 
 Code:
 - Config: `backend/app/core/validators/config/pii_remover_safety_validator_config.py`
@@ -119,7 +119,7 @@ Evaluation notes from project documentation:
 - Dataset 2: synthetic Hindi dataset (project-created)
   - Reported results indicate tradeoffs by class, with the custom validator showing stronger balance for NGO deployment contexts where over-masking harms usability.
 
-## 3) Gender Assumption Bias Validator (`gender_assumption_bias`)
+### 3) Gender Assumption Bias Validator (`gender_assumption_bias`)
 
 Code:
 - Config: `backend/app/core/validators/config/gender_assumption_bias_safety_validator_config.py`
@@ -156,7 +156,7 @@ Improvement suggestions from project documentation:
 - Fine-tune generation prompts for neutral language defaults.
 - Consider external LLM-as-judge checks for nuanced multi-turn assumption detection.
 
-## 4) Ban List Validator (`ban_list`)
+### 4) Ban List Validator (`ban_list`)
 
 Code:
 - Config: `backend/app/core/validators/config/ban_list_safety_validator_config.py`
