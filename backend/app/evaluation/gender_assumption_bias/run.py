@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "outputs" / "gender_assumption_bias"
 
 df = pd.read_csv(BASE_DIR / "datasets" / "gender_bias_assumption_dataset.csv")
-print(BASE_DIR, OUT_DIR)
+
 validator = GenderAssumptionBias()
 
 with Profiler() as p:
