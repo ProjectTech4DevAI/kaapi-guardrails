@@ -1,25 +1,7 @@
-Delete a validator configuration by id.
+Deletes a validator configuration by id within an organization/project scope.
 
-The validator must belong to the provided organization and project scope.
+Behavior notes:
+- Deletion is scope-aware; the id must belong to the provided organization/project.
 
-## Authentication
-Requires `Authorization: Bearer <token>`.
-
-## Endpoint
-- Method: `DELETE`
-- Path: `/guardrails/validators/configs/{id}`
-
-## Path Parameters
-- `id` (`UUID`, required)
-
-## Query Parameters
-- `organization_id` (`int`, required)
-- `project_id` (`int`, required)
-
-## Successful Response
-Returns `APIResponse[dict]` with:
-- `message`: `"Validator deleted successfully"`
-
-## Failure Behavior
 Common failure cases:
-- Validator not found for provided scope
+- Validator not found for provided scope.

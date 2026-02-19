@@ -1,25 +1,10 @@
-Get a single validator configuration by id.
+Fetches a single validator configuration by id within an organization/project scope.
 
-The validator must belong to the provided organization and project scope.
+Response data is flattened and includes both base validator fields and validator-specific config fields.
 
-## Authentication
-Requires `Authorization: Bearer <token>`.
+Behavior notes:
+- Scope is strictly enforced; a validator id outside the provided organization/project is treated as inaccessible.
 
-## Endpoint
-- Method: `GET`
-- Path: `/guardrails/validators/configs/{id}`
-
-## Path Parameters
-- `id` (`UUID`, required)
-
-## Query Parameters
-- `organization_id` (`int`, required)
-- `project_id` (`int`, required)
-
-## Successful Response
-Returns `APIResponse[ValidatorResponse]` with flattened validator data.
-
-## Failure Behavior
 Common failure cases:
-- Validator not found
-- Validator exists but does not match provided organization/project scope
+- Validator not found.
+- Validator exists but does not match the provided scope.

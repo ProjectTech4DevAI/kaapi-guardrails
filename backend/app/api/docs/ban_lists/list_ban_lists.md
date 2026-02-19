@@ -1,23 +1,11 @@
-List ban lists for the tenant resolved from `X-API-KEY`.
+Lists ban lists for the tenant resolved from `X-API-KEY`.
 
-Supports optional filtering by `domain` and pagination.
+Behavior notes:
+- Supports filtering by `domain`.
+- Supports pagination via `offset` and `limit`.
+- `offset` defaults to `0`.
+- `limit` is optional; when omitted, no limit is applied.
 
-## Authentication
-Requires `X-API-KEY: <token>`.
-
-## Endpoint
-- Method: `GET`
-- Path: `/guardrails/ban_lists/`
-
-## Query Parameters
-- `domain` (`string`, optional)
-- `offset` (`int`, optional, default: `0`, min: `0`)
-- `limit` (`int`, optional, default: `null` (no limit), min: `1`, max: `100`)
-
-## Successful Response
-Returns `APIResponse[list[BanListResponse]]`.
-
-## Failure Behavior
 Common failure cases:
-- Missing or invalid `X-API-KEY`
-- Invalid query parameter values
+- Missing or invalid API key.
+- Invalid filter/pagination values.

@@ -1,35 +1,12 @@
-Update a validator configuration by id.
+Partially updates a validator configuration by id within an organization/project scope.
 
-Supports partial updates for base fields and validator-specific config fields.
+Behavior notes:
+- Supports patching base fields and validator-specific config fields.
+- Validator-specific updates are merged into the existing config rather than replacing the entire config object.
+- Omitted fields remain unchanged.
+- Updates still honor uniqueness on `(organization_id, project_id, type, stage)`.
 
-## Authentication
-Requires `Authorization: Bearer <token>`.
-
-## Endpoint
-- Method: `PATCH`
-- Path: `/guardrails/validators/configs/{id}`
-
-## Path Parameters
-- `id` (`UUID`, required)
-
-## Query Parameters
-- `organization_id` (`int`, required)
-- `project_id` (`int`, required)
-
-## Request Body
-`ValidatorUpdate` object (all fields optional):
-- `type`
-- `stage`
-- `on_fail_action`
-- `is_enabled`
-
-Additional validator-specific config fields are merged into existing config.
-
-## Successful Response
-Returns `APIResponse[ValidatorResponse]` with updated flattened data.
-
-## Failure Behavior
 Common failure cases:
-- Validator not found for provided scope
-- Duplicate validator constraint after update
-- Invalid update payload
+- Validator not found for provided scope.
+- Duplicate validator conflict after changing `type`/`stage`.
+- Invalid patch payload.

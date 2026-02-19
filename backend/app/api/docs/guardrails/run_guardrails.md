@@ -1,48 +1,15 @@
-Run guardrails on input text with a selected list of validators.
+Runs guardrails on input text with a selected list of validators.
 
-This endpoint evaluates unsafe content and returns a normalized API response with validated text and metadata needed by clients.
+Behavior notes:
+- Runtime validator format uses `on_fail`; config-style payloads with `on_fail_action` are accepted and normalized.
+- `suppress_pass_logs=true` skips persisting pass-case validator logs.
+- `rephrase_needed=true` means the system could not safely auto-fix the input/output and wants the user to retry with a rephrased query.
+- When `rephrase_needed=true`, `safe_text` contains the rephrase prompt shown to the user.
 
-## Authentication
-Requires `Authorization: Bearer <token>`.
+Failure behavior:
+- `success=false` is returned when validation fails without a recoverable fix or an internal runtime error occurs.
+- Common failures include invalid `request_id` format and validator errors without fallback output.
 
-## Endpoint
-- Method: `POST`
-- Path: `/guardrails/`
-
-## Query Parameters
-- `suppress_pass_logs` (`bool`, optional, default: `true`)
-  - When `true`, passing validator results are not persisted in validator logs.
-
-## Request Body
-- `request_id` (`string`, required)
-  - Must be a valid UUID string.
-- `organization_id` (`int`, required)
-- `project_id` (`int`, required)
-- `input` (`string`, required)
-  - Raw user text to validate.
-- `validators` (`array`, required)
-  - Validator configuration objects.
-  - Runtime format uses `on_fail`; config API format using `on_fail_action` is also accepted and normalized.
-  - For `ban_list` validator, pass either `banned_words` or `ban_list_id`.
-  - Supported validator `type` values are discovered from configured validator models.
-
-## Successful Response
-Returns `APIResponse[GuardrailResponse]`.
-
-- `success`: `true`
-- `data.response_id`: generated UUID for this validation response
-- `data.rephrase_needed`: `true` when output starts with the rephrase marker
-- `data.safe_text`: validated or transformed text
-
-## Failure Behavior
-Returns `APIResponse[GuardrailResponse]` with `success: false` when validation fails without a fix or runtime errors occur.
-
-Common failure cases:
-- Invalid `request_id` format
-- Validator failure with no recoverable output
-- Unexpected internal validation/runtime error
-
-## Side Effects
-- Creates a request log entry
-- Updates request log with final status and response text
-- Persists validator logs when available (subject to `suppress_pass_logs`)
+Side effects:
+- Creates and updates request logs for the run.
+- Persists validator logs when available (subject to `suppress_pass_logs`).
