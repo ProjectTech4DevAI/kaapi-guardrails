@@ -152,6 +152,13 @@ Parameters / customization:
 - `threshold: float` (default: `0.5`)
 - `on_fail`
 
+Threshold guidance:
+- `threshold` is the minimum confidence score required for a detected entity to be treated as PII.
+- Lower threshold -> more detections (higher recall, more false positives/over-masking).
+- Higher threshold -> fewer detections (higher precision, more false negatives/missed PII).
+- Start around `0.5`, then tune using real conversation samples by reviewing both missed PII and unnecessary masking.
+- If the product is privacy-critical, prefer a slightly lower threshold and tighter `entity_types`; if readability is primary, prefer a slightly higher threshold.
+
 Supported default entity types:
 - `CREDIT_CARD`, `EMAIL_ADDRESS`, `IBAN_CODE`, `IP_ADDRESS`, `LOCATION`, `MEDICAL_LICENSE`, `NRP`, `PERSON`, `PHONE_NUMBER`, `URL`, `IN_AADHAAR`, `IN_PAN`, `IN_PASSPORT`, `IN_VEHICLE_REGISTRATION`, `IN_VOTER`
 

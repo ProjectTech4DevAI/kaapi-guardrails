@@ -24,14 +24,14 @@ This API currently uses two auth modes:
    - The server validates your plaintext bearer token against a SHA-256 digest stored in `AUTH_TOKEN`.
 2. multi-tenant API key auth (`X-API-KEY: <token>`)
    - Used by ban list endpoints.
-   - The API key is verified against `KAAPI_AUTH_URL` and resolves tenant scope (`organization_id`, `project_id`).
+   - The API key is verified against `KAAPI_AUTH_URL` and resolves tenant's scope (`organization_id`, `project_id`).
 
 Notes:
 - `GET /utils/health-check/` is public.
 
 ## Response Shape
 
-All API responses use:
+All successful API responses use:
 
 ```json
 {
