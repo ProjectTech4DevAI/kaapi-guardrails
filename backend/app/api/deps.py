@@ -75,7 +75,7 @@ def _fetch_tenant_from_backend(token: str) -> TenantContext:
     try:
         response = httpx.get(
             f"{settings.KAAPI_AUTH_URL}/apikeys/verify",
-            headers={"X-API-KEY": f"ApiKey {token}"},
+            headers={"X-API-KEY": token},
             timeout=settings.KAAPI_AUTH_TIMEOUT,
         )
     except httpx.RequestError:
