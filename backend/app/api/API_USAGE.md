@@ -5,7 +5,7 @@ This guide explains how to use the current API surface for:
 - Validator configuration CRUD
 - Runtime validator discovery
 - Guardrail execution
-- Ban list CRUD for multitenant projects
+- Ban list CRUD for multi-tenant projects
 
 ## Base URL and Version
 
@@ -22,7 +22,7 @@ This API currently uses two auth modes:
 1. Bearer token auth (`Authorization: Bearer <plain-text-token>`)
    - Used by validator config and guardrails endpoints.
    - The server validates your plaintext bearer token against a SHA-256 digest stored in `AUTH_TOKEN`.
-2. Multitenant API key auth (`X-API-KEY: <token>`)
+2. multi-tenant API key auth (`X-API-KEY: <token>`)
    - Used by ban list endpoints.
    - The API key is verified against `KAAPI_AUTH_URL` and resolves tenant scope (`organization_id`, `project_id`).
 
@@ -31,7 +31,7 @@ Notes:
 
 ## Response Shape
 
-Most API responses use:
+All API responses use:
 
 ```json
 {
@@ -156,7 +156,6 @@ Endpoint:
 
 Purpose:
 - Returns all runtime validator `type` values and their JSON schemas.
-- Useful for dynamic UI/form generation.
 
 Example:
 
@@ -242,7 +241,7 @@ Possible failure response:
 }
 ```
 
-## 5) Ban List APIs (Multitenant)
+## 5) Ban List APIs (multi-tenant)
 
 These endpoints manage tenant-scoped ban lists and use `X-API-KEY` auth.
 

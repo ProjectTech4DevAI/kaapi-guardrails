@@ -48,28 +48,6 @@ cd backend
 fastapi dev app/main.py --port 8001
 ```
 
-## Docker Compose in `localhost.tiangolo.com`
-
-When you start the Docker Compose stack, it uses `localhost` by default, with mapped ports for the backend services defined in `docker-compose.yml`.
-
-When you deploy it to production (or staging), it will deploy each service in a different subdomain, like `api.example.com` for the backend.
-
-If you want to test that it's all working locally, you can edit the local `.env` file, and change:
-
-```dotenv
-DOMAIN=localhost.tiangolo.com
-```
-
-This variable exists in the template, but subdomain routing via `localhost.tiangolo.com` is not currently wired in this repository's compose stack.
-
-Use `localhost` and mapped ports for local development unless you add your own reverse proxy/domain routing.
-
-After you update it, run again:
-
-```bash
-docker compose watch
-```
-
 ## Docker Compose files and env vars
 
 There is a main `docker-compose.yml` file with all the configurations that apply to the whole stack, it is used automatically by `docker compose`.
@@ -151,9 +129,3 @@ Backend: <http://localhost:8001>
 Automatic Interactive Docs (Swagger UI): <http://localhost:8001/docs>
 
 Automatic Alternative Docs (ReDoc): <http://localhost:8001/redoc>
-
-### Development URLs with `localhost.tiangolo.com` Configured
-
-Development URLs, for local development.
-
-These URLs require custom local proxy/domain routing, which is not included by default in this repository.
