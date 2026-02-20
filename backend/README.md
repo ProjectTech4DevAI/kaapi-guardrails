@@ -97,7 +97,7 @@ If you use GitHub Actions the tests will run automatically.
 
 We can benchmark validators like PII Remover and Lexical Slur Detection on curated datasets.
 
-Download the dataset from [here](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89). This contains multiple folders, one for each validator. Each folder contains a testing dataset in csv format for the validator. Download these csv files and store them in `backend/app/evaluation/datasets/`.
+Download the dataset from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89).This contains multiple folders, one for each validator. Each folder contains a testing dataset in csv format for the validator. Download these csv files and store them in `backend/app/evaluation/datasets/`.
 
 Important: each `run.py` expects a specific filename, so dataset files must be named exactly as below:
 - `app/evaluation/lexical_slur/run.py` expects `lexical_slur_testing_dataset.csv`
@@ -106,14 +106,14 @@ Important: each `run.py` expects a specific filename, so dataset files must be n
 
 Once these files are in place with the exact names above, run the evaluation scripts.
 
-For lexical slur match, ban list and gender assumption bias, testing doesn't make much sense cause these are deterministic. However, we curated datasets for lexical slur match and gender assumption bias for benchmarking. The curated dataset for lexical slur match will be later in toxicity detection workflows.
+Unit tests for lexical slur match, ban list, and gender assumption bias validators have limited value because their logic is deterministic. However, curated datasets exist for lexical slur match and gender assumption bias to benchmark accuracy and latency. The lexical slur dataset will also be used in future toxicity detection workflows.
 
 Each validator produces:
 - predictions.csv – row-level outputs for debugging and analysis
 - metrics.json – aggregated accuracy + performance metrics
 
 Standardized output structure:
-```
+```text
 app/evaluation/outputs/
   lexical_slur/
     predictions.csv
@@ -128,8 +128,28 @@ app/evaluation/outputs/
 
 - To evaluate Lexical Slur Validator, run the offline evaluation script: `python app/evaluation/lexical_slur/run.py` 
 
-Expected outputs:
+- To run all evaluation scripts together, use:
+```bash
+bash scripts/run_all_evaluations.sh
 ```
+This script runs the evaluators in sequence:
+- `app/evaluation/lexical_slur/run.py`
+- `app/evaluation/pii/run.py`
+- `app/evaluation/gender_assumption_bias/run.py`
+
+Expected aggregate outputs:
+```text
+app/evaluation/outputs/
+  lexical_slur/predictions.csv
+  lexical_slur/metrics.json
+  pii_remover/predictions.csv
+  pii_remover/metrics.json
+  gender_assumption_bias/predictions.csv
+  gender_assumption_bias/metrics.json
+```
+
+Expected outputs:
+```text
 app/evaluation/outputs/lexical_slur/
 ├── predictions.csv
 └── metrics.json
@@ -141,7 +161,7 @@ metrics.json contains binary classification metrics and performance stats (laten
 - To evaluate PII Validator, run the PII evaluation script: `python app/evaluation/pii/run.py`
 
 Expected outputs:
-```
+```text
 app/evaluation/outputs/pii_remover/
 ├── predictions.csv
 └── metrics.json
@@ -153,7 +173,7 @@ metrics.json contains entity-level precision, recall, and F1 per PII type.
 - To evaluate Gender Assumption Bias Validator, run: `python app/evaluation/gender_assumption_bias/run.py`
 
 Expected outputs:
-```
+```text
 app/evaluation/outputs/gender_assumption_bias/
 ├── predictions.csv
 └── metrics.json
