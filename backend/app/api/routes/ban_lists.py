@@ -6,12 +6,16 @@ from fastapi import APIRouter, Query
 from app.api.deps import MultitenantAuthDep, SessionDep
 from app.crud.ban_list import ban_list_crud
 from app.schemas.ban_list import BanListCreate, BanListUpdate, BanListResponse
-from app.utils import APIResponse
+from app.utils import APIResponse, load_description
 
 router = APIRouter(prefix="/guardrails/ban_lists", tags=["Ban Lists"])
 
 
-@router.post("/", response_model=APIResponse[BanListResponse])
+@router.post(
+    "/",
+    description=load_description("ban_lists/create_ban_list.md"),
+    response_model=APIResponse[BanListResponse],
+)
 def create_ban_list(
     payload: BanListCreate,
     session: SessionDep,
@@ -23,7 +27,11 @@ def create_ban_list(
     return APIResponse.success_response(data=ban_list)
 
 
-@router.get("/", response_model=APIResponse[list[BanListResponse]])
+@router.get(
+    "/",
+    description=load_description("ban_lists/list_ban_lists.md"),
+    response_model=APIResponse[list[BanListResponse]],
+)
 def list_ban_lists(
     session: SessionDep,
     auth: MultitenantAuthDep,
@@ -42,7 +50,11 @@ def list_ban_lists(
     return APIResponse.success_response(data=ban_lists)
 
 
-@router.get("/{id}", response_model=APIResponse[BanListResponse])
+@router.get(
+    "/{id}",
+    description=load_description("ban_lists/get_ban_list.md"),
+    response_model=APIResponse[BanListResponse],
+)
 def get_ban_list(
     id: UUID,
     session: SessionDep,
@@ -52,7 +64,11 @@ def get_ban_list(
     return APIResponse.success_response(data=obj)
 
 
-@router.patch("/{id}", response_model=APIResponse[BanListResponse])
+@router.patch(
+    "/{id}",
+    description=load_description("ban_lists/update_ban_list.md"),
+    response_model=APIResponse[BanListResponse],
+)
 def update_ban_list(
     id: UUID,
     payload: BanListUpdate,
@@ -69,7 +85,11 @@ def update_ban_list(
     return APIResponse.success_response(data=ban_list)
 
 
-@router.delete("/{id}", response_model=APIResponse[dict])
+@router.delete(
+    "/{id}",
+    description=load_description("ban_lists/delete_ban_list.md"),
+    response_model=APIResponse[dict],
+)
 def delete_ban_list(
     id: UUID,
     session: SessionDep,

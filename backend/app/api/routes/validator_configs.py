@@ -11,7 +11,7 @@ from app.schemas.validator_config import (
     ValidatorUpdate,
 )
 from app.crud.validator_config import validator_config_crud
-from app.utils import APIResponse
+from app.utils import APIResponse, load_description
 
 router = APIRouter(
     prefix="/guardrails/validators/configs",
@@ -19,7 +19,11 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=APIResponse[ValidatorResponse])
+@router.post(
+    "/",
+    description=load_description("validator_configs/create_validator.md"),
+    response_model=APIResponse[ValidatorResponse],
+)
 def create_validator(
     payload: ValidatorCreate,
     session: SessionDep,
@@ -33,7 +37,11 @@ def create_validator(
     return APIResponse.success_response(data=response_model)
 
 
-@router.get("/", response_model=APIResponse[list[ValidatorResponse]])
+@router.get(
+    "/",
+    description=load_description("validator_configs/list_validators.md"),
+    response_model=APIResponse[list[ValidatorResponse]],
+)
 def list_validators(
     organization_id: int,
     project_id: int,
@@ -49,7 +57,11 @@ def list_validators(
     return APIResponse.success_response(data=response_model)
 
 
-@router.get("/{id}", response_model=APIResponse[ValidatorResponse])
+@router.get(
+    "/{id}",
+    description=load_description("validator_configs/get_validator.md"),
+    response_model=APIResponse[ValidatorResponse],
+)
 def get_validator(
     id: UUID,
     organization_id: int,
@@ -61,7 +73,11 @@ def get_validator(
     return APIResponse.success_response(data=validator_config_crud.flatten(obj))
 
 
-@router.patch("/{id}", response_model=APIResponse[ValidatorResponse])
+@router.patch(
+    "/{id}",
+    description=load_description("validator_configs/update_validator.md"),
+    response_model=APIResponse[ValidatorResponse],
+)
 def update_validator(
     id: UUID,
     organization_id: int,
@@ -77,7 +93,11 @@ def update_validator(
     return APIResponse.success_response(data=response_model)
 
 
-@router.delete("/{id}", response_model=APIResponse[dict])
+@router.delete(
+    "/{id}",
+    description=load_description("validator_configs/delete_validator.md"),
+    response_model=APIResponse[dict],
+)
 def delete_validator(
     id: UUID,
     organization_id: int,

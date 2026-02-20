@@ -89,7 +89,7 @@ To test the backend run:
 $ bash ./scripts/test.sh
 ```
 
-The tests run with Pytest, modify and add tests to `./backend/tests/`.
+The tests run with Pytest, modify and add tests to `./backend/app/tests/`.
 
 If you use GitHub Actions the tests will run automatically.
 
@@ -182,6 +182,16 @@ app/evaluation/outputs/gender_assumption_bias/
 
 `metrics.json` contains binary classification metrics and performance stats (latency + peak memory).
 
+## Validator configuration guide
+
+Detailed validator configuration reference:
+`backend/app/core/validators/README.md`
+
+## API usage guide
+
+Detailed API usage and end-to-end request examples:
+`backend/app/api/API_USAGE.md`
+
 ### Test running stack
 
 If your stack is already up and you just want to run the tests, you can use:
@@ -214,7 +224,7 @@ Make sure you create a "revision" of your models and that you "upgrade" your dat
 $ docker compose exec backend bash
 ```
 
-* Alembic is already configured to import your SQLModel models from `./backend/app/models.py`.
+* Alembic is configured with SQLModel models under `./backend/app/models/`.
 
 * After changing a model (for example, adding a column), inside the container, create a revision, e.g.:
 
@@ -258,6 +268,20 @@ echo -n "your-plain-text-token" | shasum -a 256
 
 Set the resulting digest as `AUTH_TOKEN` in your `.env` / `.env.test`.
 
+## Multi-tenant API Key Configuration
+
+Ban List APIs use `X-API-KEY` auth instead of bearer token auth.
+
+Required environment variables:
+- `KAAPI_AUTH_URL`: Base URL of the Kaapi auth service used to verify API keys.
+- `KAAPI_AUTH_TIMEOUT`: Timeout in seconds for auth verification calls.
+
+At runtime, the backend calls:
+- `GET {KAAPI_AUTH_URL}/apikeys/verify`
+- Header: `X-API-KEY: ApiKey <token>`
+
+If verification succeeds, tenant's scope (`organization_id`, `project_id`) is resolved from the auth response and applied to Ban List CRUD operations.
+
 ## Guardrails AI Setup
 1. Ensure that the .env file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
 
@@ -286,7 +310,7 @@ Enter API Key below leave empty if you want to keep existing token [HBPo]
 ```
 
 To install any validator from Guardrails Hub:
-```
+```bash
 guardrails hub install hub://guardrails/<validator-name>
 
 Example -
@@ -296,13 +320,13 @@ guardrails hub install hub://guardrails/ban_list
 ## Adding a new validator from Guardrails Hub
 To add a new validator from the Guardrails Hub to this project, follow the steps below.
 
-1. In the `backend/app/models` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
+1. In the `backend/app/core/validators/config` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
 
-```
+```python
 from guardrails.hub import # validator name from Guardrails Hub
 from typing import List, Literal
 
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["<validator-name>"]
@@ -314,11 +338,11 @@ class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
 
 For example, this is the code for [BanList validator](https://guardrailsai.com/hub/validator/guardrails/ban_list).
 
-```
+```python
 from guardrails.hub import BanList
 from typing import List, Literal
 
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 
 class BanListSafetyValidatorConfig(BaseValidatorConfig):
@@ -333,14 +357,14 @@ class BanListSafetyValidatorConfig(BaseValidatorConfig):
 
 ```
 
-2. In `backend/app/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
+2. In `backend/app/schemas/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
 
 ## How to add custom validators?
 To add a custom validator to this project, follow the steps below.
 
 1. Create the custom validator class. Take a look at the `backend/app/core/validators/gender_assumption_bias.py` as an example. Each custom validator should contain an `__init__` and `_validator` method. For example,
 
-```
+```python
 from guardrails import OnFailAction
 from guardrails.validators import (
     FailResult,
@@ -366,12 +390,12 @@ class <Validator-Name>(Validator):
         # add logic for validation
 ```
 
-2. In the `backend/app/models` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
+2. In the `backend/app/core/validators/config` folder, create a new Python file called `<validator_name>_safety_validator_config.py`. Add the following code there:
 
-```
+```python
 from typing import List, Literal
 
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["<validator-name>"]
@@ -383,9 +407,9 @@ class <Validator-name>SafetyValidatorConfig(BaseValidatorConfig):
 
 For example, this is the code for GenderAssumptionBias validator.
 
-```
+```python
 from typing import ClassVar, List, Literal, Optional
-from app.models.base_validator_config import BaseValidatorConfig
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
 from app.core.enum import BiasCategories
 from app.core.validators.gender_assumption_bias import GenderAssumptionBias
 
@@ -400,4 +424,4 @@ class GenderAssumptionBiasSafetyValidatorConfig(BaseValidatorConfig):
         )
 ```
 
-2. In `backend/app/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
+3. In `backend/app/schemas/guardrail_config.py`, add the newly created config class to `ValidatorConfigItem`.
