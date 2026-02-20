@@ -58,11 +58,11 @@ write_json(
         "metrics": metrics,
         "performance": {
             "latency_ms": {
-                "mean": sum(p.latencies) / len(p.latencies),
-                "p95": sorted(p.latencies)[int(len(p.latencies) * 0.95)],
-                "max": max(p.latencies),
+                "mean": round(sum(p.latencies) / len(p.latencies), 2),
+                "p95": round(sorted(p.latencies)[int(len(p.latencies) * 0.95)], 2),
+                "max": round(max(p.latencies), 2),
             },
-            "memory_mb": p.peak_memory_mb,
+            "memory_mb": round(p.peak_memory_mb, 2),
         },
     },
     OUT_DIR / "metrics.json",
