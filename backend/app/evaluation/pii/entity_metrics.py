@@ -75,9 +75,9 @@ def finalize_entity_metrics(stats: Dict[str, dict]) -> Dict[str, dict]:
             "tp": tp,
             "fp": fp,
             "fn": fn,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
+            "precision": round(precision, 2),
+            "recall": round(recall, 2),
+            "f1": round(f1, 2),
         }
 
     return report

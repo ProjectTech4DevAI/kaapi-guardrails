@@ -31,9 +31,9 @@ def compute_binary_metrics(y_true, y_pred):
         "tn": tn,
         "fp": fp,
         "fn": fn,
-        "precision": precision,
-        "recall": recall,
-        "f1": f1,
+        "precision": round(precision, 2),
+        "recall": round(recall, 2),
+        "f1": round(f1, 2),
     }
 
 

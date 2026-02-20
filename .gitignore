@@ -11,3 +11,4 @@ htmlcov
 .env.test
 metrics.json
 predictions.csv
+backend/app/evaluation/datasets/*.csv
