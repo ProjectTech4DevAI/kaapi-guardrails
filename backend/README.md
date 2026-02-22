@@ -126,8 +126,6 @@ app/evaluation/outputs/
     metrics.json
 ```
 
-- To evaluate Lexical Slur Validator, run the offline evaluation script: `python app/evaluation/lexical_slur/run.py` 
-
 - To run all evaluation scripts together, use:
 ```bash
 bash scripts/run_all_evaluations.sh
@@ -137,47 +135,20 @@ This script runs the evaluators in sequence:
 - `app/evaluation/pii/run.py`
 - `app/evaluation/gender_assumption_bias/run.py`
 
-Expected aggregate outputs:
-```text
-app/evaluation/outputs/
-  lexical_slur/predictions.csv
-  lexical_slur/metrics.json
-  pii_remover/predictions.csv
-  pii_remover/metrics.json
-  gender_assumption_bias/predictions.csv
-  gender_assumption_bias/metrics.json
-```
-
-Expected outputs:
-```text
-app/evaluation/outputs/lexical_slur/
-├── predictions.csv
-└── metrics.json
-```
 predictions.csv contains row-level inputs, predictions, and labels.
 
 metrics.json contains binary classification metrics and performance stats (latency + peak memory).
 
+- To evaluate Lexical Slur Validator, run the offline evaluation script: `python app/evaluation/lexical_slur/run.py` 
+
 - To evaluate PII Validator, run the PII evaluation script: `python app/evaluation/pii/run.py`
 
-Expected outputs:
-```text
-app/evaluation/outputs/pii_remover/
-├── predictions.csv
-└── metrics.json
-```
-predictions.csv contains original text, anonymized output, ground-truth masked text
+`predictions.csv` contains original text, anonymized output, ground-truth masked text
 
-metrics.json contains entity-level precision, recall, and F1 per PII type.
+`metrics.json` contains entity-level precision, recall, and F1 per PII type.
 
 - To evaluate Gender Assumption Bias Validator, run: `python app/evaluation/gender_assumption_bias/run.py`
 
-Expected outputs:
-```text
-app/evaluation/outputs/gender_assumption_bias/
-├── predictions.csv
-└── metrics.json
-```
 `predictions.csv` contains biased and neutral samples with predicted outcomes for each.
 
 `metrics.json` contains binary classification metrics and performance stats (latency + peak memory).
