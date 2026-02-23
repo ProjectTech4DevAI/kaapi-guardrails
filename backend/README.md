@@ -110,7 +110,7 @@ Unit tests for lexical slur match, ban list, and gender assumption bias validato
 
 Each validator produces:
 - predictions.csv – row-level outputs for debugging and analysis
-- metrics.json – aggregated accuracy + performance metrics
+- metrics.json – aggregated accuracy + performance metrics (latency and peak memory)
 
 Standardized output structure:
 ```text
