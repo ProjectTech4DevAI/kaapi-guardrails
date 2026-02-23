@@ -95,7 +95,7 @@ If you use GitHub Actions the tests will run automatically.
 
 ## Running evaluation tests
 
-We can benchmark validators like PII Remover and Lexical Slur Detection on curated datasets.
+We can benchmark validators on curated datasets.
 
 Download the dataset from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89).This contains multiple folders, one for each validator. Each folder contains a testing dataset in csv format for the validator. Download these csv files and store them in `backend/app/evaluation/datasets/`.
 
@@ -139,19 +139,7 @@ predictions.csv contains row-level inputs, predictions, and labels.
 
 metrics.json contains binary classification metrics and performance stats (latency + peak memory).
 
-- To evaluate Lexical Slur Validator, run the offline evaluation script: `python app/evaluation/lexical_slur/run.py` 
-
-- To evaluate PII Validator, run the PII evaluation script: `python app/evaluation/pii/run.py`
-
-`predictions.csv` contains original text, anonymized output, ground-truth masked text
-
-`metrics.json` contains entity-level precision, recall, and F1 per PII type.
-
-- To evaluate Gender Assumption Bias Validator, run: `python app/evaluation/gender_assumption_bias/run.py`
-
-`predictions.csv` contains biased and neutral samples with predicted outcomes for each.
-
-`metrics.json` contains binary classification metrics and performance stats (latency + peak memory).
+To evaluate any specific evaluator, run the offline evaluation script: `python app/evaluation/<validator-path>/run.py` 
 
 ## Validator configuration guide
 

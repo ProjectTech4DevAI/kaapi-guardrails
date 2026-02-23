@@ -36,7 +36,9 @@ def compute_entity_metrics(
     """
     Compute per-entity TP / FP / FN counts across the dataset.
     """
-    stats = defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0})
+    stats = defaultdict(
+        lambda: {"true_positive": 0, "false_positive": 0, "false_negative": 0}
+    )
 
     for gold_txt, pred_txt in zip(gold_texts, pred_texts, strict=True):
         gold_entities = extract_entities(gold_txt)
@@ -45,11 +47,11 @@ def compute_entity_metrics(
         tp, fp, fn = compare_entities(gold_entities, pred_entities)
 
         for e in tp:
-            stats[e]["tp"] += 1
+            stats[e]["true_positive"] += 1
         for e in fp:
-            stats[e]["fp"] += 1
+            stats[e]["false_positive"] += 1
         for e in fn:
-            stats[e]["fn"] += 1
+            stats[e]["false_negative"] += 1
 
     return finalize_entity_metrics(stats)
 
@@ -61,7 +63,7 @@ def finalize_entity_metrics(stats: Dict[str, dict]) -> Dict[str, dict]:
     report = {}
 
     for entity, s in stats.items():
-        tp, fp, fn = s["tp"], s["fp"], s["fn"]
+        tp, fp, fn = s["true_positive"], s["false_positive"], s["false_negative"]
 
         precision = tp / (tp + fp) if (tp + fp) else 0.0
         recall = tp / (tp + fn) if (tp + fn) else 0.0
@@ -72,9 +74,9 @@ def finalize_entity_metrics(stats: Dict[str, dict]) -> Dict[str, dict]:
         )
 
         report[entity] = {
-            "tp": tp,
-            "fp": fp,
-            "fn": fn,
+            "true_positive": tp,
+            "false_positive": fp,
+            "false_negative": fn,
             "precision": round(precision, 2),
             "recall": round(recall, 2),
             "f1": round(f1, 2),
