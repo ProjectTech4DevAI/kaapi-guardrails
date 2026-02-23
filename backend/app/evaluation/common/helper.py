@@ -27,13 +27,13 @@ def compute_binary_metrics(y_true, y_pred):
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
 
     return {
-        "tp": tp,
-        "tn": tn,
-        "fp": fp,
-        "fn": fn,
-        "precision": precision,
-        "recall": recall,
-        "f1": f1,
+        "true_positive": tp,
+        "true_negative": tn,
+        "false_positive": fp,
+        "false_negative": fn,
+        "precision": round(precision, 2),
+        "recall": round(recall, 2),
+        "f1": round(f1, 2),
     }
 
 
