@@ -135,11 +135,7 @@ This script runs the evaluators in sequence:
 - `app/evaluation/pii/run.py`
 - `app/evaluation/gender_assumption_bias/run.py`
 
-predictions.csv contains row-level inputs, predictions, and labels.
-
-metrics.json contains binary classification metrics and performance stats (latency + peak memory).
-
-To evaluate any specific evaluator, run the offline evaluation script: `python app/evaluation/<validator-path>/run.py` 
+To evaluate any specific evaluator, run the offline evaluation script: `python <validator's eval script path>` 
 
 ## Validator configuration guide
 
