@@ -103,10 +103,11 @@ Important: each `run.py` expects a specific filename, so dataset files must be n
 - `app/evaluation/lexical_slur/run.py` expects `lexical_slur_testing_dataset.csv`
 - `app/evaluation/pii/run.py` expects `pii_detection_testing_dataset.csv`
 - `app/evaluation/gender_assumption_bias/run.py` expects `gender_bias_assumption_dataset.csv`
+- `app/evaluation/ban_list/run.py` expects `ban_list_testing_dataset.csv`
 
 Once these files are in place with the exact names above, run the evaluation scripts.
 
-Unit tests for lexical slur match, ban list, and gender assumption bias validators have limited value because their logic is deterministic. However, curated datasets exist for lexical slur match and gender assumption bias to benchmark accuracy and latency. The lexical slur dataset will also be used in future toxicity detection workflows.
+Unit tests for lexical slur match, ban list, and gender assumption bias validators have limited value because their logic is deterministic. Curated datasets are used to benchmark accuracy and latency for lexical slur, gender assumption bias, and ban list. The lexical slur dataset will also be used in future toxicity detection workflows.
 
 Each validator produces:
 - predictions.csv – row-level outputs for debugging and analysis
@@ -121,6 +122,9 @@ app/evaluation/outputs/
   gender_assumption_bias/
     predictions.csv
     metrics.json
+  ban_list/
+    predictions.csv
+    metrics.json
   pii_remover/
     predictions.csv
     metrics.json
@@ -128,12 +132,20 @@ app/evaluation/outputs/
 
 - To run all evaluation scripts together, use:
 ```bash
-bash scripts/run_all_evaluations.sh
+BAN_LIST_WORDS="word1,word2" bash scripts/run_all_evaluations.sh
 ```
+or
+```bash
+bash scripts/run_all_evaluations.sh BAN_LIST_WORDS="word1,word2"
+```
+
+`BAN_LIST_WORDS` is required for the `ban_list` evaluator and should be a comma-separated list.
+
 This script runs the evaluators in sequence:
 - `app/evaluation/lexical_slur/run.py`
 - `app/evaluation/pii/run.py`
 - `app/evaluation/gender_assumption_bias/run.py`
+- `app/evaluation/ban_list/run.py`
 
 To evaluate any specific evaluator, run the offline evaluation script: `python <validator's eval script path>` 
 
