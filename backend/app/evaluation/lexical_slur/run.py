@@ -4,8 +4,9 @@ from guardrails.validators import FailResult
 
 from app.core.validators.lexical_slur import LexicalSlur
 from app.evaluation.common.helper import (
-    compute_binary_metrics,
+    build_evaluation_report,
     Profiler,
+    compute_binary_metrics,
     write_csv,
     write_json,
 )
@@ -33,18 +34,11 @@ metrics = compute_binary_metrics(df["y_true"], df["y_pred"])
 write_csv(df.drop(columns=["result"]), OUT_DIR / "predictions.csv")
 
 write_json(
-    {
-        "guardrail": "lexical_slur",
-        "num_samples": len(df),
-        "metrics": metrics,
-        "performance": {
-            "latency_ms": {
-                "mean": round(sum(p.latencies) / len(p.latencies), 2),
-                "p95": round(sorted(p.latencies)[int(len(p.latencies) * 0.95)], 2),
-                "max": round(max(p.latencies), 2),
-            },
-            "memory_mb": round(p.peak_memory_mb, 2),
-        },
-    },
+    build_evaluation_report(
+        guardrail="lexical_slur",
+        num_samples=len(df),
+        profiler=p,
+        metrics=metrics,
+    ),
     OUT_DIR / "metrics.json",
 )
