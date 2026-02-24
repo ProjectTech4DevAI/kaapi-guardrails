@@ -27,11 +27,6 @@ for runner in "${RUNNERS[@]}"; do
   name="$(basename "$(dirname "$runner")")"
   echo ""
   echo "==> [$name] $runner"
-
-  if [[ "$name" == "ban_list" ]]; then
-    : "${BAN_LIST_WORDS:?BAN_LIST_WORDS must be set for ban_list evaluation (comma-separated)}"
-  fi
-
   uv run python "$runner"
 done
 

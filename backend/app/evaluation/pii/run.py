@@ -3,8 +3,13 @@ import pandas as pd
 from guardrails.validators import FailResult
 
 from app.core.validators.pii_remover import PIIRemover
+from app.evaluation.common.helper import (
+    Profiler,
+    build_evaluation_report,
+    write_csv,
+    write_json,
+)
 from app.evaluation.pii.entity_metrics import compute_entity_metrics
-from app.evaluation.common.helper import Profiler, write_csv, write_json
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "outputs" / "pii_remover"
@@ -35,18 +40,11 @@ entity_report = compute_entity_metrics(
 write_csv(df, OUT_DIR / "predictions.csv")
 
 write_json(
-    {
-        "guardrail": "pii_remover",
-        "num_samples": len(df),
-        "entity_metrics": entity_report,
-        "performance": {
-            "latency_ms": {
-                "mean": round(sum(p.latencies) / len(p.latencies), 2),
-                "p95": round(sorted(p.latencies)[int(len(p.latencies) * 0.95)], 2),
-                "max": round(max(p.latencies), 2),
-            },
-            "memory_mb": round(p.peak_memory_mb, 2),
-        },
-    },
+    build_evaluation_report(
+        guardrail="pii_remover",
+        num_samples=len(df),
+        profiler=p,
+        entity_metrics=entity_report,
+    ),
     OUT_DIR / "metrics.json",
 )

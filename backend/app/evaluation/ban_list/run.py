@@ -6,6 +6,7 @@ from guardrails.hub import BanList
 from guardrails.validators import FailResult
 
 from app.evaluation.common.helper import (
+    build_evaluation_report,
     Profiler,
     compute_binary_metrics,
     write_csv,
@@ -18,65 +19,61 @@ DATASET_PATH = BASE_DIR / "datasets" / "ban_list_testing_dataset.csv"
 
 # Provide comma-separated words via env var BAN_LIST_WORDS, e.g.:
 # BAN_LIST_WORDS="badword,slur,profanity"
-DEFAULT_BANNED_WORDS = ["badword"]
-BANNED_WORDS = [
-    word.strip()
-    for word in os.getenv("BAN_LIST_WORDS", ",".join(DEFAULT_BANNED_WORDS)).split(",")
-    if word.strip()
-]
+BAN_LIST_WORDS_RAW = os.getenv("BAN_LIST_WORDS")
+if not BAN_LIST_WORDS_RAW:
+    raise ValueError(
+        "BAN_LIST_WORDS must be set for ban_list evaluation (comma-separated)."
+    )
 
-df = pd.read_csv(DATASET_PATH)
+BANNED_WORDS = [word.strip() for word in BAN_LIST_WORDS_RAW.split(",") if word.strip()]
+
+dataset = pd.read_csv(DATASET_PATH)
 
 validator = BanList(
     banned_words=BANNED_WORDS,
 )
 
 
-def run_ban_list(text: str):
+def run_ban_list(text: str) -> tuple[str, int]:
     result = validator.validate(text, metadata=None)
     if isinstance(result, FailResult):
-        return result.fix_value, 1
+        return (result.fix_value or text), 1
     return text, 0
 
 
 with Profiler() as p:
-    outputs = df["source_text"].astype(str).apply(lambda x: p.record(run_ban_list, x))
+    results = (
+        dataset["source_text"].astype(str).apply(lambda x: p.record(run_ban_list, x))
+    )
 
-df["redacted_text"] = outputs.apply(lambda x: x[0])
-df["y_pred"] = outputs.apply(lambda x: x[1])
+dataset["redacted_text"] = results.apply(lambda x: x[0])
+dataset["y_pred"] = results.apply(lambda x: x[1])
 
-if "label" in df.columns:
-    df["y_true"] = df["label"].astype(int)
+if "label" in dataset.columns:
+    dataset["y_true"] = dataset["label"].astype(int)
 else:
-    df["y_true"] = (
-        df["source_text"].astype(str) != df["target_text"].astype(str)
+    dataset["y_true"] = (
+        dataset["source_text"].astype(str) != dataset["target_text"].astype(str)
     ).astype(int)
 
-metrics = compute_binary_metrics(df["y_true"], df["y_pred"])
+metrics = compute_binary_metrics(dataset["y_true"], dataset["y_pred"])
 
-if "target_text" in df.columns:
+if "target_text" in dataset.columns:
     exact_match = (
-        df["redacted_text"].astype(str) == df["target_text"].astype(str)
+        dataset["redacted_text"].astype(str) == dataset["target_text"].astype(str)
     ).mean()
     metrics["exact_match"] = round(float(exact_match), 2)
 
-write_csv(df, OUT_DIR / "predictions.csv")
+write_csv(dataset, OUT_DIR / "predictions.csv")
 
 write_json(
-    {
-        "guardrail": "ban_list",
-        "num_samples": len(df),
-        "banned_words": BANNED_WORDS,
-        "dataset": str(DATASET_PATH.name),
-        "metrics": metrics,
-        "performance": {
-            "latency_ms": {
-                "mean": round(sum(p.latencies) / len(p.latencies), 2),
-                "p95": round(sorted(p.latencies)[int(len(p.latencies) * 0.95)], 2),
-                "max": round(max(p.latencies), 2),
-            },
-            "memory_mb": round(p.peak_memory_mb, 2),
-        },
-    },
+    build_evaluation_report(
+        guardrail="ban_list",
+        num_samples=len(dataset),
+        profiler=p,
+        banned_words=BANNED_WORDS,
+        dataset=str(DATASET_PATH.name),
+        metrics=metrics,
+    ),
     OUT_DIR / "metrics.json",
 )
