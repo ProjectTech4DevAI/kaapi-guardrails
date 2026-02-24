@@ -59,9 +59,12 @@ else:
 metrics = compute_binary_metrics(dataset["y_true"], dataset["y_pred"])
 
 if "target_text" in dataset.columns:
-    exact_match = (
-        dataset["redacted_text"].astype(str) == dataset["target_text"].astype(str)
-    ).mean()
+    if dataset.empty:
+        exact_match = 0.0
+    else:
+        exact_match = (
+            dataset["redacted_text"].astype(str) == dataset["target_text"].astype(str)
+        ).mean()
     metrics["exact_match"] = round(float(exact_match), 2)
 
 write_csv(dataset, OUT_DIR / "predictions.csv")

@@ -115,19 +115,9 @@ Each validator produces:
 
 Standardized output structure:
 ```text
-app/evaluation/outputs/
-  lexical_slur/
-    predictions.csv
-    metrics.json
-  gender_assumption_bias/
-    predictions.csv
-    metrics.json
-  ban_list/
-    predictions.csv
-    metrics.json
-  pii_remover/
-    predictions.csv
-    metrics.json
+app/evaluation/outputs/<validator-name>
+  predictions.csv
+  metrics.json
 ```
 
 - To run all evaluation scripts together, use:
