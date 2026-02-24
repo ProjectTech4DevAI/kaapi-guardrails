@@ -45,7 +45,12 @@ def run_guardrails(
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    _resolve_ban_list_banned_words(payload, session)
+    if any(
+        isinstance(validator, BanListSafetyValidatorConfig)
+        and validator.banned_words is None
+        for validator in payload.validators
+    ):
+        _resolve_ban_list_banned_words(payload, session)
     return _validate_with_guard(
         payload,
         request_log_crud,
