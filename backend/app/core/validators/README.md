@@ -166,7 +166,8 @@ Notes / limitations:
 - Rule/ML recognizers can under-detect free-text references.
 - Threshold and entity selection should be tuned per deployment context.
 - Runtime requirement: this validator is configured to use spaCy model `en_core_web_lg`.
-
+The model is pre-installed at build time in the Docker image to ensure fast startup and no runtime internet dependency.
+For local development without Docker, manually install the model using: `python -m spacy download en_core_web_lg`
 Evidence and evaluation:
 - Compared approaches:
   - Custom PII validator (this codebase)
