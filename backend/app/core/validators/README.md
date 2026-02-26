@@ -166,7 +166,6 @@ Notes / limitations:
 - Rule/ML recognizers can under-detect free-text references.
 - Threshold and entity selection should be tuned per deployment context.
 - Runtime requirement: this validator is configured to use spaCy model `en_core_web_lg`.
-  If `en_core_web_lg` is missing, Presidio attempts to download it at runtime.
 
 Evidence and evaluation:
 - Compared approaches:

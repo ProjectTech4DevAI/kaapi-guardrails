@@ -29,6 +29,8 @@ from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_re
     InVoterRecognizer,
 )
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 ALL_ENTITY_TYPES = [
     "CREDIT_CARD",
     "EMAIL_ADDRESS",
@@ -52,6 +54,38 @@ CONFIGURATION = {
     "models": [{"lang_code": "en", "model_name": "en_core_web_lg"}],
 }
 
+_GLOBAL_NLP_ENGINE = None
+_ANALYZER_CACHE = {}
+
+
+INDIA_RECOGNIZERS = {
+    "IN_AADHAAR": InAadhaarRecognizer,
+    "IN_PAN": InPanRecognizer,
+    "IN_PASSPORT": InPassportRecognizer,
+    "IN_VEHICLE_REGISTRATION": InVehicleRegistrationRecognizer,
+    "IN_VOTER": InVoterRecognizer,
+}
+
+
+def _build_analyzer(entity_types: list[str]) -> AnalyzerEngine:
+    global _GLOBAL_NLP_ENGINE
+    if _GLOBAL_NLP_ENGINE is None:
+        provider = NlpEngineProvider(nlp_configuration=CONFIGURATION)
+        _GLOBAL_NLP_ENGINE = provider.create_engine()
+    analyzer = AnalyzerEngine(nlp_engine=_GLOBAL_NLP_ENGINE)
+
+    for entity_type, recognizer_cls in INDIA_RECOGNIZERS.items():
+        if entity_type in entity_types:
+            analyzer.registry.add_recognizer(recognizer_cls())
+    return analyzer
+
+
+def _get_cached_analyzer(entity_types: list[str]) -> AnalyzerEngine:
+    recognizer_key = tuple(sorted(t for t in entity_types if t in INDIA_RECOGNIZERS))
+    if recognizer_key not in _ANALYZER_CACHE:
+        _ANALYZER_CACHE[recognizer_key] = _build_analyzer(entity_types)
+    return _ANALYZER_CACHE[recognizer_key]
+
 
 @register_validator(name="pii-remover", data_type="string")
 class PIIRemover(Validator):
@@ -72,23 +106,7 @@ class PIIRemover(Validator):
         self.entity_types = entity_types or ALL_ENTITY_TYPES
         self.threshold = threshold
         self.on_fail = on_fail
-        os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-        provider = NlpEngineProvider(nlp_configuration=CONFIGURATION)
-        nlp_engine = provider.create_engine()
-
-        self.analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
-
-        if "IN_AADHAAR" in self.entity_types:
-            self.analyzer.registry.add_recognizer(InAadhaarRecognizer())
-        if "IN_PAN" in self.entity_types:
-            self.analyzer.registry.add_recognizer(InPanRecognizer())
-        if "IN_PASSPORT" in self.entity_types:
-            self.analyzer.registry.add_recognizer(InPassportRecognizer())
-        if "IN_VEHICLE_REGISTRATION" in self.entity_types:
-            self.analyzer.registry.add_recognizer(InVehicleRegistrationRecognizer())
-        if "IN_VOTER" in self.entity_types:
-            self.analyzer.registry.add_recognizer(InVoterRecognizer())
+        self.analyzer = _get_cached_analyzer(self.entity_types)
         self.anonymizer = AnonymizerEngine()
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
