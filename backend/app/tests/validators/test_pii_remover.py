@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.core.validators import pii_remover
 from app.core.validators.pii_remover import ALL_ENTITY_TYPES, PIIRemover
 
 # -------------------------------
@@ -11,15 +12,13 @@ from app.core.validators.pii_remover import ALL_ENTITY_TYPES, PIIRemover
 
 @pytest.fixture
 def mock_presidio():
-    """
-    Mock AnalyzerEngine and AnonymizerEngine before validator loads.
-    """
     with patch(
-        "app.core.validators.pii_remover.AnalyzerEngine"
+        "app.core.validators.pii_remover._get_cached_analyzer"
     ) as mock_analyzer, patch(
         "app.core.validators.pii_remover.AnonymizerEngine"
     ) as mock_anonymizer:
-        analyzer_instance = mock_analyzer.return_value
+        analyzer_instance = MagicMock()
+        mock_analyzer.return_value = analyzer_instance
         anonymizer_instance = mock_anonymizer.return_value
 
         analyzer_instance.analyze.return_value = []
@@ -80,25 +79,22 @@ def test_custom_entity_types_override(mock_presidio):
     assert v.entity_types == ["EMAIL_ADDRESS"]
 
 
-def test_indian_recognizers_registered_when_requested():
-    """
-    Ensure Indian recognizers are conditionally registered.
-    """
+def test_cached_analyzer_registers_only_requested_indian_recognizers():
     with patch(
+        "app.core.validators.pii_remover.NlpEngineProvider"
+    ) as mock_provider, patch(
         "app.core.validators.pii_remover.AnalyzerEngine"
-    ) as mock_analyzer, patch("app.core.validators.pii_remover.AnonymizerEngine"):
-        registry = mock_analyzer.return_value.registry
+    ) as mock_analyzer:
+        pii_remover._ANALYZER_CACHE.clear()
+        pii_remover._GLOBAL_NLP_ENGINE = None
+        analyzer_instance = mock_analyzer.return_value
 
-        PIIRemover(
-            entity_types=[
-                "IN_AADHAAR",
-                "IN_PAN",
-                "IN_PASSPORT",
-                "IN_VEHICLE_REGISTRATION",
-                "IN_VOTER",
-            ],
-            threshold=0.5,
+        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"])
+        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"])
+
+        mock_provider.assert_called_once_with(
+            nlp_configuration=pii_remover.CONFIGURATION
         )
-
-        # Called once per recognizer
-        assert registry.add_recognizer.call_count == 5
+        mock_provider.return_value.create_engine.assert_called_once()
+        mock_analyzer.assert_called_once()
+        assert analyzer_instance.registry.add_recognizer.call_count == 2
