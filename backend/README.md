@@ -29,6 +29,12 @@ Make sure your editor is using the correct Python virtual environment, with the 
 
 Modify or add SQLModel models for data and SQL tables in `./backend/app/models/`, API endpoints in `./backend/app/api/`.
 
+Install the spaCy model required by the custom `pii_remover` validator:
+
+```bash
+python -m spacy download en_core_web_lg
+```
+
 ## VS Code
 
 There are already configurations in place to run the backend through the VS Code debugger, so that you can use breakpoints, pause and explore variables, etc.
