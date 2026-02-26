@@ -11,6 +11,7 @@ from guardrails.validators import (
     Validator,
 )
 from presidio_analyzer import AnalyzerEngine
+from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
 from presidio_analyzer.predefined_recognizers.country_specific.india.in_aadhaar_recognizer import (
     InAadhaarRecognizer,
@@ -46,6 +47,11 @@ ALL_ENTITY_TYPES = [
     "IN_VOTER",
 ]
 
+CONFIGURATION = {
+    "nlp_engine_name": "spacy",
+    "models": [{"lang_code": "en", "model_name": "en_core_web_lg"}],
+}
+
 
 @register_validator(name="pii-remover", data_type="string")
 class PIIRemover(Validator):
@@ -66,11 +72,12 @@ class PIIRemover(Validator):
         self.entity_types = entity_types or ALL_ENTITY_TYPES
         self.threshold = threshold
         self.on_fail = on_fail
-        os.environ[
-            "TOKENIZERS_PARALLELISM"
-        ] = "false"  # Disables huggingface/tokenizers warning
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-        self.analyzer = AnalyzerEngine()
+        provider = NlpEngineProvider(nlp_configuration=CONFIGURATION)
+        nlp_engine = provider.create_engine()
+
+        self.analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
 
         if "IN_AADHAAR" in self.entity_types:
             self.analyzer.registry.add_recognizer(InAadhaarRecognizer())

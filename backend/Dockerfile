@@ -42,6 +42,9 @@ COPY ./app /app/app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
+# Install spaCy model at build time
+RUN python -m spacy download en_core_web_lg
+
 # -------------------------------
 # Entrypoint (runtime setup)
 # -------------------------------
