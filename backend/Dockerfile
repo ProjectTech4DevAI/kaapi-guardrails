@@ -27,9 +27,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project
 
-# Install pinned spaCy model before app source copy to maximize layer cache reuse.
 ARG SPACY_MODEL_WHEEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl"
-RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
 
 ENV PYTHONPATH=/app
 RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
@@ -45,6 +43,9 @@ COPY ./app /app/app
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
+
+# Install pinned spaCy model in the final environment used at runtime.
+RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
 
 # -------------------------------
 # Entrypoint (runtime setup)
