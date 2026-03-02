@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 import json
 import pandas as pd
 import time
@@ -14,6 +15,41 @@ def write_json(obj: dict, path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         json.dump(obj, f, indent=2)
+
+
+def summarize_latency(latencies: list[float]) -> dict[str, float]:
+    if not latencies:
+        return {"mean": 0.0, "p95": 0.0, "max": 0.0}
+
+    sorted_latencies = sorted(latencies)
+    p95_idx = min(len(sorted_latencies) - 1, int(len(sorted_latencies) * 0.95))
+
+    return {
+        "mean": round(sum(latencies) / len(latencies), 2),
+        "p95": round(sorted_latencies[p95_idx], 2),
+        "max": round(max(latencies), 2),
+    }
+
+
+def build_performance_payload(profiler: "Profiler") -> dict[str, Any]:
+    return {
+        "latency_ms": summarize_latency(profiler.latencies),
+        "memory_mb": round(profiler.peak_memory_mb, 2),
+    }
+
+
+def build_evaluation_report(
+    guardrail: str,
+    num_samples: int,
+    profiler: "Profiler",
+    **extra_fields: Any,
+) -> dict[str, Any]:
+    return {
+        "guardrail": guardrail,
+        "num_samples": num_samples,
+        **extra_fields,
+        "performance": build_performance_payload(profiler),
+    }
 
 
 def compute_binary_metrics(y_true, y_pred):
