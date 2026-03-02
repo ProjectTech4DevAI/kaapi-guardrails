@@ -4,6 +4,7 @@ from guardrails.validators import FailResult
 
 from app.core.validators.gender_assumption_bias import GenderAssumptionBias
 from app.evaluation.common.helper import (
+    build_evaluation_report,
     compute_binary_metrics,
     Profiler,
     write_csv,
@@ -52,18 +53,11 @@ write_csv(
 )
 
 write_json(
-    {
-        "guardrail": "gender_assumption_bias",
-        "num_samples": len(df) * 2,  # because evaluating both sides
-        "metrics": metrics,
-        "performance": {
-            "latency_ms": {
-                "mean": round(sum(p.latencies) / len(p.latencies), 2),
-                "p95": round(sorted(p.latencies)[int(len(p.latencies) * 0.95)], 2),
-                "max": round(max(p.latencies), 2),
-            },
-            "memory_mb": round(p.peak_memory_mb, 2),
-        },
-    },
+    build_evaluation_report(
+        guardrail="gender_assumption_bias",
+        num_samples=len(df) * 2,
+        profiler=p,
+        metrics=metrics,
+    ),
     OUT_DIR / "metrics.json",
 )
