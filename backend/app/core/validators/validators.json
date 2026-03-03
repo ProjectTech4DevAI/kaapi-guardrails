@@ -24,6 +24,11 @@
             "type": "llm_critic",
             "version": "0.1.0",
             "source": "hub://guardrails/llm_critic"
-        }        
+        },
+        {
+            "type": "topic_relevance",
+            "version": "0.1.0",
+            "source": "local"
+        }
     ]
 }

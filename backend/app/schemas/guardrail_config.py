@@ -21,6 +21,9 @@ from app.core.validators.config.llm_critic_safety_validator_config import (
 from app.core.validators.config.pii_remover_safety_validator_config import (
     PIIRemoverSafetyValidatorConfig,
 )
+from app.core.validators.config.topic_relevance_safety_validator_config import (
+    TopicRelevanceSafetyValidatorConfig,
+)
 
 ValidatorConfigItem = Annotated[
     # future validators will come here
@@ -30,6 +33,7 @@ ValidatorConfigItem = Annotated[
         LexicalSlurSafetyValidatorConfig,
         LLMCriticSafetyValidatorConfig,
         PIIRemoverSafetyValidatorConfig,
+        TopicRelevanceSafetyValidatorConfig,
     ],
     Field(discriminator="type"),
 ]
