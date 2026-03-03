@@ -15,6 +15,9 @@ from app.core.validators.config.gender_assumption_bias_safety_validator_config i
 from app.core.validators.config.lexical_slur_safety_validator_config import (
     LexicalSlurSafetyValidatorConfig,
 )
+from app.core.validators.config.llm_critic_safety_validator_config import (
+    LLMCriticSafetyValidatorConfig,
+)
 from app.core.validators.config.pii_remover_safety_validator_config import (
     PIIRemoverSafetyValidatorConfig,
 )
@@ -25,6 +28,7 @@ ValidatorConfigItem = Annotated[
         BanListSafetyValidatorConfig,
         GenderAssumptionBiasSafetyValidatorConfig,
         LexicalSlurSafetyValidatorConfig,
+        LLMCriticSafetyValidatorConfig,
         PIIRemoverSafetyValidatorConfig,
     ],
     Field(discriminator="type"),

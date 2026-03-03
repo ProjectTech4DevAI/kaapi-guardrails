@@ -19,6 +19,11 @@
             "type": "ban_list",
             "version": "0.1.0",
             "source": "hub://guardrails/ban_list"
-        }
+        },
+        {
+            "type": "llm_critic",
+            "version": "0.1.0",
+            "source": "hub://guardrails/llm_critic"
+        }        
     ]
 }
