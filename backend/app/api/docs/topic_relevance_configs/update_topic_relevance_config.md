@@ -2,6 +2,7 @@ Partially updates a topic relevance configuration by id for the tenant resolved 
 
 Behavior notes:
 - Supports patch-style updates; omitted fields remain unchanged.
+- `configuration` should be provided as a plain text scope sub-prompt (string).
 - Tenant scope is enforced from the API key context.
 - Duplicate configurations are rejected.
 

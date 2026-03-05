@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 from guardrails.hub import LLMCritic
 from guardrails import OnFailAction
@@ -11,13 +11,7 @@ from guardrails.validators import (
     register_validator,
     ValidationResult,
 )
-from guardrails.validators import PassResult, FailResult
-
-
-def _build_topic_configuration(topic_config: Dict[str, str]) -> str:
-    return "\n".join(
-        f"- {topic}: {description}" for topic, description in topic_config.items()
-    )
+from guardrails.validators import FailResult, PassResult
 
 
 # This should be present in all prompt templates to indicate where the topic configuration will be inserted
@@ -44,8 +38,10 @@ def _load_prompt_template(prompt_version: int) -> str:
     return template
 
 
-def _build_metric_prompt(prompt_version: int, topic_config: Dict[str, str]) -> str:
-    scope_text = _build_topic_configuration(topic_config)
+def _build_metric_prompt(prompt_version: int, topic_config: str) -> str:
+    scope_text = topic_config.strip()
+    if not scope_text:
+        raise ValueError("topic_config cannot be empty")
     prompt_template = _load_prompt_template(prompt_version)
     return prompt_template.replace(_PROMPT_PLACEHOLDER, scope_text)
 
@@ -62,14 +58,14 @@ class TopicRelevance(Validator):
 
     def __init__(
         self,
-        topic_config: Dict[str, str],
+        topic_config: str,
         prompt_version: int = 1,
         llm_callable: str = "gpt-4o-mini",
         on_fail: Optional[Callable] = OnFailAction.EXCEPTION,
     ):
         super().__init__(on_fail=on_fail)
 
-        if not topic_config:
+        if not topic_config or not topic_config.strip():
             raise ValueError("topic_config cannot be empty")
 
         self.topic_config = topic_config

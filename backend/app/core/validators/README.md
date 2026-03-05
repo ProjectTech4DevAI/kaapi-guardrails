@@ -256,7 +256,7 @@ What it does:
 - Checks whether the user message is in scope using an LLM-critic style metric.
 - Builds the final prompt from:
   - a versioned markdown template (`prompt_version`)
-  - tenant-specific `scope_definitions`.
+  - tenant-specific `configuration` (string sub-prompt text).
 
 Why this is used:
 - Enforces domain scope for assistants that should answer only allowed topics.
@@ -268,16 +268,15 @@ Recommendation:
   - Add to `output` only when you also need to enforce output-topic strictness.
 
 Parameters / customization:
-- `topic_relevance_config_id: UUID` (optional; resolves scope and prompt version from tenant config)
-- `scope_definitions: dict[str, str]` (optional; inline fallback)
+- `topic_relevance_config_id: UUID` (required at runtime; resolves configuration and prompt version from tenant config)
 - `prompt_version: int` (optional; defaults to `1`)
 - `llm_callable: str` (default: `gpt-4o-mini`)
 - `on_fail`
 
 Notes / limitations:
-- Runtime validation requires either `topic_relevance_config_id` or inline `scope_definitions`.
-- When `topic_relevance_config_id` is provided, scope + prompt version are resolved from tenant Topic Relevance Config APIs.
-- Prompt templates must include the `{{SCOPE_DEFINITIONS}}` placeholder.
+- Runtime validation requires `topic_relevance_config_id`.
+- Configuration is resolved in `backend/app/api/routes/guardrails.py` from tenant Topic Relevance Config APIs.
+- Prompt templates must include the `{{TOPIC_CONFIGURATION}}` placeholder.
 
 ## Example Config Payloads
 

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Dict, Optional
+from typing import Annotated, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, StringConstraints
@@ -16,12 +16,20 @@ TopicsName = Annotated[
     ),
 ]
 
+TopicConfiguration = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+    ),
+]
+
 
 class TopicRelevanceBase(BaseModel):
     name: TopicsName
     description: Optional[str] = None
     prompt_version: int
-    configuration: Dict
+    configuration: TopicConfiguration
 
 
 class TopicRelevanceCreate(TopicRelevanceBase):
@@ -32,7 +40,7 @@ class TopicRelevanceUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     prompt_version: Optional[int] = None
-    configuration: Optional[Dict] = None
+    configuration: Optional[TopicConfiguration] = None
     is_active: Optional[bool] = None
 
 

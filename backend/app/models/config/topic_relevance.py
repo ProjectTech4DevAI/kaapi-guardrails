@@ -1,10 +1,7 @@
-from typing import Optional, Dict
 from uuid import UUID, uuid4
 from datetime import datetime
 
 from sqlmodel import SQLModel, Field
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import JSONB
 
 from app.utils import now
 
@@ -46,14 +43,11 @@ class TopicRelevance(SQLModel, table=True):
         sa_column_kwargs={"comment": "Version of the topic relevance prompt to use"},
     )
 
-    configuration: Dict = Field(
-        default_factory=dict,
-        sa_column=Column(
-            JSONB,
-            nullable=False,
-            comment="JSON payload containing the topic relevance configuration",
-        ),
-        description="JSON payload containing the topic relevance configuration",
+    configuration: str = Field(
+        nullable=False,
+        sa_column_kwargs={
+            "comment": "Prompt text blob containing topic relevance scope definition"
+        },
     )
 
     is_active: bool = Field(

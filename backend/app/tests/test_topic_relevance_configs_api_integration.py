@@ -20,11 +20,11 @@ class BaseTopicRelevanceTest:
             "name": "Maternal Health Scope",
             "description": "Topic guard for maternal health support bot",
             "prompt_version": 1,
-            "configuration": {
-                "Pregnancy care": (
-                    "Questions about prenatal care, supplements, and danger signs."
-                )
-            },
+            "configuration": (
+                "Pregnancy care: Questions about prenatal care, supplements, and "
+                "danger signs. Postpartum care: Questions about recovery after "
+                "delivery and breastfeeding."
+            ),
             **kwargs,
         }
         return client.post(BASE_URL, json=payload, headers=self._headers(api_key))

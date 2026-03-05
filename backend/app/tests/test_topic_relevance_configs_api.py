@@ -31,9 +31,9 @@ def sample_topic_relevance():
     obj.name = "Maternal Health Scope"
     obj.description = "Topic scope for maternal health bot"
     obj.prompt_version = 1
-    obj.configuration = {
-        "Pregnancy care": "Questions related to prenatal care and supplements."
-    }
+    obj.configuration = (
+        "Pregnancy care: Questions related to prenatal care and supplements."
+    )
     obj.is_active = True
     obj.organization_id = TOPIC_RELEVANCE_TEST_ORGANIZATION_ID
     obj.project_id = TOPIC_RELEVANCE_TEST_PROJECT_ID
@@ -46,9 +46,7 @@ def create_payload():
         name="Maternal Health Scope",
         description="Topic scope for maternal health bot",
         prompt_version=1,
-        configuration={
-            "Pregnancy care": "Questions related to prenatal care and supplements."
-        },
+        configuration="Pregnancy care: Questions related to prenatal care and supplements.",
     )
 
 

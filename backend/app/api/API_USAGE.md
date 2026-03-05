@@ -183,7 +183,8 @@ Request fields:
 Important:
 - Runtime validators use `on_fail`.
 - If you pass objects from config APIs, server normalization supports `on_fail_action` and strips non-runtime fields.
-- For `topic_relevance`, you can pass either inline `scope_definitions` or a `topic_relevance_config_id` to resolve scope + prompt version from tenant config.
+- For `topic_relevance`, pass `topic_relevance_config_id` only.
+- The API resolves `configuration` + `prompt_version` in `guardrails.py` before validator execution, so the validator always executes with both values.
 
 Example:
 
@@ -345,10 +346,7 @@ curl -X POST "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/" 
     "name": "Maternal Health Scope",
     "description": "Topic guard for maternal health support bot",
     "prompt_version": 1,
-    "configuration": {
-      "Pregnancy care": "Questions about prenatal care, ANC visits, nutrition, supplements, danger signs.",
-      "Postpartum care": "Questions about recovery after delivery, breastfeeding, and mother health checks."
-    }
+    "configuration": "Pregnancy care: Questions about prenatal care, ANC visits, nutrition, supplements, danger signs. Postpartum care: Questions about recovery after delivery, breastfeeding, and mother health checks."
   }'
 ```
 
@@ -389,9 +387,7 @@ curl -X PATCH "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<
   -H "Content-Type: application/json" \
   -d '{
     "prompt_version": 1,
-    "configuration": {
-      "Pregnancy care": "Updated scope definition"
-    }
+    "configuration": "Pregnancy care: Updated scope definition"
   }'
 ```
 
@@ -416,7 +412,7 @@ Recommended request flow:
 4. Use `safe_text` as downstream text.
 5. If `rephrase_needed=true`, ask user to rephrase.
 6. For `ban_list` validators without inline `banned_words`, create/manage a ban list first and pass `ban_list_id`.
-7. For `topic_relevance`, create/manage a topic relevance config and pass `topic_relevance_config_id` at runtime (or pass inline `scope_definitions`).
+7. For `topic_relevance`, create/manage a topic relevance config and pass `topic_relevance_config_id` at runtime. The server resolves the configuration string internally.
 
 ## 8) Common Errors
 
