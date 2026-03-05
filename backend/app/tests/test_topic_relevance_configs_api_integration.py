@@ -16,14 +16,15 @@ class BaseTopicRelevanceTest:
         return {"X-API-Key": api_key}
 
     def create(self, client, api_key=DEFAULT_API_KEY, **kwargs):
+        name = kwargs.get("name", "Maternal Health Scope")
         payload = {
-            "name": "Maternal Health Scope",
+            "name": name,
             "description": "Topic guard for maternal health support bot",
             "prompt_schema_version": 1,
             "configuration": (
                 "Pregnancy care: Questions about prenatal care, supplements, and "
                 "danger signs. Postpartum care: Questions about recovery after "
-                "delivery and breastfeeding."
+                f"delivery and breastfeeding. Scope name: {name}."
             ),
             **kwargs,
         }
@@ -81,9 +82,9 @@ class TestCreateTopicRelevanceConfig(BaseTopicRelevanceTest):
 
 class TestListTopicRelevanceConfigs(BaseTopicRelevanceTest):
     def test_list_success(self, integration_client, clear_database):
-        self.create(integration_client, name="Scope 1")
-        self.create(integration_client, name="Scope 2")
-        self.create(integration_client, name="Scope 3")
+        assert self.create(integration_client, name="Scope 1").status_code == 200
+        assert self.create(integration_client, name="Scope 2").status_code == 200
+        assert self.create(integration_client, name="Scope 3").status_code == 200
 
         response = self.list(integration_client)
 
@@ -98,9 +99,9 @@ class TestListTopicRelevanceConfigs(BaseTopicRelevanceTest):
         assert response.json()["data"] == []
 
     def test_list_pagination_with_limit(self, integration_client, clear_database):
-        self.create(integration_client, name="Scope 1")
-        self.create(integration_client, name="Scope 2")
-        self.create(integration_client, name="Scope 3")
+        assert self.create(integration_client, name="Scope 1").status_code == 200
+        assert self.create(integration_client, name="Scope 2").status_code == 200
+        assert self.create(integration_client, name="Scope 3").status_code == 200
 
         response = self.list(integration_client, limit=2)
 
@@ -110,10 +111,10 @@ class TestListTopicRelevanceConfigs(BaseTopicRelevanceTest):
     def test_list_pagination_with_offset_and_limit(
         self, integration_client, clear_database
     ):
-        self.create(integration_client, name="Scope 1")
-        self.create(integration_client, name="Scope 2")
-        self.create(integration_client, name="Scope 3")
-        self.create(integration_client, name="Scope 4")
+        assert self.create(integration_client, name="Scope 1").status_code == 200
+        assert self.create(integration_client, name="Scope 2").status_code == 200
+        assert self.create(integration_client, name="Scope 3").status_code == 200
+        assert self.create(integration_client, name="Scope 4").status_code == 200
 
         full_response = self.list(integration_client)
         full_data = full_response.json()["data"]
