@@ -1,6 +1,6 @@
 # Validator Configuration Guide
 
-This document describes the validator configuration model used in this codebase, including the 4 currently supported validators from `backend/app/core/validators/validators.json`.
+This document describes the validator configuration model used in this codebase, including the currently supported validators from `backend/app/core/validators/validators.json`.
 
 ## Supported Validators
 
@@ -9,6 +9,8 @@ Current validator manifest:
 - `pii_remover` (source: `local`)
 - `gender_assumption_bias` (source: `local`)
 - `ban_list` (source: `hub://guardrails/ban_list`)
+- `llm_critic` (source: `hub://guardrails/llm_critic`)
+- `topic_relevance` (source: `local`)
 
 ## Configuration Model
 
@@ -243,6 +245,40 @@ Notes / limitations:
 - Runtime validation requires at least one of `banned_words` or `ban_list_id`.
 - If `ban_list_id` is used, banned words are resolved from the tenant-scoped Ban List APIs.
 
+### 5) Topic Relevance Validator (`topic_relevance`)
+
+Code:
+- Config: `backend/app/core/validators/config/topic_relevance_safety_validator_config.py`
+- Runtime validator: `backend/app/core/validators/topic_relevance.py`
+- Prompt templates: `backend/app/core/validators/prompts/topic_relevance/`
+
+What it does:
+- Checks whether the user message is in scope using an LLM-critic style metric.
+- Builds the final prompt from:
+  - a versioned markdown template (`prompt_version`)
+  - tenant-specific `scope_definitions`.
+
+Why this is used:
+- Enforces domain scope for assistants that should answer only allowed topics.
+- Keeps prompt wording versioned and reusable while allowing tenant-level scope customization.
+
+Recommendation:
+- primarily `input`
+  - Why `input`: blocks out-of-scope prompts before model processing.
+  - Add to `output` only when you also need to enforce output-topic strictness.
+
+Parameters / customization:
+- `topic_relevance_config_id: UUID` (optional; resolves scope and prompt version from tenant config)
+- `scope_definitions: dict[str, str]` (optional; inline fallback)
+- `prompt_version: int` (optional; defaults to `1`)
+- `llm_callable: str` (default: `gpt-4o-mini`)
+- `on_fail`
+
+Notes / limitations:
+- Runtime validation requires either `topic_relevance_config_id` or inline `scope_definitions`.
+- When `topic_relevance_config_id` is provided, scope + prompt version are resolved from tenant Topic Relevance Config APIs.
+- Prompt templates must include the `{{SCOPE_DEFINITIONS}}` placeholder.
+
 ## Example Config Payloads
 
 Example: create validator config (stored shape)
@@ -272,7 +308,7 @@ Example: runtime guardrail validator object (execution shape)
 ## Operational Guidance
 
 Default stage strategy:
-- Input guardrails: `pii_remover`, `uli_slur_match`, `ban_list`
+- Input guardrails: `pii_remover`, `uli_slur_match`, `ban_list`, `topic_relevance` (when scope enforcement is needed)
 - Output guardrails: `pii_remover`, `uli_slur_match`, `gender_assumption_bias`, `ban_list`
 
 Tuning strategy:
@@ -288,5 +324,6 @@ Tuning strategy:
 - `backend/app/core/validators/config/pii_remover_safety_validator_config.py`
 - `backend/app/core/validators/config/lexical_slur_safety_validator_config.py`
 - `backend/app/core/validators/config/gender_assumption_bias_safety_validator_config.py`
+- `backend/app/core/validators/config/topic_relevance_safety_validator_config.py`
 - `backend/app/schemas/guardrail_config.py`
 - `backend/app/schemas/validator_config.py`

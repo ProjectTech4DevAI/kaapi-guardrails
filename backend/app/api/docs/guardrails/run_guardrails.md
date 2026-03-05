@@ -5,6 +5,8 @@ Behavior notes:
 - `suppress_pass_logs=true` skips persisting pass-case validator logs.
 - The endpoint always saves a `request_log` entry for the run.
 - Validator logs are also saved; with `suppress_pass_logs=true`, only fail-case validator logs are persisted. Otherwise, all validator logs are added.
+- For `ban_list`, `ban_list_id` can be resolved to `banned_words` from tenant ban list configs.
+- For `topic_relevance`, `topic_relevance_config_id` can be resolved to `scope_definitions` + `prompt_version` from tenant topic relevance configs.
 - `rephrase_needed=true` means the system could not safely auto-fix the input/output and wants the user to retry with a rephrased query.
 - When `rephrase_needed=true`, `safe_text` contains the rephrase prompt shown to the user.
 

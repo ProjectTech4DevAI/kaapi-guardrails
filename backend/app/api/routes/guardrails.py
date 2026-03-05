@@ -15,8 +15,12 @@ from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
 from app.crud.ban_list import ban_list_crud
+from app.crud.topic_relevance import topic_relevance_crud
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
+from app.core.validators.config.topic_relevance_safety_validator_config import (
+    TopicRelevanceSafetyValidatorConfig,
+)
 from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
@@ -46,6 +50,7 @@ def run_guardrails(
         return APIResponse.failure_response(error="Invalid request_id")
 
     _resolve_ban_list_banned_words(payload, session)
+    _resolve_topic_relevance_scope(payload, session)
     return _validate_with_guard(
         payload,
         request_log_crud,
@@ -194,6 +199,21 @@ def _validate_with_guard(
             status=RequestStatus.ERROR,
             error_message=_safe_error_message(exc),
         )
+
+
+def _resolve_topic_relevance_scope(payload: GuardrailRequest, session: Session) -> None:
+    for validator in payload.validators:
+        if not isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+            continue
+
+        config = topic_relevance_crud.get(
+            session=session,
+            id=validator.topic_relevance_config_id,
+            organization_id=payload.organization_id,
+            project_id=payload.project_id,
+        )
+        validator.configuration = config.configuration
+        validator.prompt_version = config.prompt_version
 
 
 def add_validator_logs(
