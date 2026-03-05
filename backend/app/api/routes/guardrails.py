@@ -216,7 +216,7 @@ def _resolve_topic_relevance_scope(payload: GuardrailRequest, session: Session) 
             project_id=payload.project_id,
         )
         validator.configuration = config.configuration
-        validator.prompt_version = config.prompt_version
+        validator.prompt_schema_version = config.prompt_schema_version
 
 
 def add_validator_logs(

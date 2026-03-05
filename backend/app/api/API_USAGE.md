@@ -184,7 +184,7 @@ Important:
 - Runtime validators use `on_fail`.
 - If you pass objects from config APIs, server normalization supports `on_fail_action` and strips non-runtime fields.
 - For `topic_relevance`, pass `topic_relevance_config_id` only.
-- The API resolves `configuration` + `prompt_version` in `guardrails.py` before validator execution, so the validator always executes with both values.
+- The API resolves `configuration` + `prompt_schema_version` in `guardrails.py` before validator execution, so the validator always executes with both values.
 
 Example:
 
@@ -345,7 +345,7 @@ curl -X POST "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/" 
   -d '{
     "name": "Maternal Health Scope",
     "description": "Topic guard for maternal health support bot",
-    "prompt_version": 1,
+    "prompt_schema_version": 1,
     "configuration": "Pregnancy care: Questions about prenatal care, ANC visits, nutrition, supplements, danger signs. Postpartum care: Questions about recovery after delivery, breastfeeding, and mother health checks."
   }'
 ```
@@ -386,7 +386,7 @@ curl -X PATCH "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<
   -H "X-API-KEY: <api-key>" \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt_version": 1,
+    "prompt_schema_version": 1,
     "configuration": "Pregnancy care: Updated scope definition"
   }'
 ```

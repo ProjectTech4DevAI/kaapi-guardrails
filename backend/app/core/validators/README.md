@@ -255,7 +255,7 @@ Code:
 What it does:
 - Checks whether the user message is in scope using an LLM-critic style metric.
 - Builds the final prompt from:
-  - a versioned markdown template (`prompt_version`)
+  - a versioned markdown template (`prompt_schema_version`)
   - tenant-specific `configuration` (string sub-prompt text).
 
 Why this is used:
@@ -269,7 +269,7 @@ Recommendation:
 
 Parameters / customization:
 - `topic_relevance_config_id: UUID` (required at runtime; resolves configuration and prompt version from tenant config)
-- `prompt_version: int` (optional; defaults to `1`)
+- `prompt_schema_version: int` (optional; defaults to `1`)
 - `llm_callable: str` (default: `gpt-4o-mini`)
 - `on_fail`
 

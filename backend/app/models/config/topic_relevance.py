@@ -37,7 +37,7 @@ class TopicRelevance(SQLModel, table=True):
         sa_column_kwargs={"comment": "Description of the topic relevance entry"},
     )
 
-    prompt_version: int = Field(
+    prompt_schema_version: int = Field(
         index=True,
         nullable=False,
         sa_column_kwargs={"comment": "Version of the topic relevance prompt to use"},

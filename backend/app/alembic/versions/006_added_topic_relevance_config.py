@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("description", sa.String(), nullable=True),
-        sa.Column("prompt_version", sa.Integer(), nullable=False),
+        sa.Column("prompt_schema_version", sa.Integer(), nullable=False),
         sa.Column("configuration", sa.Text(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column("created_at", sa.DateTime(), nullable=False),
@@ -35,7 +35,7 @@ def upgrade() -> None:
         sa.UniqueConstraint(
             "organization_id",
             "project_id",
-            "prompt_version",
+            "prompt_schema_version",
             "configuration",
             name="uq_topic_relevance_config_org_project_prompt",
         ),
@@ -46,7 +46,9 @@ def upgrade() -> None:
     )
     op.create_index("idx_topic_relevance_project", "topic_relevance", ["project_id"])
     op.create_index(
-        "idx_topic_relevance_prompt_version", "topic_relevance", ["prompt_version"]
+        "idx_topic_relevance_prompt_schema_version",
+        "topic_relevance",
+        ["prompt_schema_version"],
     )
     op.create_index("idx_topic_relevance_is_active", "topic_relevance", ["is_active"])
 

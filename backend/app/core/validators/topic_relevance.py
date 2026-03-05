@@ -20,29 +20,29 @@ _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance"
 
 
 @lru_cache(maxsize=8)
-def _load_prompt_template(prompt_version: int) -> str:
-    if prompt_version < 1:
-        raise ValueError("prompt_version must be a positive integer")
+def _load_prompt_template(prompt_schema_version: int) -> str:
+    if prompt_schema_version < 1:
+        raise ValueError("prompt_schema_version must be a positive integer")
 
-    prompt_file = _PROMPTS_DIR / f"v{prompt_version}.md"
+    prompt_file = _PROMPTS_DIR / f"v{prompt_schema_version}.md"
     if not prompt_file.exists():
         raise ValueError(
-            f"Topic relevance prompt template for version {prompt_version} not found"
+            f"Topic relevance prompt template for version {prompt_schema_version} not found"
         )
 
     template = prompt_file.read_text(encoding="utf-8")
     if _PROMPT_PLACEHOLDER not in template:
         raise ValueError(
-            f"Prompt template v{prompt_version} must contain {_PROMPT_PLACEHOLDER}"
+            f"Prompt template v{prompt_schema_version} must contain {_PROMPT_PLACEHOLDER}"
         )
     return template
 
 
-def _build_metric_prompt(prompt_version: int, topic_config: str) -> str:
+def _build_metric_prompt(prompt_schema_version: int, topic_config: str) -> str:
     scope_text = topic_config.strip()
     if not scope_text:
         raise ValueError("topic_config cannot be empty")
-    prompt_template = _load_prompt_template(prompt_version)
+    prompt_template = _load_prompt_template(prompt_schema_version)
     return prompt_template.replace(_PROMPT_PLACEHOLDER, scope_text)
 
 
@@ -59,7 +59,7 @@ class TopicRelevance(Validator):
     def __init__(
         self,
         topic_config: str,
-        prompt_version: int = 1,
+        prompt_schema_version: int = 1,
         llm_callable: str = "gpt-4o-mini",
         on_fail: Optional[Callable] = OnFailAction.EXCEPTION,
     ):
@@ -69,13 +69,13 @@ class TopicRelevance(Validator):
             raise ValueError("topic_config cannot be empty")
 
         self.topic_config = topic_config
-        self.prompt_version = prompt_version
+        self.prompt_schema_version = prompt_schema_version
         self.llm_callable = llm_callable
 
         self._critic = LLMCritic(
             metrics={
                 "scope_violation": _build_metric_prompt(
-                    prompt_version=prompt_version,
+                    prompt_schema_version=prompt_schema_version,
                     topic_config=topic_config,
                 )
             },

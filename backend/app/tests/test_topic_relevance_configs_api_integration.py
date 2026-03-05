@@ -19,7 +19,7 @@ class BaseTopicRelevanceTest:
         payload = {
             "name": "Maternal Health Scope",
             "description": "Topic guard for maternal health support bot",
-            "prompt_version": 1,
+            "prompt_schema_version": 1,
             "configuration": (
                 "Pregnancy care: Questions about prenatal care, supplements, and "
                 "danger signs. Postpartum care: Questions about recovery after "
@@ -54,7 +54,7 @@ class TestCreateTopicRelevanceConfig(BaseTopicRelevanceTest):
         data = response.json()["data"]
 
         assert data["name"] == "Maternal Health Scope"
-        assert data["prompt_version"] == 1
+        assert data["prompt_schema_version"] == 1
         assert "Pregnancy care" in data["configuration"]
 
     def test_create_validation_error_missing_required_fields(
@@ -176,13 +176,13 @@ class TestUpdateTopicRelevanceConfig(BaseTopicRelevanceTest):
         response = self.update(
             integration_client,
             config_id,
-            {"name": "Updated scope", "prompt_version": 2},
+            {"name": "Updated scope", "prompt_schema_version": 2},
         )
 
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["name"] == "Updated scope"
-        assert data["prompt_version"] == 2
+        assert data["prompt_schema_version"] == 2
 
     def test_partial_update(self, integration_client, clear_database):
         create_resp = self.create(integration_client)

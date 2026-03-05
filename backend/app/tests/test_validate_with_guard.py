@@ -151,13 +151,13 @@ def test_resolve_topic_relevance_scope_from_config_id():
     with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
         mock_get.return_value = MagicMock(
             configuration="Topic scope prompt text",
-            prompt_version=2,
+            prompt_schema_version=2,
         )
         _resolve_topic_relevance_scope(payload, mock_session)
 
     validator = payload.validators[0]
     assert validator.configuration == "Topic scope prompt text"
-    assert validator.prompt_version == 2
+    assert validator.prompt_schema_version == 2
     mock_get.assert_called_once_with(
         session=mock_session,
         id=validator.topic_relevance_config_id,

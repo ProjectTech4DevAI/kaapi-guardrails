@@ -28,7 +28,7 @@ TopicConfiguration = Annotated[
 class TopicRelevanceBase(BaseModel):
     name: TopicsName
     description: Optional[str] = None
-    prompt_version: int = Field(ge=1)
+    prompt_schema_version: int = Field(ge=1)
     configuration: TopicConfiguration
 
 
@@ -39,7 +39,7 @@ class TopicRelevanceCreate(TopicRelevanceBase):
 class TopicRelevanceUpdate(BaseModel):
     name: Optional[TopicsName] = None
     description: Optional[str] = None
-    prompt_version: Optional[int] = Field(default=None, ge=1)
+    prompt_schema_version: Optional[int] = Field(default=None, ge=1)
     configuration: Optional[TopicConfiguration] = None
     is_active: Optional[bool] = None
 
