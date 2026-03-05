@@ -188,9 +188,22 @@ def _validate_with_guard(
             )
 
         # Case 2: validation failed without a fix
+        error_message = "Validation failed"
+
+        history = getattr(guard, "history", None)
+        if history and getattr(history, "last", None):
+            iteration = history.last.iterations[-1]
+            logs = getattr(iteration.outputs, "validator_logs", [])
+
+            for log in logs:
+                result = log.validation_result
+                if isinstance(result, FailResult) and result.error_message:
+                    error_message = result.error_message
+                    break
+
         return _finalize(
             status=RequestStatus.ERROR,
-            error_message=str(result.error),
+            error_message=error_message,
         )
 
     except Exception as exc:

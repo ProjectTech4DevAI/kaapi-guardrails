@@ -61,7 +61,7 @@ class TopicRelevance(Validator):
         topic_config: str,
         prompt_schema_version: int = 1,
         llm_callable: str = "gpt-4o-mini",
-        on_fail: Optional[Callable] = OnFailAction.EXCEPTION,
+        on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
         super().__init__(on_fail=on_fail)
 
@@ -74,23 +74,41 @@ class TopicRelevance(Validator):
 
         self._critic = LLMCritic(
             metrics={
-                "scope_violation": _build_metric_prompt(
-                    prompt_schema_version=prompt_schema_version,
-                    topic_config=topic_config,
-                )
+                "scope_violation": {
+                    "description": _build_metric_prompt(
+                        prompt_schema_version=prompt_schema_version,
+                        topic_config=topic_config,
+                    ),
+                    "threshold": 2,
+                }
             },
-            max_score=0,  # Only score 0 passes
+            max_score=3,
             llm_callable=llm_callable,
             on_fail=on_fail,
+            llm_kwargs={"response_format": {"type": "json_object"}},
         )
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
         if not value or not value.strip():
             return FailResult(error_message="Empty message.")
 
-        result = self._critic.validate(value, metadata=metadata)
+        try:
+            result = self._critic.validate(value, metadata)
+            score = None
 
-        if result.passed:
-            return PassResult(value=value)
+            if getattr(result, "metadata", None):
+                score = result.metadata.get("scope_violation")
 
-        return FailResult(error_message="Message is outside the allowed topic scope.")
+            if isinstance(result, PassResult):
+                return PassResult(value=value, metadata={"scope_score": score})
+
+            if isinstance(result, FailResult):
+                return FailResult(
+                    error_message="Input is outside the allowed topic scope.",
+                    metadata={"scope_score": score},
+                )
+
+        except Exception as e:
+            return FailResult(error_message="LLM critic returned an invalid response.")
+
+        return FailResult(error_message="Topic relevance validation failed.")
