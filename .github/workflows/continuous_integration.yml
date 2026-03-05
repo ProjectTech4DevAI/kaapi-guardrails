@@ -61,6 +61,7 @@ jobs:
           guardrails configure \
             --token "$GUARDRAILS_HUB_API_KEY" \
             --enable-metrics false
+            --enable-remote-inferencing true
         working-directory: backend
 
       - name: Install Guardrails hub validators
