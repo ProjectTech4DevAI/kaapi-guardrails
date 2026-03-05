@@ -25,7 +25,7 @@ def upgrade() -> None:
         sa.Column("organization_id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
-        sa.Column("description", sa.String(), nullable=False),
+        sa.Column("description", sa.String(), nullable=True),
         sa.Column("prompt_version", sa.Integer(), nullable=False),
         sa.Column("configuration", sa.Text(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
@@ -33,10 +33,11 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "name",
             "organization_id",
             "project_id",
-            name="uq_topic_relevance_name_org_project",
+            "prompt_version",
+            "configuration",
+            name="uq_topic_relevance_config_org_project_prompt",
         ),
     )
 

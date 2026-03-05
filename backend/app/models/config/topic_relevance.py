@@ -33,7 +33,7 @@ class TopicRelevance(SQLModel, table=True):
     )
 
     description: str = Field(
-        nullable=False,
+        nullable=True,
         sa_column_kwargs={"comment": "Description of the topic relevance entry"},
     )
 
@@ -61,14 +61,16 @@ class TopicRelevance(SQLModel, table=True):
     created_at: datetime = Field(
         default_factory=now,
         nullable=False,
-        sa_column_kwargs={"comment": "Timestamp when the ban list entry was created"},
+        sa_column_kwargs={
+            "comment": "Timestamp when the topic configuration entry was created"
+        },
     )
 
     updated_at: datetime = Field(
         default_factory=now,
         nullable=False,
         sa_column_kwargs={
-            "comment": "Timestamp when the ban list entry was last updated",
+            "comment": "Timestamp when the topic configuration entry was last updated",
             "onupdate": now,
         },
     )

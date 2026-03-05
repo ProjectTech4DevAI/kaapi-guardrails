@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
 MAX_TOPIC_RELEVANCE_NAME_LENGTH = 100
 MAX_TOPIC_RELEVANCE_DESCRIPTION_LENGTH = 500
@@ -28,7 +28,7 @@ TopicConfiguration = Annotated[
 class TopicRelevanceBase(BaseModel):
     name: TopicsName
     description: Optional[str] = None
-    prompt_version: int
+    prompt_version: int = Field(ge=1)
     configuration: TopicConfiguration
 
 
@@ -37,9 +37,9 @@ class TopicRelevanceCreate(TopicRelevanceBase):
 
 
 class TopicRelevanceUpdate(BaseModel):
-    name: Optional[str] = None
+    name: Optional[TopicsName] = None
     description: Optional[str] = None
-    prompt_version: Optional[int] = None
+    prompt_version: Optional[int] = Field(default=None, ge=1)
     configuration: Optional[TopicConfiguration] = None
     is_active: Optional[bool] = None
 

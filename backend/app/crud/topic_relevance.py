@@ -62,9 +62,13 @@ class TopicRelevanceCrud:
         offset: int = 0,
         limit: int | None = None,
     ) -> List[TopicRelevance]:
-        query = select(TopicRelevance).where(
-            TopicRelevance.organization_id == organization_id,
-            TopicRelevance.project_id == project_id,
+        query = (
+            select(TopicRelevance)
+            .where(
+                TopicRelevance.organization_id == organization_id,
+                TopicRelevance.project_id == project_id,
+            )
+            .order_by(TopicRelevance.created_at, TopicRelevance.id)
         )
 
         if offset:

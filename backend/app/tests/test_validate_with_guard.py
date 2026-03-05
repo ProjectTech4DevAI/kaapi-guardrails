@@ -5,6 +5,7 @@ import pytest
 
 from app.api.routes.guardrails import (
     _resolve_ban_list_banned_words,
+    _resolve_topic_relevance_scope,
     _validate_with_guard,
 )
 from app.schemas.guardrail_config import GuardrailRequest
@@ -131,4 +132,74 @@ def test_resolve_ban_list_banned_words_skips_lookup_when_banned_words_provided()
     with patch("app.api.routes.guardrails.ban_list_crud.get") as mock_get:
         _resolve_ban_list_banned_words(payload, mock_session)
 
+    mock_get.assert_not_called()
+
+
+def test_resolve_topic_relevance_scope_from_config_id():
+    topic_relevance_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {"type": "topic_relevance", "topic_relevance_config_id": topic_relevance_id}
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            configuration="Topic scope prompt text",
+            prompt_version=2,
+        )
+        _resolve_topic_relevance_scope(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.configuration == "Topic scope prompt text"
+    assert validator.prompt_version == 2
+    mock_get.assert_called_once_with(
+        session=mock_session,
+        id=validator.topic_relevance_config_id,
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+    )
+
+
+def test_topic_relevance_runtime_payload_allows_missing_config_id():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[{"type": "topic_relevance"}],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+        _resolve_topic_relevance_scope(payload, mock_session)
+
+    mock_get.assert_not_called()
+
+
+def test_topic_relevance_runtime_payload_allows_inline_configuration_without_lookup():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {
+                "type": "topic_relevance",
+                "configuration": "inline config",
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+        _resolve_topic_relevance_scope(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.configuration == "inline config"
     mock_get.assert_not_called()

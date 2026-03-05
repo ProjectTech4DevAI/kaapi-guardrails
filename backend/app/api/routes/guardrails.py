@@ -206,6 +206,9 @@ def _resolve_topic_relevance_scope(payload: GuardrailRequest, session: Session) 
         if not isinstance(validator, TopicRelevanceSafetyValidatorConfig):
             continue
 
+        if validator.topic_relevance_config_id is None:
+            continue
+
         config = topic_relevance_crud.get(
             session=session,
             id=validator.topic_relevance_config_id,
