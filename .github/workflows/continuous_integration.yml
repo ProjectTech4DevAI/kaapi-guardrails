@@ -53,6 +53,17 @@ jobs:
         run: uv sync
         working-directory: backend
 
+      - name: Configure Guardrails CLI
+        env:
+          GUARDRAILS_HUB_API_KEY: ${{ secrets.GUARDRAILS_HUB_API_KEY }}
+        run: |
+          source .venv/bin/activate
+          guardrails configure \
+            --token "$GUARDRAILS_HUB_API_KEY" \
+            --disable-metrics \
+            --enable-remote-inferencing
+        working-directory: backend
+
       - name: Install Guardrails hub validators
         env:
           GUARDRAILS_HUB_API_KEY: ${{ secrets.GUARDRAILS_HUB_API_KEY }}
