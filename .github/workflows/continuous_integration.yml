@@ -58,7 +58,9 @@ jobs:
           GUARDRAILS_HUB_API_KEY: ${{ secrets.GUARDRAILS_HUB_API_KEY }}
         run: |
           source .venv/bin/activate
-          guardrails configure --token $GUARDRAILS_HUB_API_KEY
+          guardrails configure \
+            --token "$GUARDRAILS_HUB_API_KEY" \
+            --enable-metrics false
         working-directory: backend
 
       - name: Install Guardrails hub validators
