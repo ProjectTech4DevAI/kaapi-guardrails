@@ -1,4 +1,4 @@
-import os
+import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -17,15 +17,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "outputs" / "ban_list"
 DATASET_PATH = BASE_DIR / "datasets" / "ban_list_testing_dataset.csv"
 
-# Provide comma-separated words via env var BAN_LIST_WORDS, e.g.:
-# BAN_LIST_WORDS="badword,slur,profanity"
-BAN_LIST_WORDS_RAW = os.getenv("BAN_LIST_WORDS")
-if not BAN_LIST_WORDS_RAW:
-    raise ValueError(
-        "BAN_LIST_WORDS must be set for ban_list evaluation (comma-separated)."
-    )
 
-BANNED_WORDS = [word.strip() for word in BAN_LIST_WORDS_RAW.split(",") if word.strip()]
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--words",
+    required=True,
+    help="Comma-separated banned words",
+)
+
+args = parser.parse_args()
+
+BANNED_WORDS = [word.strip() for word in args.words.split(",") if word.strip()]
 
 dataset = pd.read_csv(DATASET_PATH)
 
