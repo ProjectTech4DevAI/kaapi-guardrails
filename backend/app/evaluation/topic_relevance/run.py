@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -24,36 +23,29 @@ DEFAULT_CONFIG = {
     "prompt_schema_version": 1,
 }
 
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run topic relevance evaluation")
-    parser.add_argument(
-        "--dataset",
-        type=str,
-        required=True,
-        help="Dataset CSV filename (e.g., education-topic-relevance-dataset.csv)",
-    )
-    parser.add_argument(
-        "--topic-config",
-        type=str,
-        required=True,
-        help="Topic config TXT filename (e.g., education_topic_config.txt)",
-    )
-    parser.add_argument(
-        "--domain",
-        type=str,
-        required=True,
-        help="Domain name for output files (e.g., education, healthcare)",
-    )
-    return parser.parse_args()
+# All evaluations defined here
+EVALUATIONS = [
+    {
+        "domain": "education",
+        "dataset": "education-topic-relevance-dataset.csv",
+        "topic_config": "education_topic_config.txt",
+    },
+    {
+        "domain": "healthcare",
+        "dataset": "healthcare-topic-relevance-dataset.csv",
+        "topic_config": "healthcare_topic_config.txt",
+    },
+]
 
 
-def main() -> None:
-    args = parse_args()
+def run_evaluation(config: dict) -> None:
+    domain = config["domain"]
 
-    dataset_path = DATASETS_DIR / args.dataset
-    topic_config_path = DATASETS_DIR / args.topic_config
+    dataset_path = DATASETS_DIR / config["dataset"]
+    topic_config_path = DATASETS_DIR / config["topic_config"]
     topic_config = topic_config_path.read_text()
+
+    print(f"\nRunning topic relevance evaluation: {domain}")
 
     df = pd.read_csv(dataset_path)
 
@@ -70,6 +62,7 @@ def main() -> None:
             "in_scope": df["scope"].apply(lambda x: 1 if x == "IN_SCOPE" else 0),
         }
     )
+
     normalized_df["y_true"] = (1 - normalized_df["in_scope"]).astype(int)
 
     with Profiler() as p:
@@ -91,6 +84,7 @@ def main() -> None:
     metrics["accuracy"] = round(
         float((normalized_df["y_true"] == normalized_df["y_pred"]).mean()), 2
     )
+
     metrics["category_metrics"] = {
         str(cat): {
             "num_samples": int(len(g)),
@@ -100,7 +94,9 @@ def main() -> None:
     }
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    write_csv(normalized_df, OUT_DIR / f"{args.domain}-predictions.csv")
+
+    write_csv(normalized_df, OUT_DIR / f"{domain}-predictions.csv")
+
     write_json(
         build_evaluation_report(
             guardrail="topic_relevance",
@@ -111,8 +107,15 @@ def main() -> None:
             prompt_schema_version=DEFAULT_CONFIG["prompt_schema_version"],
             metrics=metrics,
         ),
-        OUT_DIR / f"{args.domain}-metrics.json",
+        OUT_DIR / f"{domain}-metrics.json",
     )
+
+    print(f"Completed {domain} evaluation")
+
+
+def main() -> None:
+    for config in EVALUATIONS:
+        run_evaluation(config)
 
 
 if __name__ == "__main__":

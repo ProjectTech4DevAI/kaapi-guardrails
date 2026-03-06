@@ -1,4 +1,3 @@
-import argparse
 from pathlib import Path
 
 import pandas as pd
@@ -17,68 +16,89 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "outputs" / "ban_list"
 DATASET_PATH = BASE_DIR / "datasets" / "ban_list_testing_dataset.csv"
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--words",
-    required=True,
-    help="Comma-separated banned words",
-)
-
-args = parser.parse_args()
-
-BANNED_WORDS = [word.strip() for word in args.words.split(",") if word.strip()]
-
-dataset = pd.read_csv(DATASET_PATH)
-
-validator = BanList(
-    banned_words=BANNED_WORDS,
-)
+# Define ban list evaluations here
+BAN_LIST_EVALUATIONS = [
+    {
+        "name": "maternal_healthcare",
+        "banned_words": ["sonography", "gender check"],
+    },
+    # Future configs can be added here
+    # {
+    #     "name": "abuse_terms",
+    #     "banned_words": ["slur1", "slur2"],
+    # },
+]
 
 
-def run_ban_list(text: str) -> tuple[str, int]:
-    result = validator.validate(text, metadata=None)
-    if isinstance(result, FailResult):
-        return (result.fix_value or text), 1
-    return text, 0
+def run_evaluation(config: dict):
+    name = config["name"]
+    banned_words = config["banned_words"]
 
+    print(f"\nRunning ban list evaluation: {name}")
+    print(f"Banned words: {banned_words}")
 
-with Profiler() as p:
-    results = (
-        dataset["source_text"].astype(str).apply(lambda x: p.record(run_ban_list, x))
+    dataset = pd.read_csv(DATASET_PATH)
+
+    validator = BanList(banned_words=banned_words)
+
+    def run_ban_list(text: str) -> tuple[str, int]:
+        result = validator.validate(text, metadata=None)
+        if isinstance(result, FailResult):
+            return (result.fix_value or text), 1
+        return text, 0
+
+    with Profiler() as p:
+        results = (
+            dataset["source_text"]
+            .astype(str)
+            .apply(lambda x: p.record(run_ban_list, x))
+        )
+
+    dataset["redacted_text"] = results.apply(lambda x: x[0])
+    dataset["y_pred"] = results.apply(lambda x: x[1])
+
+    if "label" in dataset.columns:
+        dataset["y_true"] = dataset["label"].astype(int)
+    else:
+        dataset["y_true"] = (
+            dataset["source_text"].astype(str) != dataset["target_text"].astype(str)
+        ).astype(int)
+
+    metrics = compute_binary_metrics(dataset["y_true"], dataset["y_pred"])
+
+    if "target_text" in dataset.columns:
+        if dataset.empty:
+            exact_match = 0.0
+        else:
+            exact_match = (
+                dataset["redacted_text"].astype(str)
+                == dataset["target_text"].astype(str)
+            ).mean()
+        metrics["exact_match"] = round(float(exact_match), 2)
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    write_csv(dataset, OUT_DIR / f"{name}-predictions.csv")
+
+    write_json(
+        build_evaluation_report(
+            guardrail="ban_list",
+            num_samples=len(dataset),
+            profiler=p,
+            banned_words=banned_words,
+            dataset=str(DATASET_PATH.name),
+            metrics=metrics,
+        ),
+        OUT_DIR / f"{name}-metrics.json",
     )
 
-dataset["redacted_text"] = results.apply(lambda x: x[0])
-dataset["y_pred"] = results.apply(lambda x: x[1])
+    print(f"Completed {name} evaluation")
 
-if "label" in dataset.columns:
-    dataset["y_true"] = dataset["label"].astype(int)
-else:
-    dataset["y_true"] = (
-        dataset["source_text"].astype(str) != dataset["target_text"].astype(str)
-    ).astype(int)
 
-metrics = compute_binary_metrics(dataset["y_true"], dataset["y_pred"])
+def main():
+    for config in BAN_LIST_EVALUATIONS:
+        run_evaluation(config)
 
-if "target_text" in dataset.columns:
-    if dataset.empty:
-        exact_match = 0.0
-    else:
-        exact_match = (
-            dataset["redacted_text"].astype(str) == dataset["target_text"].astype(str)
-        ).mean()
-    metrics["exact_match"] = round(float(exact_match), 2)
 
-write_csv(dataset, OUT_DIR / "predictions.csv")
-
-write_json(
-    build_evaluation_report(
-        guardrail="ban_list",
-        num_samples=len(dataset),
-        profiler=p,
-        banned_words=BANNED_WORDS,
-        dataset=str(DATASET_PATH.name),
-        metrics=metrics,
-    ),
-    OUT_DIR / "metrics.json",
-)
+if __name__ == "__main__":
+    main()
