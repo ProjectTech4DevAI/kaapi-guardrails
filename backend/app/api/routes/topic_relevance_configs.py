@@ -20,9 +20,7 @@ router = APIRouter(
 
 @router.post(
     "/",
-    description=load_description(
-        "topic_relevance_configs/create_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/create_config.md"),
     response_model=APIResponse[TopicRelevanceResponse],
 )
 def create_topic_relevance_config(
@@ -41,9 +39,7 @@ def create_topic_relevance_config(
 
 @router.get(
     "/",
-    description=load_description(
-        "topic_relevance_configs/list_topic_relevance_configs.md"
-    ),
+    description=load_description("topic_relevance_configs/list_configs.md"),
     response_model=APIResponse[list[TopicRelevanceResponse]],
 )
 def list_topic_relevance_configs(
@@ -64,9 +60,7 @@ def list_topic_relevance_configs(
 
 @router.get(
     "/{id}",
-    description=load_description(
-        "topic_relevance_configs/get_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/get_config.md"),
     response_model=APIResponse[TopicRelevanceResponse],
 )
 def get_topic_relevance_config(
@@ -85,9 +79,7 @@ def get_topic_relevance_config(
 
 @router.patch(
     "/{id}",
-    description=load_description(
-        "topic_relevance_configs/update_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/update_config.md"),
     response_model=APIResponse[TopicRelevanceResponse],
 )
 def update_topic_relevance_config(
@@ -108,9 +100,7 @@ def update_topic_relevance_config(
 
 @router.delete(
     "/{id}",
-    description=load_description(
-        "topic_relevance_configs/delete_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/delete_config.md"),
     response_model=APIResponse[dict],
 )
 def delete_topic_relevance_config(

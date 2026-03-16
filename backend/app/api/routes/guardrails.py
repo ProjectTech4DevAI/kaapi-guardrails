@@ -41,6 +41,10 @@ def run_guardrails(
     _: AuthDep,
     suppress_pass_logs: bool = True,
 ):
+    """
+    Resolves any config-backed validator references (ban list words, topic relevance scope),
+    then runs validation and returns a structured guardrail response.
+    """
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
 
@@ -91,6 +95,11 @@ def list_validators(_: AuthDep):
 
 
 def _resolve_ban_list_banned_words(payload: GuardrailRequest, session: Session) -> None:
+    """
+    Resolves banned words from the tenant's stored BanList when a validator references
+    a ban_list_id instead of providing banned_words inline.
+    Mutates the validator config in-place before guard execution.
+    """
     for validator in payload.validators:
         if not isinstance(validator, BanListSafetyValidatorConfig):
             continue
@@ -215,6 +224,12 @@ def _validate_with_guard(
 
 
 def _resolve_topic_relevance_scope(payload: GuardrailRequest, session: Session) -> None:
+    """
+    Resolves the topic scope configuration from the tenant's stored TopicRelevanceConfig
+    when a validator references a topic_relevance_config_id.
+    Populates `configuration` and `prompt_schema_version` on the validator config in-place
+    before guard execution.
+    """
     for validator in payload.validators:
         if not isinstance(validator, TopicRelevanceSafetyValidatorConfig):
             continue
@@ -238,7 +253,11 @@ def add_validator_logs(
     validator_log_crud: ValidatorLogCrud,
     payload: GuardrailRequest,
     suppress_pass_logs: bool = False,
-):
+) -> None:
+    """
+    Writes a ValidatorLog entry for each validator outcome in the guard's last iteration.
+    Pass results are skipped when suppress_pass_logs is True.
+    """
     history = getattr(guard, "history", None)
     if not history:
         return

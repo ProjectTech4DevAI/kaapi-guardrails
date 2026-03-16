@@ -109,6 +109,8 @@ class TopicRelevance(Validator):
                 )
 
         except Exception as e:
-            return FailResult(error_message="LLM critic returned an invalid response.")
+            return FailResult(
+                error_message=f"LLM critic returned an invalid response: {e}"
+            )
 
         return FailResult(error_message="Topic relevance validation failed.")

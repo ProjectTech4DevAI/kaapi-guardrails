@@ -26,7 +26,6 @@ from app.core.validators.config.topic_relevance_safety_validator_config import (
 )
 
 ValidatorConfigItem = Annotated[
-    # future validators will come here
     Union[
         BanListSafetyValidatorConfig,
         GenderAssumptionBiasSafetyValidatorConfig,

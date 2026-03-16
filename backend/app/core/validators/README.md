@@ -9,7 +9,7 @@ Current validator manifest:
 - `pii_remover` (source: `local`)
 - `gender_assumption_bias` (source: `local`)
 - `ban_list` (source: `hub://guardrails/ban_list`)
-- `llm_critic` (source: `hub://guardrails/llm_critic`)
+- `llm_critic` (source: `hub://guardrails/llm_critic`) - https://guardrailsai.com/hub/validator/guardrails/llm_critic
 - `topic_relevance` (source: `local`)
 
 ## Configuration Model
@@ -272,7 +272,7 @@ Recommendation:
 Parameters / customization:
 - `topic_relevance_config_id: UUID` (required at runtime; resolves configuration and prompt version from tenant config)
 - `prompt_schema_version: int` (optional; defaults to `1`)
-- `llm_callable: str` (default: `gpt-4o-mini`)
+- `llm_callable: str` (default: `gpt-4o-mini`) — the model identifier passed to Guardrails' LLMCritic to perform the scope evaluation. This must be a model string supported by LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`). It controls which LLM is used to score whether the input is within the allowed topic scope; changing it affects cost, latency, and scoring quality.
 - `on_fail`
 
 Notes / limitations:
