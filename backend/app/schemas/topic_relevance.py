@@ -28,13 +28,12 @@ TopicConfiguration = Annotated[
 
 class TopicRelevanceBase(SQLModel):
     name: TopicsName
-    description: Optional[str] = None
     prompt_schema_version: int = Field(ge=1)
     configuration: TopicConfiguration
 
 
 class TopicRelevanceCreate(TopicRelevanceBase):
-    pass
+    description: str
 
 
 class TopicRelevanceUpdate(SQLModel):
@@ -46,6 +45,7 @@ class TopicRelevanceUpdate(SQLModel):
 
 
 class TopicRelevanceResponse(TopicRelevanceBase):
+    description: str
     id: UUID
     is_active: bool
     created_at: datetime
