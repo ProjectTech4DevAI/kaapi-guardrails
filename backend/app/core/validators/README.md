@@ -247,7 +247,35 @@ Notes / limitations:
 - Runtime validation requires at least one of `banned_words` or `ban_list_id`.
 - If `ban_list_id` is used, banned words are resolved from the tenant-scoped Ban List APIs.
 
-### 5) Topic Relevance Validator (`topic_relevance`)
+### 5) LLM Critic Validator (`llm_critic`)
+
+Code:
+- Config: `backend/app/core/validators/config/llm_critic_safety_validator_config.py`
+- Source: Guardrails Hub (`hub://guardrails/llm_critic`) — https://guardrailsai.com/hub/validator/guardrails/llm_critic
+
+What it does:
+- Evaluates text against one or more custom quality/safety metrics using an LLM as judge.
+- Each metric is scored up to `max_score`; validation fails if any metric score falls below the threshold.
+
+Why this is used:
+- Enables flexible, prompt-driven content evaluation for use cases not covered by rule-based validators.
+- All configuration is passed inline in the runtime request — there is no stored config object to resolve. Unlike `topic_relevance`, which looks up scope text from a persisted `TopicRelevanceConfig`, `llm_critic` receives `metrics`, `max_score`, and `llm_callable` directly in the guardrail request payload.
+
+Recommendation:
+- `input` or `output` depending on whether you are evaluating user input quality or model output quality.
+
+Parameters / customization:
+- `metrics: dict` (required) — metric name-to-description mapping passed to the LLM judge
+- `max_score: int` (required) — maximum score per metric; used to define the scoring scale
+- `llm_callable: str` (required) — model identifier passed to LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`)
+- `on_fail`
+
+Notes / limitations:
+- All three parameters are required and must be provided inline in every runtime guardrail request; there is no stored config to reference.
+- Quality and latency depend on the chosen `llm_callable`.
+- LLM-judge approaches can be inconsistent across runs; consider setting `max_score` conservatively and reviewing outputs before production use.
+
+### 6) Topic Relevance Validator (`topic_relevance`)
 
 Code:
 - Config: `backend/app/core/validators/config/topic_relevance_safety_validator_config.py`

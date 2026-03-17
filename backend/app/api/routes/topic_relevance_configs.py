@@ -27,7 +27,7 @@ def create_topic_relevance_config(
     payload: TopicRelevanceCreate,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[TopicRelevanceResponse]:
     topic_relevance_config = topic_relevance_crud.create(
         session,
         payload,
@@ -47,7 +47,7 @@ def list_topic_relevance_configs(
     auth: MultitenantAuthDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
-):
+) -> APIResponse[list[TopicRelevanceResponse]]:
     topic_relevance_configs = topic_relevance_crud.list(
         session,
         auth.organization_id,
@@ -67,7 +67,7 @@ def get_topic_relevance_config(
     id: UUID,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[TopicRelevanceResponse]:
     topic_relevance_config = topic_relevance_crud.get(
         session,
         id,
@@ -87,7 +87,7 @@ def update_topic_relevance_config(
     payload: TopicRelevanceUpdate,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[TopicRelevanceResponse]:
     topic_relevance_config = topic_relevance_crud.update(
         session,
         id,
@@ -107,7 +107,7 @@ def delete_topic_relevance_config(
     id: UUID,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[dict]:
     obj = topic_relevance_crud.get(
         session,
         id,

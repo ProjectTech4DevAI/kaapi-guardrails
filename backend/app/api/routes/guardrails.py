@@ -8,7 +8,6 @@ from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep
 from app.core.constants import BAN_LIST, REPHRASE_ON_FAIL_PREFIX
-from app.core.config import settings
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
 from app.core.validators.config.ban_list_safety_validator_config import (
@@ -201,14 +200,17 @@ def _validate_with_guard(
 
         history = getattr(guard, "history", None)
         if history and getattr(history, "last", None):
-            iteration = history.last.iterations[-1]
-            logs = getattr(iteration.outputs, "validator_logs", [])
-
-            for log in logs:
-                result = log.validation_result
-                if isinstance(result, FailResult) and result.error_message:
-                    error_message = result.error_message
-                    break
+            iterations = getattr(history.last, "iterations", None)
+            if iterations:
+                iteration = iterations[-1]
+                logs = getattr(
+                    getattr(iteration, "outputs", None), "validator_logs", []
+                )
+                for log in logs:
+                    log_result = log.validation_result
+                    if isinstance(log_result, FailResult) and log_result.error_message:
+                        error_message = log_result.error_message
+                        break
 
         return _finalize(
             status=RequestStatus.ERROR,

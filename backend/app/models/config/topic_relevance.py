@@ -33,7 +33,7 @@ class TopicRelevance(SQLModel, table=True):
     )
 
     description: str = Field(
-        nullable=True,
+        nullable=False,
         sa_column_kwargs={"comment": "Description of the topic relevance entry"},
     )
 
@@ -53,6 +53,7 @@ class TopicRelevance(SQLModel, table=True):
     is_active: bool = Field(
         default=True,
         index=True,
+        nullable=False,
         sa_column_kwargs={
             "comment": "Whether the topic relevance entry is active or not"
         },

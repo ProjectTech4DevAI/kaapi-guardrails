@@ -1,8 +1,6 @@
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-import pytest
-
 from app.api.routes.guardrails import (
     _resolve_ban_list_banned_words,
     _resolve_topic_relevance_scope,
@@ -91,6 +89,75 @@ def test_validate_with_guard_exception():
     assert response.success is False
     assert response.data.safe_text is None
     assert response.error == "Invalid config"
+
+
+def test_validate_with_guard_uses_fail_result_error_message():
+    """Case 2: when guard returns no validated_output, the error message should
+    be extracted from the first FailResult in the last iteration's validator logs."""
+    from guardrails.validators import FailResult as GRFailResult
+
+    mock_log = MagicMock()
+    mock_log.validation_result = MagicMock(spec=GRFailResult)
+    mock_log.validation_result.error_message = "specific validator error"
+
+    mock_outputs = MagicMock()
+    mock_outputs.validator_logs = [mock_log]
+
+    mock_iteration = MagicMock()
+    mock_iteration.outputs = mock_outputs
+
+    mock_last = MagicMock()
+    mock_last.iterations = [mock_iteration]
+
+    mock_history = MagicMock()
+    mock_history.last = mock_last
+
+    class MockGuard:
+        history = mock_history
+
+        def validate(self, data):
+            return MockResult(validated_output=None)
+
+    with patch(
+        "app.api.routes.guardrails.build_guard",
+        return_value=MockGuard(),
+    ):
+        response = _validate_with_guard(
+            payload=_build_payload("bad text"),
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+        )
+
+    assert response.success is False
+    assert response.error == "specific validator error"
+
+
+def test_validate_with_guard_handles_empty_iterations():
+    """Case 2: when guard history exists but iterations is empty, falls back
+    to the default 'Validation failed' message without raising."""
+
+    class MockGuard:
+        class history:
+            class last:
+                iterations = []
+
+        def validate(self, data):
+            return MockResult(validated_output=None)
+
+    with patch(
+        "app.api.routes.guardrails.build_guard",
+        return_value=MockGuard(),
+    ):
+        response = _validate_with_guard(
+            payload=_build_payload("bad text"),
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+        )
+
+    assert response.success is False
+    assert response.error == "Validation failed"
 
 
 def test_resolve_ban_list_banned_words_from_ban_list_id():

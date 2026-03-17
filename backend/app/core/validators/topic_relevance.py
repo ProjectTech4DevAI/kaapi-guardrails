@@ -72,6 +72,15 @@ class TopicRelevance(Validator):
         self.prompt_schema_version = prompt_schema_version
         self.llm_callable = llm_callable
 
+        try:
+            from litellm import get_supported_openai_params
+
+            supports_response_format = "response_format" in (
+                get_supported_openai_params(model=llm_callable) or []
+            )
+        except Exception:
+            supports_response_format = False
+
         self._critic = LLMCritic(
             metrics={
                 "scope_violation": {
@@ -85,7 +94,11 @@ class TopicRelevance(Validator):
             max_score=3,
             llm_callable=llm_callable,
             on_fail=on_fail,
-            llm_kwargs={"response_format": {"type": "json_object"}},
+            **(
+                {"llm_kwargs": {"response_format": {"type": "json_object"}}}
+                if supports_response_format
+                else {}
+            ),
         )
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
