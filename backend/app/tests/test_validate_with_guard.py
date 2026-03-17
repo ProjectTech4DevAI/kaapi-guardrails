@@ -97,8 +97,7 @@ def test_validate_with_guard_uses_fail_result_error_message():
     from guardrails.validators import FailResult as GRFailResult
 
     mock_log = MagicMock()
-    mock_log.validation_result = MagicMock(spec=GRFailResult)
-    mock_log.validation_result.error_message = "specific validator error"
+    mock_log.validation_result = GRFailResult(error_message="specific validator error")
 
     mock_outputs = MagicMock()
     mock_outputs.validator_logs = [mock_log]
@@ -119,9 +118,8 @@ def test_validate_with_guard_uses_fail_result_error_message():
             return MockResult(validated_output=None)
 
     with patch(
-        "app.api.routes.guardrails.build_guard",
-        return_value=MockGuard(),
-    ):
+        "app.api.routes.guardrails.build_guard", return_value=MockGuard()
+    ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
             payload=_build_payload("bad text"),
             request_log_crud=mock_request_log_crud,
