@@ -68,12 +68,15 @@ class TopicRelevance(Validator):
         """Build the LLMCritic with a scope_violation metric from the topic configuration."""
         super().__init__(on_fail=on_fail)
 
-        if not topic_config or not topic_config.strip():
-            raise ValueError("topic_config cannot be empty")
-
         self.topic_config = topic_config
         self.prompt_schema_version = prompt_schema_version
         self.llm_callable = llm_callable
+        self._invalid_config_reason: Optional[str] = None
+
+        if not topic_config or not topic_config.strip():
+            self._invalid_config_reason = "topic_config is blank or missing"
+            self._critic = None
+            return
 
         try:
             from litellm import get_supported_openai_params
@@ -106,6 +109,9 @@ class TopicRelevance(Validator):
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
         """Run the LLMCritic and return a PassResult or FailResult with the scope score."""
+        if self._invalid_config_reason:
+            return FailResult(error_message=self._invalid_config_reason)
+
         if not value or not value.strip():
             return FailResult(error_message="Empty message.")
 
