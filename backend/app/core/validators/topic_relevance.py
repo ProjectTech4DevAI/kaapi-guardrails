@@ -21,6 +21,7 @@ _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance"
 
 @lru_cache(maxsize=8)
 def _load_prompt_template(prompt_schema_version: int) -> str:
+    """Load and cache the prompt template for the given schema version."""
     if prompt_schema_version < 1:
         raise ValueError("prompt_schema_version must be a positive integer")
 
@@ -39,6 +40,7 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
 
 
 def _build_metric_prompt(prompt_schema_version: int, topic_config: str) -> str:
+    """Inject the topic configuration into the prompt template."""
     scope_text = topic_config.strip()
     if not scope_text:
         raise ValueError("topic_config cannot be empty")
@@ -63,6 +65,7 @@ class TopicRelevance(Validator):
         llm_callable: str = "gpt-4o-mini",
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
+        """Build the LLMCritic with a scope_violation metric from the topic configuration."""
         super().__init__(on_fail=on_fail)
 
         if not topic_config or not topic_config.strip():
@@ -102,6 +105,7 @@ class TopicRelevance(Validator):
         )
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+        """Run the LLMCritic and return a PassResult or FailResult with the scope score."""
         if not value or not value.strip():
             return FailResult(error_message="Empty message.")
 

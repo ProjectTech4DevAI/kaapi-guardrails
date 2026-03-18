@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import Annotated, Optional
 from uuid import UUID
 
-from pydantic import Field, StringConstraints
-from sqlmodel import SQLModel
+from pydantic import StringConstraints
+from sqlmodel import Field, SQLModel
 
 MAX_TOPIC_RELEVANCE_NAME_LENGTH = 100
 MAX_TOPIC_RELEVANCE_DESCRIPTION_LENGTH = 500
