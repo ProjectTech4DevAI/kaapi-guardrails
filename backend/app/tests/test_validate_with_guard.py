@@ -2,8 +2,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 from app.api.routes.guardrails import (
-    _resolve_ban_list_banned_words,
-    _resolve_topic_relevance_scope,
+    _resolve_validator_configs,
     _validate_with_guard,
 )
 from app.schemas.guardrail_config import GuardrailRequest
@@ -158,7 +157,7 @@ def test_validate_with_guard_handles_empty_iterations():
     assert response.error == "Validation failed"
 
 
-def test_resolve_ban_list_banned_words_from_ban_list_id():
+def test_resolve_validator_configs_ban_list_from_id():
     ban_list_id = str(uuid4())
     payload = GuardrailRequest(
         request_id=str(uuid4()),
@@ -171,7 +170,7 @@ def test_resolve_ban_list_banned_words_from_ban_list_id():
 
     with patch("app.api.routes.guardrails.ban_list_crud.get") as mock_get:
         mock_get.return_value = MagicMock(banned_words=["foo", "bar"])
-        _resolve_ban_list_banned_words(payload, mock_session)
+        _resolve_validator_configs(payload, mock_session)
 
     assert payload.validators[0].banned_words == ["foo", "bar"]
     mock_get.assert_called_once_with(
@@ -182,7 +181,7 @@ def test_resolve_ban_list_banned_words_from_ban_list_id():
     )
 
 
-def test_resolve_ban_list_banned_words_skips_lookup_when_banned_words_provided():
+def test_resolve_validator_configs_skips_ban_list_lookup_when_words_provided():
     payload = GuardrailRequest(
         request_id=str(uuid4()),
         organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
@@ -195,12 +194,12 @@ def test_resolve_ban_list_banned_words_skips_lookup_when_banned_words_provided()
     mock_session = MagicMock()
 
     with patch("app.api.routes.guardrails.ban_list_crud.get") as mock_get:
-        _resolve_ban_list_banned_words(payload, mock_session)
+        _resolve_validator_configs(payload, mock_session)
 
     mock_get.assert_not_called()
 
 
-def test_resolve_topic_relevance_scope_from_config_id():
+def test_resolve_validator_configs_topic_relevance_from_config_id():
     topic_relevance_id = str(uuid4())
     payload = GuardrailRequest(
         request_id=str(uuid4()),
@@ -218,7 +217,7 @@ def test_resolve_topic_relevance_scope_from_config_id():
             configuration="Topic scope prompt text",
             prompt_schema_version=2,
         )
-        _resolve_topic_relevance_scope(payload, mock_session)
+        _resolve_validator_configs(payload, mock_session)
 
     validator = payload.validators[0]
     assert validator.configuration == "Topic scope prompt text"
@@ -231,7 +230,7 @@ def test_resolve_topic_relevance_scope_from_config_id():
     )
 
 
-def test_topic_relevance_runtime_payload_allows_missing_config_id():
+def test_resolve_validator_configs_skips_topic_relevance_lookup_when_no_config_id():
     payload = GuardrailRequest(
         request_id=str(uuid4()),
         organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
@@ -242,12 +241,12 @@ def test_topic_relevance_runtime_payload_allows_missing_config_id():
     mock_session = MagicMock()
 
     with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
-        _resolve_topic_relevance_scope(payload, mock_session)
+        _resolve_validator_configs(payload, mock_session)
 
     mock_get.assert_not_called()
 
 
-def test_topic_relevance_runtime_payload_allows_inline_configuration_without_lookup():
+def test_resolve_validator_configs_uses_inline_topic_relevance_without_lookup():
     payload = GuardrailRequest(
         request_id=str(uuid4()),
         organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
@@ -263,7 +262,7 @@ def test_topic_relevance_runtime_payload_allows_inline_configuration_without_loo
     mock_session = MagicMock()
 
     with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
-        _resolve_topic_relevance_scope(payload, mock_session)
+        _resolve_validator_configs(payload, mock_session)
 
     validator = payload.validators[0]
     assert validator.configuration == "inline config"
