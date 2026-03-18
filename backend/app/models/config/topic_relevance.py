@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 from datetime import datetime
 
+from sqlalchemy import UniqueConstraint
 from sqlmodel import SQLModel, Field
 
 from app.utils import now
@@ -74,4 +75,14 @@ class TopicRelevance(SQLModel, table=True):
             "comment": "Timestamp when the topic configuration entry was last updated",
             "onupdate": now,
         },
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "organization_id",
+            "project_id",
+            "prompt_schema_version",
+            "configuration",
+            name="uq_topic_relevance_config_org_project_prompt",
+        ),
     )
