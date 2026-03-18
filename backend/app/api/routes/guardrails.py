@@ -52,8 +52,7 @@ def run_guardrails(
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    _resolve_ban_list_banned_words(payload, session)
-    _resolve_topic_relevance_scope(payload, session)
+    _resolve_validator_configs(payload, session)
     return _validate_with_guard(
         payload,
         request_log_crud,
@@ -93,26 +92,33 @@ def list_validators(_: AuthDep):
     return {"validators": validators}
 
 
-def _resolve_ban_list_banned_words(payload: GuardrailRequest, session: Session) -> None:
+def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> None:
     """
-    Resolves banned words from the tenant's stored BanList when a validator references
-    a ban_list_id instead of providing banned_words inline.
-    Mutates the validator config in-place before guard execution.
+    Resolves config-backed references for all validators in-place before guard execution:
+    - BanList: fetches banned_words from the stored BanList when not provided inline.
+    - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
     """
     for validator in payload.validators:
-        if not isinstance(validator, BanListSafetyValidatorConfig):
-            continue
+        if isinstance(validator, BanListSafetyValidatorConfig):
+            if validator.type == BAN_LIST and validator.banned_words is None:
+                ban_list = ban_list_crud.get(
+                    session,
+                    id=validator.ban_list_id,
+                    organization_id=payload.organization_id,
+                    project_id=payload.project_id,
+                )
+                validator.banned_words = ban_list.banned_words
 
-        if validator.type != BAN_LIST or validator.banned_words is not None:
-            continue
-
-        ban_list = ban_list_crud.get(
-            session,
-            id=validator.ban_list_id,
-            organization_id=payload.organization_id,
-            project_id=payload.project_id,
-        )
-        validator.banned_words = ban_list.banned_words
+        elif isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+            if validator.topic_relevance_config_id is not None:
+                config = topic_relevance_crud.get(
+                    session=session,
+                    id=validator.topic_relevance_config_id,
+                    organization_id=payload.organization_id,
+                    project_id=payload.project_id,
+                )
+                validator.configuration = config.configuration
+                validator.prompt_schema_version = config.prompt_schema_version
 
 
 def _validate_with_guard(
@@ -223,30 +229,6 @@ def _validate_with_guard(
             status=RequestStatus.ERROR,
             error_message=_safe_error_message(exc),
         )
-
-
-def _resolve_topic_relevance_scope(payload: GuardrailRequest, session: Session) -> None:
-    """
-    Resolves the topic scope configuration from the tenant's stored TopicRelevanceConfig
-    when a validator references a topic_relevance_config_id.
-    Populates `configuration` and `prompt_schema_version` on the validator config in-place
-    before guard execution.
-    """
-    for validator in payload.validators:
-        if not isinstance(validator, TopicRelevanceSafetyValidatorConfig):
-            continue
-
-        if validator.topic_relevance_config_id is None:
-            continue
-
-        config = topic_relevance_crud.get(
-            session=session,
-            id=validator.topic_relevance_config_id,
-            organization_id=payload.organization_id,
-            project_id=payload.project_id,
-        )
-        validator.configuration = config.configuration
-        validator.prompt_schema_version = config.prompt_schema_version
 
 
 def add_validator_logs(
