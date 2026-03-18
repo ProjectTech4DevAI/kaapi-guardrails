@@ -272,6 +272,7 @@ Parameters / customization:
 
 Notes / limitations:
 - All three parameters are required and must be provided inline in every runtime guardrail request; there is no stored config to reference.
+- **Requires `OPENAI_API_KEY` to be set in environment variables.** If the key is not configured, `build()` raises a `ValueError` with an explicit message before any validation runs.
 - Quality and latency depend on the chosen `llm_callable`.
 - LLM-judge approaches can be inconsistent across runs; consider setting `max_score` conservatively and reviewing outputs before production use.
 
@@ -305,6 +306,7 @@ Parameters / customization:
 
 Notes / limitations:
 - Runtime validation requires `topic_relevance_config_id`.
+- **Requires `OPENAI_API_KEY` to be set in environment variables.** If the key is not configured, validation returns a `FailResult` with an explicit message.
 - Configuration is resolved in `backend/app/api/routes/guardrails.py` from tenant Topic Relevance Config APIs.
 - Prompt templates must include the `{{TOPIC_CONFIGURATION}}` placeholder.
 
