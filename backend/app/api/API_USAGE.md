@@ -6,6 +6,7 @@ This guide explains how to use the current API surface for:
 - Runtime validator discovery
 - Guardrail execution
 - Ban list CRUD for multi-tenant projects
+- Topic relevance config CRUD for multi-tenant projects
 
 ## Base URL and Version
 
@@ -23,7 +24,7 @@ This API currently uses two auth modes:
    - Used by validator config and guardrails endpoints.
    - The server validates your plaintext bearer token against a SHA-256 digest stored in `AUTH_TOKEN`.
 2. multi-tenant API key auth (`X-API-KEY: <token>`)
-   - Used by ban list endpoints.
+   - Used by ban list and topic relevance config endpoints.
    - The API key is verified against `KAAPI_AUTH_URL` and resolves tenant's scope (`organization_id`, `project_id`).
 
 Notes:
@@ -99,7 +100,7 @@ Endpoint:
 Optional filters:
 - `ids=<uuid>&ids=<uuid>`
 - `stage=input|output`
-- `type=uli_slur_match|pii_remover|gender_assumption_bias|ban_list`
+- `type=uli_slur_match|pii_remover|gender_assumption_bias|ban_list|llm_critic|topic_relevance`
 
 Example:
 
@@ -182,6 +183,8 @@ Request fields:
 Important:
 - Runtime validators use `on_fail`.
 - If you pass objects from config APIs, server normalization supports `on_fail_action` and strips non-runtime fields.
+- For `topic_relevance`, pass `topic_relevance_config_id` only.
+- The API resolves `configuration` + `prompt_schema_version` in `guardrails.py` before validator execution, so the validator always executes with both values.
 
 Example:
 
@@ -321,7 +324,86 @@ curl -X DELETE "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>"
   -H "X-API-KEY: <api-key>"
 ```
 
-## 6) End-to-End Usage Pattern
+## 6) Topic Relevance Config APIs (multi-tenant)
+
+These endpoints manage tenant-scoped topic relevance presets and use `X-API-KEY` auth.
+
+Base path:
+- `/api/v1/guardrails/topic_relevance_configs`
+
+## 6.1 Create topic relevance config
+
+Endpoint:
+- `POST /api/v1/guardrails/topic_relevance_configs/`
+
+Example:
+
+```bash
+curl -X POST "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/" \
+  -H "X-API-KEY: <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Maternal Health Scope",
+    "description": "Topic guard for maternal health support bot",
+    "prompt_schema_version": 1,
+    "configuration": "Pregnancy care: Questions about prenatal care, ANC visits, nutrition, supplements, danger signs. Postpartum care: Questions about recovery after delivery, breastfeeding, and mother health checks."
+  }'
+```
+
+## 6.2 List topic relevance configs
+
+Endpoint:
+- `GET /api/v1/guardrails/topic_relevance_configs/?offset=0&limit=20`
+
+Example:
+
+```bash
+curl -X GET "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/?offset=0&limit=20" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 6.3 Get topic relevance config by id
+
+Endpoint:
+- `GET /api/v1/guardrails/topic_relevance_configs/{id}`
+
+Example:
+
+```bash
+curl -X GET "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<topic_relevance_config_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 6.4 Update topic relevance config
+
+Endpoint:
+- `PATCH /api/v1/guardrails/topic_relevance_configs/{id}`
+
+Example:
+
+```bash
+curl -X PATCH "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<topic_relevance_config_id>" \
+  -H "X-API-KEY: <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt_schema_version": 1,
+    "configuration": "Pregnancy care: Updated scope definition"
+  }'
+```
+
+## 6.5 Delete topic relevance config
+
+Endpoint:
+- `DELETE /api/v1/guardrails/topic_relevance_configs/{id}`
+
+Example:
+
+```bash
+curl -X DELETE "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<topic_relevance_config_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 7) End-to-End Usage Pattern
 
 Recommended request flow:
 1. Create/update validator configs via `/guardrails/validators/configs`.
@@ -330,15 +412,16 @@ Recommended request flow:
 4. Use `safe_text` as downstream text.
 5. If `rephrase_needed=true`, ask user to rephrase.
 6. For `ban_list` validators without inline `banned_words`, create/manage a ban list first and pass `ban_list_id`.
+7. For `topic_relevance`, create/manage a topic relevance config and pass `topic_relevance_config_id` at runtime. The server resolves the configuration string internally.
 
-## 7) Common Errors
+## 8) Common Errors
 
 - `401 Missing Authorization header`
   - Add `Authorization: Bearer <token>`.
 - `401 Invalid authorization token`
   - Verify plaintext token matches server-side hash.
 - `401 Missing X-API-KEY header`
-  - Add `X-API-KEY: <api-key>` for ban list endpoints.
+  - Add `X-API-KEY: <api-key>` for ban list and topic relevance config endpoints.
 - `401 Invalid API key`
   - Verify the API key is valid in the upstream Kaapi auth service.
 - `Invalid request_id`
@@ -347,14 +430,18 @@ Recommended request flow:
   - Type+stage is unique per organization/project scope.
 - `Validator not found`
   - Confirm `id`, `organization_id`, and `project_id` match.
+- `Topic relevance preset not found`
+  - Confirm topic relevance config `id` exists within your tenant scope.
 
-## 8) Current Validator Types
+## 9) Current Validator Types
 
 From `validators.json`:
 - `uli_slur_match`
 - `pii_remover`
 - `gender_assumption_bias`
 - `ban_list`
+- `llm_critic`
+- `topic_relevance`
 
 Source of truth:
 - `backend/app/core/validators/validators.json`

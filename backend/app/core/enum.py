@@ -31,3 +31,4 @@ class ValidatorType(Enum):
     PIIRemover = "pii_remover"
     GenderAssumptionBias = "gender_assumption_bias"
     BanList = "ban_list"
+    TopicRelevance = "topic_relevance"
