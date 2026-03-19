@@ -3,6 +3,7 @@ from uuid import UUID
 
 from pydantic import model_validator
 
+from app.core.config import settings
 from app.core.validators.topic_relevance import TopicRelevance
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
@@ -15,6 +16,11 @@ class TopicRelevanceSafetyValidatorConfig(BaseValidatorConfig):
     topic_relevance_config_id: Optional[UUID] = None
 
     def build(self):
+        if not settings.OPENAI_API_KEY:
+            raise ValueError(
+                "OPENAI_API_KEY is not configured. "
+                "Topic relevance validation requires an OpenAI API key."
+            )
         return TopicRelevance(
             topic_config=self.configuration or " ",
             prompt_schema_version=self.prompt_schema_version or 1,

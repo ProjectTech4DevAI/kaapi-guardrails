@@ -2,6 +2,7 @@ from typing import Literal
 
 from guardrails.hub import LLMCritic
 
+from app.core.config import settings
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 
@@ -12,6 +13,11 @@ class LLMCriticSafetyValidatorConfig(BaseValidatorConfig):
     llm_callable: str
 
     def build(self):
+        if not settings.OPENAI_API_KEY:
+            raise ValueError(
+                "OPENAI_API_KEY is not configured. "
+                "LLM critic validation requires an OpenAI API key."
+            )
         return LLMCritic(
             metrics=self.metrics,
             max_score=self.max_score,

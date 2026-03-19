@@ -9,7 +9,7 @@ Current validator manifest:
 - `pii_remover` (source: `local`)
 - `gender_assumption_bias` (source: `local`)
 - `ban_list` (source: `hub://guardrails/ban_list`)
-- `llm_critic` (source: `hub://guardrails/llm_critic`)
+- `llm_critic` (source: `hub://guardrails/llm_critic`) - https://guardrailsai.com/hub/validator/guardrails/llm_critic
 - `topic_relevance` (source: `local`)
 
 ## Configuration Model
@@ -167,7 +167,9 @@ Supported default entity types:
 Notes / limitations:
 - Rule/ML recognizers can under-detect free-text references.
 - Threshold and entity selection should be tuned per deployment context.
-
+- Runtime requirement: this validator is configured to use spaCy model `en_core_web_lg`.
+The model is pre-installed at build time in the Docker image to ensure fast startup and no runtime internet dependency.
+For local development without Docker, manually install the model using: `python -m spacy download en_core_web_lg`
 Evidence and evaluation:
 - Compared approaches:
   - Custom PII validator (this codebase)
@@ -245,7 +247,36 @@ Notes / limitations:
 - Runtime validation requires at least one of `banned_words` or `ban_list_id`.
 - If `ban_list_id` is used, banned words are resolved from the tenant-scoped Ban List APIs.
 
-### 5) Topic Relevance Validator (`topic_relevance`)
+### 5) LLM Critic Validator (`llm_critic`)
+
+Code:
+- Config: `backend/app/core/validators/config/llm_critic_safety_validator_config.py`
+- Source: Guardrails Hub (`hub://guardrails/llm_critic`) — https://guardrailsai.com/hub/validator/guardrails/llm_critic
+
+What it does:
+- Evaluates text against one or more custom quality/safety metrics using an LLM as judge.
+- Each metric is scored up to `max_score`; validation fails if any metric score falls below the threshold.
+
+Why this is used:
+- Enables flexible, prompt-driven content evaluation for use cases not covered by rule-based validators.
+- All configuration is passed inline in the runtime request — there is no stored config object to resolve. Unlike `topic_relevance`, which looks up scope text from a persisted `TopicRelevanceConfig`, `llm_critic` receives `metrics`, `max_score`, and `llm_callable` directly in the guardrail request payload.
+
+Recommendation:
+- `input` or `output` depending on whether you are evaluating user input quality or model output quality.
+
+Parameters / customization:
+- `metrics: dict` (required) — metric name-to-description mapping passed to the LLM judge
+- `max_score: int` (required) — maximum score per metric; used to define the scoring scale
+- `llm_callable: str` (required) — model identifier passed to LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`)
+- `on_fail`
+
+Notes / limitations:
+- All three parameters are required and must be provided inline in every runtime guardrail request; there is no stored config to reference.
+- **Requires `OPENAI_API_KEY` to be set in environment variables.** If the key is not configured, `build()` raises a `ValueError` with an explicit message before any validation runs.
+- Quality and latency depend on the chosen `llm_callable`.
+- LLM-judge approaches can be inconsistent across runs; consider setting `max_score` conservatively and reviewing outputs before production use.
+
+### 6) Topic Relevance Validator (`topic_relevance`)
 
 Code:
 - Config: `backend/app/core/validators/config/topic_relevance_safety_validator_config.py`
@@ -270,11 +301,12 @@ Recommendation:
 Parameters / customization:
 - `topic_relevance_config_id: UUID` (required at runtime; resolves configuration and prompt version from tenant config)
 - `prompt_schema_version: int` (optional; defaults to `1`)
-- `llm_callable: str` (default: `gpt-4o-mini`)
+- `llm_callable: str` (default: `gpt-4o-mini`) — the model identifier passed to Guardrails' LLMCritic to perform the scope evaluation. This must be a model string supported by LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`). It controls which LLM is used to score whether the input is within the allowed topic scope; changing it affects cost, latency, and scoring quality.
 - `on_fail`
 
 Notes / limitations:
 - Runtime validation requires `topic_relevance_config_id`.
+- **Requires `OPENAI_API_KEY` to be set in environment variables.** If the key is not configured, validation returns a `FailResult` with an explicit message.
 - Configuration is resolved in `backend/app/api/routes/guardrails.py` from tenant Topic Relevance Config APIs.
 - Prompt templates must include the `{{TOPIC_CONFIGURATION}}` placeholder.
 

@@ -21,6 +21,7 @@ _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance"
 
 @lru_cache(maxsize=8)
 def _load_prompt_template(prompt_schema_version: int) -> str:
+    """Load and cache the prompt template for the given schema version."""
     if prompt_schema_version < 1:
         raise ValueError("prompt_schema_version must be a positive integer")
 
@@ -39,6 +40,7 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
 
 
 def _build_metric_prompt(prompt_schema_version: int, topic_config: str) -> str:
+    """Inject the topic configuration into the prompt template."""
     scope_text = topic_config.strip()
     if not scope_text:
         raise ValueError("topic_config cannot be empty")
@@ -63,14 +65,27 @@ class TopicRelevance(Validator):
         llm_callable: str = "gpt-4o-mini",
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
+        """Build the LLMCritic with a scope_violation metric from the topic configuration."""
         super().__init__(on_fail=on_fail)
-
-        if not topic_config or not topic_config.strip():
-            raise ValueError("topic_config cannot be empty")
 
         self.topic_config = topic_config
         self.prompt_schema_version = prompt_schema_version
         self.llm_callable = llm_callable
+        self._invalid_config_reason: Optional[str] = None
+
+        if not topic_config or not topic_config.strip():
+            self._invalid_config_reason = "topic_config is blank or missing"
+            self._critic = None
+            return
+
+        try:
+            from litellm import get_supported_openai_params
+
+            supports_response_format = "response_format" in (
+                get_supported_openai_params(model=llm_callable) or []
+            )
+        except Exception:
+            supports_response_format = False
 
         self._critic = LLMCritic(
             metrics={
@@ -85,10 +100,18 @@ class TopicRelevance(Validator):
             max_score=3,
             llm_callable=llm_callable,
             on_fail=on_fail,
-            llm_kwargs={"response_format": {"type": "json_object"}},
+            **(
+                {"llm_kwargs": {"response_format": {"type": "json_object"}}}
+                if supports_response_format
+                else {}
+            ),
         )
 
     def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+        """Run the LLMCritic and return a PassResult or FailResult with the scope score."""
+        if self._invalid_config_reason:
+            return FailResult(error_message=self._invalid_config_reason)
+
         if not value or not value.strip():
             return FailResult(error_message="Empty message.")
 
@@ -109,6 +132,8 @@ class TopicRelevance(Validator):
                 )
 
         except Exception as e:
-            return FailResult(error_message="LLM critic returned an invalid response.")
+            return FailResult(
+                error_message=f"LLM critic returned an invalid response: {e}"
+            )
 
         return FailResult(error_message="Topic relevance validation failed.")

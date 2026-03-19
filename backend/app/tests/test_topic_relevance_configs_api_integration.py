@@ -177,13 +177,13 @@ class TestUpdateTopicRelevanceConfig(BaseTopicRelevanceTest):
         response = self.update(
             integration_client,
             config_id,
-            {"name": "Updated scope", "prompt_schema_version": 2},
+            {"name": "Updated scope", "prompt_schema_version": 1},
         )
 
         assert response.status_code == 200
         data = response.json()["data"]
         assert data["name"] == "Updated scope"
-        assert data["prompt_schema_version"] == 2
+        assert data["prompt_schema_version"] == 1
 
     def test_partial_update(self, integration_client, clear_database):
         create_resp = self.create(integration_client)

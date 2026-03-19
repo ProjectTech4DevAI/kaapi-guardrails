@@ -29,6 +29,12 @@ Make sure your editor is using the correct Python virtual environment, with the 
 
 Modify or add SQLModel models for data and SQL tables in `./backend/app/models/`, API endpoints in `./backend/app/api/`.
 
+Install the spaCy model required by the custom `pii_remover` validator:
+
+```bash
+python -m spacy download en_core_web_lg
+```
+
 ## VS Code
 
 There are already configurations in place to run the backend through the VS Code debugger, so that you can use breakpoints, pause and explore variables, etc.
@@ -240,6 +246,12 @@ At runtime, the backend calls:
 If verification succeeds, tenant's scope (`organization_id`, `project_id`) is resolved from the auth response and applied to tenant-scoped CRUD operations (for example Ban Lists and Topic Relevance Configs).
 
 ## Guardrails AI Setup
+
+> **OpenAI API key required for LLM-based validators**
+> The `llm_critic` and `topic_relevance` validators call OpenAI models at runtime.
+> Set `OPENAI_API_KEY` in your `.env` / `.env.test` before using these validators.
+> If the key is missing, `llm_critic` will raise a `ValueError` at build time and `topic_relevance` will return a validation failure with an explicit error message.
+
 1. Ensure that the .env file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
 
 2. Make the `install_guardrails_from_hub.sh` script executable using this command (run this from the `backend` folder) -

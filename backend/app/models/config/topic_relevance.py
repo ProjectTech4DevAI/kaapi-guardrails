@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 from datetime import datetime
 
+from sqlalchemy import UniqueConstraint
 from sqlmodel import SQLModel, Field
 
 from app.utils import now
@@ -33,7 +34,7 @@ class TopicRelevance(SQLModel, table=True):
     )
 
     description: str = Field(
-        nullable=True,
+        nullable=False,
         sa_column_kwargs={"comment": "Description of the topic relevance entry"},
     )
 
@@ -53,6 +54,7 @@ class TopicRelevance(SQLModel, table=True):
     is_active: bool = Field(
         default=True,
         index=True,
+        nullable=False,
         sa_column_kwargs={
             "comment": "Whether the topic relevance entry is active or not"
         },
@@ -73,4 +75,14 @@ class TopicRelevance(SQLModel, table=True):
             "comment": "Timestamp when the topic configuration entry was last updated",
             "onupdate": now,
         },
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "organization_id",
+            "project_id",
+            "prompt_schema_version",
+            "configuration",
+            name="uq_topic_relevance_config_org_project_prompt",
+        ),
     )

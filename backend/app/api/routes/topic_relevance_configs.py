@@ -20,16 +20,14 @@ router = APIRouter(
 
 @router.post(
     "/",
-    description=load_description(
-        "topic_relevance_configs/create_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/create_config.md"),
     response_model=APIResponse[TopicRelevanceResponse],
 )
 def create_topic_relevance_config(
     payload: TopicRelevanceCreate,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[TopicRelevanceResponse]:
     topic_relevance_config = topic_relevance_crud.create(
         session,
         payload,
@@ -41,9 +39,7 @@ def create_topic_relevance_config(
 
 @router.get(
     "/",
-    description=load_description(
-        "topic_relevance_configs/list_topic_relevance_configs.md"
-    ),
+    description=load_description("topic_relevance_configs/list_configs.md"),
     response_model=APIResponse[list[TopicRelevanceResponse]],
 )
 def list_topic_relevance_configs(
@@ -51,7 +47,7 @@ def list_topic_relevance_configs(
     auth: MultitenantAuthDep,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
-):
+) -> APIResponse[list[TopicRelevanceResponse]]:
     topic_relevance_configs = topic_relevance_crud.list(
         session,
         auth.organization_id,
@@ -64,16 +60,14 @@ def list_topic_relevance_configs(
 
 @router.get(
     "/{id}",
-    description=load_description(
-        "topic_relevance_configs/get_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/get_config.md"),
     response_model=APIResponse[TopicRelevanceResponse],
 )
 def get_topic_relevance_config(
     id: UUID,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[TopicRelevanceResponse]:
     topic_relevance_config = topic_relevance_crud.get(
         session,
         id,
@@ -85,9 +79,7 @@ def get_topic_relevance_config(
 
 @router.patch(
     "/{id}",
-    description=load_description(
-        "topic_relevance_configs/update_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/update_config.md"),
     response_model=APIResponse[TopicRelevanceResponse],
 )
 def update_topic_relevance_config(
@@ -95,7 +87,7 @@ def update_topic_relevance_config(
     payload: TopicRelevanceUpdate,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[TopicRelevanceResponse]:
     topic_relevance_config = topic_relevance_crud.update(
         session,
         id,
@@ -108,16 +100,14 @@ def update_topic_relevance_config(
 
 @router.delete(
     "/{id}",
-    description=load_description(
-        "topic_relevance_configs/delete_topic_relevance_config.md"
-    ),
+    description=load_description("topic_relevance_configs/delete_config.md"),
     response_model=APIResponse[dict],
 )
 def delete_topic_relevance_config(
     id: UUID,
     session: SessionDep,
     auth: MultitenantAuthDep,
-):
+) -> APIResponse[dict]:
     obj = topic_relevance_crud.get(
         session,
         id,

@@ -8,7 +8,6 @@ from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep
 from app.core.constants import BAN_LIST, REPHRASE_ON_FAIL_PREFIX
-from app.core.config import settings
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
 from app.core.validators.config.ban_list_safety_validator_config import (
@@ -41,6 +40,10 @@ def run_guardrails(
     _: AuthDep,
     suppress_pass_logs: bool = True,
 ):
+    """
+    Resolves any config-backed validator references (ban list words, topic relevance scope),
+    then runs validation and returns a structured guardrail response.
+    """
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
 
@@ -49,8 +52,7 @@ def run_guardrails(
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    _resolve_ban_list_banned_words(payload, session)
-    _resolve_topic_relevance_scope(payload, session)
+    _resolve_validator_configs(payload, session)
     return _validate_with_guard(
         payload,
         request_log_crud,
@@ -90,21 +92,33 @@ def list_validators(_: AuthDep):
     return {"validators": validators}
 
 
-def _resolve_ban_list_banned_words(payload: GuardrailRequest, session: Session) -> None:
+def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> None:
+    """
+    Resolves config-backed references for all validators in-place before guard execution:
+    - BanList: fetches banned_words from the stored BanList when not provided inline.
+    - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
+    """
     for validator in payload.validators:
-        if not isinstance(validator, BanListSafetyValidatorConfig):
-            continue
+        if isinstance(validator, BanListSafetyValidatorConfig):
+            if validator.type == BAN_LIST and validator.banned_words is None:
+                ban_list = ban_list_crud.get(
+                    session,
+                    id=validator.ban_list_id,
+                    organization_id=payload.organization_id,
+                    project_id=payload.project_id,
+                )
+                validator.banned_words = ban_list.banned_words
 
-        if validator.type != BAN_LIST or validator.banned_words is not None:
-            continue
-
-        ban_list = ban_list_crud.get(
-            session,
-            id=validator.ban_list_id,
-            organization_id=payload.organization_id,
-            project_id=payload.project_id,
-        )
-        validator.banned_words = ban_list.banned_words
+        elif isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+            if validator.topic_relevance_config_id is not None:
+                config = topic_relevance_crud.get(
+                    session=session,
+                    id=validator.topic_relevance_config_id,
+                    organization_id=payload.organization_id,
+                    project_id=payload.project_id,
+                )
+                validator.configuration = config.configuration
+                validator.prompt_schema_version = config.prompt_schema_version
 
 
 def _validate_with_guard(
@@ -192,14 +206,17 @@ def _validate_with_guard(
 
         history = getattr(guard, "history", None)
         if history and getattr(history, "last", None):
-            iteration = history.last.iterations[-1]
-            logs = getattr(iteration.outputs, "validator_logs", [])
-
-            for log in logs:
-                result = log.validation_result
-                if isinstance(result, FailResult) and result.error_message:
-                    error_message = result.error_message
-                    break
+            iterations = getattr(history.last, "iterations", None)
+            if iterations:
+                iteration = iterations[-1]
+                logs = getattr(
+                    getattr(iteration, "outputs", None), "validator_logs", []
+                )
+                for log in logs:
+                    log_result = log.validation_result
+                    if isinstance(log_result, FailResult) and log_result.error_message:
+                        error_message = log_result.error_message
+                        break
 
         return _finalize(
             status=RequestStatus.ERROR,
@@ -238,7 +255,11 @@ def add_validator_logs(
     validator_log_crud: ValidatorLogCrud,
     payload: GuardrailRequest,
     suppress_pass_logs: bool = False,
-):
+) -> None:
+    """
+    Writes a ValidatorLog entry for each validator outcome in the guard's last iteration.
+    Pass results are skipped when suppress_pass_logs is True.
+    """
     history = getattr(guard, "history", None)
     if not history:
         return
