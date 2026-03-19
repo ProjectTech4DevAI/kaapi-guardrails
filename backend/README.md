@@ -29,6 +29,12 @@ Make sure your editor is using the correct Python virtual environment, with the 
 
 Modify or add SQLModel models for data and SQL tables in `./backend/app/models/`, API endpoints in `./backend/app/api/`.
 
+Install the spaCy model required by the custom `pii_remover` validator:
+
+```bash
+python -m spacy download en_core_web_lg
+```
+
 ## VS Code
 
 There are already configurations in place to run the backend through the VS Code debugger, so that you can use breakpoints, pause and explore variables, etc.
@@ -103,10 +109,11 @@ Important: each `run.py` expects a specific filename, so dataset files must be n
 - `app/evaluation/lexical_slur/run.py` expects `lexical_slur_testing_dataset.csv`
 - `app/evaluation/pii/run.py` expects `pii_detection_testing_dataset.csv`
 - `app/evaluation/gender_assumption_bias/run.py` expects `gender_bias_assumption_dataset.csv`
+- `app/evaluation/ban_list/run.py` expects `ban_list_testing_dataset.csv`
 
 Once these files are in place with the exact names above, run the evaluation scripts.
 
-Unit tests for lexical slur match, ban list, and gender assumption bias validators have limited value because their logic is deterministic. However, curated datasets exist for lexical slur match and gender assumption bias to benchmark accuracy and latency. The lexical slur dataset will also be used in future toxicity detection workflows.
+Unit tests for lexical slur match, ban list, and gender assumption bias validators have limited value because their logic is deterministic. Curated datasets are used to benchmark accuracy and latency for lexical slur, gender assumption bias, and ban list. The lexical slur dataset will also be used in future toxicity detection workflows.
 
 Each validator produces:
 - predictions.csv – row-level outputs for debugging and analysis
@@ -114,26 +121,27 @@ Each validator produces:
 
 Standardized output structure:
 ```text
-app/evaluation/outputs/
-  lexical_slur/
-    predictions.csv
-    metrics.json
-  gender_assumption_bias/
-    predictions.csv
-    metrics.json
-  pii_remover/
-    predictions.csv
-    metrics.json
+app/evaluation/outputs/<validator-name>
+  predictions.csv
+  metrics.json
 ```
 
 - To run all evaluation scripts together, use:
 ```bash
-bash scripts/run_all_evaluations.sh
+BAN_LIST_WORDS="word1,word2" bash scripts/run_all_evaluations.sh
 ```
+or
+```bash
+bash scripts/run_all_evaluations.sh BAN_LIST_WORDS="word1,word2"
+```
+
+`BAN_LIST_WORDS` is required for the `ban_list` evaluator and should be a comma-separated list.
+
 This script runs the evaluators in sequence:
 - `app/evaluation/lexical_slur/run.py`
 - `app/evaluation/pii/run.py`
 - `app/evaluation/gender_assumption_bias/run.py`
+- `app/evaluation/ban_list/run.py`
 
 To evaluate any specific evaluator, run the offline evaluation script: `python <validator's eval script path>` 
 
@@ -225,7 +233,7 @@ Set the resulting digest as `AUTH_TOKEN` in your `.env` / `.env.test`.
 
 ## Multi-tenant API Key Configuration
 
-Ban List APIs use `X-API-KEY` auth instead of bearer token auth.
+Ban List and Topic Relevance Config APIs use `X-API-KEY` auth instead of bearer token auth.
 
 Required environment variables:
 - `KAAPI_AUTH_URL`: Base URL of the Kaapi auth service used to verify API keys.
@@ -233,11 +241,17 @@ Required environment variables:
 
 At runtime, the backend calls:
 - `GET {KAAPI_AUTH_URL}/apikeys/verify`
-- Header: `X-API-KEY: ApiKey <token>`
+- Header: `X-API-KEY: <token>`
 
-If verification succeeds, tenant's scope (`organization_id`, `project_id`) is resolved from the auth response and applied to Ban List CRUD operations.
+If verification succeeds, tenant's scope (`organization_id`, `project_id`) is resolved from the auth response and applied to tenant-scoped CRUD operations (for example Ban Lists and Topic Relevance Configs).
 
 ## Guardrails AI Setup
+
+> **OpenAI API key required for LLM-based validators**
+> The `llm_critic` and `topic_relevance` validators call OpenAI models at runtime.
+> Set `OPENAI_API_KEY` in your `.env` / `.env.test` before using these validators.
+> If the key is missing, `llm_critic` will raise a `ValueError` at build time and `topic_relevance` will return a validation failure with an explicit error message.
+
 1. Ensure that the .env file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
 
 2. Make the `install_guardrails_from_hub.sh` script executable using this command (run this from the `backend` folder) -
