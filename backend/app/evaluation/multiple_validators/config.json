@@ -1,0 +1,23 @@
+{
+  "_comment": "Edit this file to configure the evaluation run. All paths are relative to the 'evaluation' directory (i.e. backend/app/evaluation). Add or remove entries in 'validators' to control which validators run and with what settings.",
+  "dataset_path": "datasets/multi_validator_whatsapp_dataset.csv",
+  "out_path": "outputs/multi_validator_whatsapp/predictions.csv",
+  "organization_id": 1,
+  "project_id": 1,
+  "validators": [
+    {
+      "type": "uli_slur_match",
+      "severity": "all",
+      "on_fail": "fix"
+    },
+    {
+      "type": "pii_remover",
+      "on_fail": "fix"
+    },
+    {
+      "type": "ban_list",
+      "banned_words": ["sonography"],
+      "on_fail": "fix"
+    }
+  ]
+}

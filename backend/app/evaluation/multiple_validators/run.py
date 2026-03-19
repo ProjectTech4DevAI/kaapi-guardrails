@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import argparse
 import os
@@ -9,39 +10,31 @@ import pandas as pd
 from app.evaluation.common.helper import write_csv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATASET_PATH = BASE_DIR / "datasets" / "multi_validator_whatsapp_dataset.csv"
-OUT_PATH = BASE_DIR / "outputs" / "multi_validator_whatsapp" / "predictions.csv"
 
 API_URL = os.getenv("GUARDRAILS_API_URL", "http://localhost:8001/api/v1/guardrails/")
 TIMEOUT_SECONDS = float(os.getenv("GUARDRAILS_TIMEOUT_SECONDS", "60"))
 
-VALIDATOR_TEMPLATES = {
-    "uli_slur_match": {
-        "type": "uli_slur_match",
-        "severity": "all",
-        "on_fail": "fix",
-    },
-    "pii_remover": {
-        "type": "pii_remover",
-        "on_fail": "fix",
-    },
-    "ban_list": {
-        "type": "ban_list",
-        "banned_words": ["sonography"],
-        "on_fail": "fix",
-    },
-}
+
+def load_config(config_path: Path) -> dict:
+    with open(config_path) as f:
+        return json.load(f)
 
 
-def call_guardrails(text: str, validators_payload: list[dict], auth_token: str) -> str:
+def call_guardrails(
+    text: str,
+    validators_payload: list[dict],
+    organization_id: int,
+    project_id: int,
+    auth_token: str,
+) -> str:
     headers = {"Content-Type": "application/json"}
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 
     payload = {
         "request_id": str(uuid4()),
-        "organization_id": 1,
-        "project_id": 1,
+        "organization_id": organization_id,
+        "project_id": project_id,
         "input": text,
         "validators": validators_payload,
     }
@@ -68,9 +61,9 @@ def call_guardrails(text: str, validators_payload: list[dict], auth_token: str) 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--validators_payload",
-        required=True,
-        help="Comma-separated validators, e.g. uli_slur_match or uli_slur_match,pii_remover",
+        "--config",
+        default=str(Path(__file__).resolve().parent / "config.json"),
+        help="Path to the JSON config file (default: config.json next to this script).",
     )
     parser.add_argument(
         "--auth_token",
@@ -79,27 +72,29 @@ def main():
     )
     args = parser.parse_args()
 
-    selected_validators = [
-        value.strip() for value in args.validators_payload.split(",") if value.strip()
-    ]
-    unknown = [name for name in selected_validators if name not in VALIDATOR_TEMPLATES]
-    if not selected_validators or unknown:
-        raise ValueError(
-            "Invalid validators_payload. Supported values: "
-            f"{', '.join(VALIDATOR_TEMPLATES.keys())}"
-        )
+    config = load_config(Path(args.config))
 
-    validators_payload = [
-        dict(VALIDATOR_TEMPLATES[name]) for name in selected_validators
-    ]
+    dataset_path = BASE_DIR / config["dataset_path"]
+    out_path = BASE_DIR / config["out_path"]
+    organization_id = config["organization_id"]
+    project_id = config["project_id"]
+    validators_payload = config["validators"]
 
-    df = pd.read_csv(DATASET_PATH)
+    if not validators_payload:
+        raise ValueError("No validators defined in config.")
 
-    # Keep output names exactly as requested.
+    df = pd.read_csv(dataset_path)
+
     rows = []
     for _, row in df.iterrows():
         source_text = str(row.get("Text", ""))
-        safe_text = call_guardrails(source_text, validators_payload, args.auth_token)
+        safe_text = call_guardrails(
+            source_text,
+            validators_payload,
+            organization_id,
+            project_id,
+            args.auth_token,
+        )
 
         rows.append(
             {
@@ -113,7 +108,7 @@ def main():
     out_df = pd.DataFrame(
         rows, columns=["ID", "text", "validators_present", "response"]
     )
-    write_csv(out_df, OUT_PATH)
+    write_csv(out_df, out_path)
 
 
 if __name__ == "__main__":
