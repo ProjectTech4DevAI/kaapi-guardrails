@@ -231,24 +231,6 @@ def _validate_with_guard(
         )
 
 
-def _resolve_topic_relevance_scope(payload: GuardrailRequest, session: Session) -> None:
-    for validator in payload.validators:
-        if not isinstance(validator, TopicRelevanceSafetyValidatorConfig):
-            continue
-
-        if validator.topic_relevance_config_id is None:
-            continue
-
-        config = topic_relevance_crud.get(
-            session=session,
-            id=validator.topic_relevance_config_id,
-            organization_id=payload.organization_id,
-            project_id=payload.project_id,
-        )
-        validator.configuration = config.configuration
-        validator.prompt_schema_version = config.prompt_schema_version
-
-
 def add_validator_logs(
     guard: Guard,
     request_log_id: UUID,
