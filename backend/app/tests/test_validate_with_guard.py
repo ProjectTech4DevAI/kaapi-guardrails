@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+from guardrails.validators import FailResult as GRFailResult
+
 from app.api.routes.guardrails import (
     _resolve_validator_configs,
     _validate_with_guard,
@@ -93,8 +95,6 @@ def test_validate_with_guard_exception():
 def test_validate_with_guard_uses_fail_result_error_message():
     """Case 2: when guard returns no validated_output, the error message should
     be extracted from the first FailResult in the last iteration's validator logs."""
-    from guardrails.validators import FailResult as GRFailResult
-
     mock_log = MagicMock()
     mock_log.validation_result = GRFailResult(error_message="specific validator error")
 
