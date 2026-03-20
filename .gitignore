@@ -9,6 +9,7 @@ htmlcov
 .DS_Store
 .env
 .env.test
-metrics.json
-predictions.csv
-backend/app/evaluation/datasets/*.csv
+backend/app/evaluation/datasets/**/*.csv
+backend/app/evaluation/datasets/**/*.txt
+backend/app/evaluation/outputs/**/*.csv
+backend/app/evaluation/outputs/**/*.json
