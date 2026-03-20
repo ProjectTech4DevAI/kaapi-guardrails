@@ -156,7 +156,9 @@ To run an end-to-end evaluation combining multiple validators against a dataset 
    For the full list of supported validators and their config parameters (e.g. `severity`, `entity_types`, `banned_words`, `on_fail`), refer to:
    `backend/app/core/validators/README.md`
 
-3. Run the script from the `backend` directory:
+3. Ensure `GUARDRAILS_API_URL` is set in your `.env` file (see `.env.example`). Optionally set `GUARDRAILS_TIMEOUT_SECONDS` to override the default request timeout of 60s.
+
+4. Run the script from the `backend` directory:
 ```bash
 python -m app.evaluation.multiple_validators.run --auth_token <your-token>
 ```

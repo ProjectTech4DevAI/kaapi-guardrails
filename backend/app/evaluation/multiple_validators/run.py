@@ -8,10 +8,15 @@ import httpx
 import pandas as pd
 
 from app.evaluation.common.helper import write_csv
+from app.load_env import load_environment
+
+load_environment()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-API_URL = os.getenv("GUARDRAILS_API_URL", "http://localhost:8001/api/v1/guardrails/")
+API_URL = os.getenv("GUARDRAILS_API_URL")
+if not API_URL:
+    raise ValueError("GUARDRAILS_API_URL environment variable must be set.")
 TIMEOUT_SECONDS = float(os.getenv("GUARDRAILS_TIMEOUT_SECONDS", "60"))
 
 
