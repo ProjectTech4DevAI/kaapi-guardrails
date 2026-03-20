@@ -31,6 +31,12 @@ BAN_LIST_EVALUATIONS = [
 
 
 def run_evaluation(config: dict):
+    """
+    Run the ban list evaluation for a single config.
+    Instantiates a BanList validator with the given banned words, runs each row through it,
+    computes binary metrics and exact-match rate if target text is available,
+    and writes prediction CSV and metrics JSON to the output directory.
+    """
     name = config["name"]
     banned_words = config["banned_words"]
 
@@ -42,6 +48,7 @@ def run_evaluation(config: dict):
     validator = BanList(banned_words=banned_words)
 
     def run_ban_list(text: str) -> tuple[str, int]:
+        """Validate a single text and return the (possibly redacted) text and a binary prediction label."""
         result = validator.validate(text, metadata=None)
         if isinstance(result, FailResult):
             return (result.fix_value or text), 1
@@ -96,6 +103,7 @@ def run_evaluation(config: dict):
 
 
 def main():
+    """Iterate over all entries in BAN_LIST_EVALUATIONS and run each evaluation in sequence."""
     for config in BAN_LIST_EVALUATIONS:
         run_evaluation(config)
 

@@ -62,11 +62,15 @@ def compute_binary_metrics(y_true, y_pred):
     recall = tp / (tp + fn) if tp + fn else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
 
+    total = tp + tn + fp + fn
+    accuracy = (tp + tn) / total if total else 0.0
+
     return {
         "true_positive": tp,
         "true_negative": tn,
         "false_positive": fp,
         "false_negative": fn,
+        "accuracy": round(accuracy, 2),
         "precision": round(precision, 2),
         "recall": round(recall, 2),
         "f1": round(f1, 2),

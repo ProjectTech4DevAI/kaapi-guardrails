@@ -39,6 +39,11 @@ EVALUATIONS = [
 
 
 def run_evaluation(config: dict) -> None:
+    """
+    Run the topic relevance evaluation for a single domain config.
+    Loads the dataset and topic config, runs each input through the TopicRelevance validator,
+    computes binary and per-category metrics, and writes prediction CSV and metrics JSON to the output directory.
+    """
     domain = config["domain"]
 
     dataset_path = DATASETS_DIR / config["dataset"]
@@ -81,9 +86,6 @@ def run_evaluation(config: dict) -> None:
     )
 
     metrics = compute_binary_metrics(normalized_df["y_true"], normalized_df["y_pred"])
-    metrics["accuracy"] = round(
-        float((normalized_df["y_true"] == normalized_df["y_pred"]).mean()), 2
-    )
 
     metrics["category_metrics"] = {
         str(cat): {
@@ -114,6 +116,7 @@ def run_evaluation(config: dict) -> None:
 
 
 def main() -> None:
+    """Iterate over all entries in EVALUATIONS and run each domain evaluation in sequence."""
     for config in EVALUATIONS:
         run_evaluation(config)
 
