@@ -143,7 +143,25 @@ This script runs the evaluators in sequence:
 - `app/evaluation/gender_assumption_bias/run.py`
 - `app/evaluation/ban_list/run.py`
 
-To evaluate any specific evaluator, run the offline evaluation script: `python <validator's eval script path>` 
+To evaluate any specific evaluator, run the offline evaluation script: `python <validator's eval script path>`
+
+## Multiple validators evaluation
+
+To run an end-to-end evaluation combining multiple validators against a dataset via the live API:
+
+1. Download the multi-validator dataset from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89) and place it in `backend/app/evaluation/datasets/` as `multi_validator_whatsapp_dataset.csv`.
+
+2. Edit `backend/app/evaluation/multiple_validators/config.json` to configure which validators to run, their parameters, and the dataset/output paths.
+
+   For the full list of supported validators and their config parameters (e.g. `severity`, `entity_types`, `banned_words`, `on_fail`), refer to:
+   `backend/app/core/validators/README.md`
+
+3. Run the script from the `backend` directory:
+```bash
+python -m app.evaluation.multiple_validators.run --auth_token <your-token>
+```
+
+Output is written to `backend/app/evaluation/outputs/multiple_validators/predictions.csv`.
 
 ## Validator configuration guide
 

@@ -61,18 +61,13 @@ def call_guardrails(
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--config",
-        default=str(Path(__file__).resolve().parent / "config.json"),
-        help="Path to the JSON config file (default: config.json next to this script).",
-    )
-    parser.add_argument(
         "--auth_token",
         required=True,
         help="Bearer token value (without the 'Bearer ' prefix).",
     )
     args = parser.parse_args()
 
-    config = load_config(Path(args.config))
+    config = load_config(Path(__file__).resolve().parent / "config.json")
 
     dataset_path = BASE_DIR / config["dataset_path"]
     out_path = BASE_DIR / config["out_path"]
