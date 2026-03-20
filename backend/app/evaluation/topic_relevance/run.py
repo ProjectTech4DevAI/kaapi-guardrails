@@ -41,8 +41,10 @@ EVALUATIONS = [
 def run_evaluation(config: dict) -> None:
     """
     Run the topic relevance evaluation for a single domain config.
-    Loads the dataset and topic config, runs each input through the TopicRelevance validator,
-    computes binary and per-category metrics, and writes prediction CSV and metrics JSON to the output directory.
+    Loads the dataset and topic config (the plain-text scope definition describing allowed topics,
+    distinct from DEFAULT_CONFIG which holds model and prompt version settings), runs each input
+    through the TopicRelevance validator, computes binary and per-category metrics, and writes
+    prediction CSV and metrics JSON to the output directory.
     """
     domain = config["domain"]
 
