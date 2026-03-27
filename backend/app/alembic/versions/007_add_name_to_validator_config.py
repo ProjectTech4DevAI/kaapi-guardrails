@@ -40,22 +40,24 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    # If your table has multiple configs of a specific validator and type combination it will be hard to downgrade the chnange
+    # manually delete the configurations and keep the one that won't give an error during downgrade
     op.execute(
         """
-        DELETE FROM validator_config
-        WHERE id IN (
-            SELECT id
-            FROM (
-                SELECT id,
-                       ROW_NUMBER() OVER (
-                           PARTITION BY organization_id, project_id, type, stage
-                           ORDER BY created_at ASC, id
-                       ) as row_num
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1
                 FROM validator_config
-            ) ranked
-            WHERE row_num > 1
-        )
-    """
+                GROUP BY organization_id, project_id, type, stage
+                HAVING COUNT(*) > 1
+            ) THEN
+                RAISE EXCEPTION
+                    'Cannot downgrade revision 007: duplicate validator_config rows exist for (organization_id, project_id, type, stage). Resolve them manually first.';
+            END IF;
+        END
+        $$;
+        """
     )
 
     op.drop_index("idx_validator_name", table_name="validator_config")
