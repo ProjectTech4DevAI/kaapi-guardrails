@@ -34,6 +34,7 @@ BAN_LIST_PAYLOADS = BAN_LIST_INTEGRATION["payloads"]
 VALIDATOR_TEST_ID = uuid.UUID(VALIDATOR_UNIT["validator_id"])
 VALIDATOR_TEST_ORGANIZATION_ID = VALIDATOR_UNIT["organization_id"]
 VALIDATOR_TEST_PROJECT_ID = VALIDATOR_UNIT["project_id"]
+VALIDATOR_TEST_NAME = VALIDATOR_UNIT["name"]
 VALIDATOR_TEST_TYPE = ValidatorType[VALIDATOR_UNIT["type"]]
 VALIDATOR_TEST_STAGE = Stage[VALIDATOR_UNIT["stage"]]
 VALIDATOR_TEST_ON_FAIL = GuardrailOnFail[VALIDATOR_UNIT["on_fail_action"]]
@@ -67,6 +68,7 @@ def build_sample_validator_config() -> ValidatorConfig:
         id=VALIDATOR_TEST_ID,
         organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
         project_id=VALIDATOR_TEST_PROJECT_ID,
+        name=VALIDATOR_TEST_NAME,
         type=VALIDATOR_TEST_TYPE,
         stage=VALIDATOR_TEST_STAGE,
         on_fail_action=VALIDATOR_TEST_ON_FAIL,

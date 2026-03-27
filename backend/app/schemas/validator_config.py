@@ -11,6 +11,7 @@ from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 class ValidatorBase(SQLModel):
     model_config = ConfigDict(extra="allow")
 
+    name: str
     type: ValidatorType
     stage: Stage
     on_fail_action: GuardrailOnFail = GuardrailOnFail.Fix
