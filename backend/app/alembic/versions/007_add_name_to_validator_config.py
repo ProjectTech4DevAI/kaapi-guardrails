@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.execute(
         """
         UPDATE validator_config
-        SET name = 'config_' || (extract(epoch from created_at) * 1000)::bigint::text
+        SET name = 'config_' || id::text
         WHERE name IS NULL
     """
     )
