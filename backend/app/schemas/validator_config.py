@@ -25,7 +25,6 @@ class ValidatorCreate(ValidatorBase):
 class ValidatorUpdate(SQLModel):
     model_config = ConfigDict(extra="forbid")
 
-    name: Optional[str] = None
     type: Optional[ValidatorType] = None
     stage: Optional[Stage] = None
     on_fail_action: Optional[GuardrailOnFail] = None
