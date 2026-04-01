@@ -11,6 +11,10 @@ Current validator manifest:
 - `ban_list` (source: `hub://guardrails/ban_list`)
 - `llm_critic` (source: `hub://guardrails/llm_critic`) - https://guardrailsai.com/hub/validator/guardrails/llm_critic
 - `topic_relevance` (source: `local`)
+- `llamaguard_7b` (source: `hub://guardrails/llamaguard_7b`)
+- `nsfw_text` (source: `hub://guardrails/nsfw_text`)
+- `profanity_free` (source: `hub://guardrails/profanity_free`)
+- `toxic_language` (source: `hub://guardrails/toxic_language`)
 
 ## Configuration Model
 
@@ -310,6 +314,125 @@ Notes / limitations:
 - Configuration is resolved in `backend/app/api/routes/guardrails.py` from tenant Topic Relevance Config APIs.
 - Prompt templates must include the `{{TOPIC_CONFIGURATION}}` placeholder.
 
+### 7) LlamaGuard 7B Validator (`llamaguard_7b`)
+
+Code:
+- Config: `backend/app/core/validators/config/llamaguard_7b_safety_validator_config.py`
+- Source: Guardrails Hub (`hub://guardrails/llamaguard_7b`)
+
+What it does:
+- Classifies text as "safe" or "unsafe" using the LlamaGuard-7B model via remote inference on the Guardrails Hub.
+- Checks against a configurable set of safety policies covering violence/hate, sexual content, criminal planning, weapons, illegal drugs, and self-harm encouragement.
+
+Why this is used:
+- Provides a model-level safety classifier as a complement to rule-based validators.
+- Allows policy-targeted filtering (e.g. only flag content violating specific categories).
+
+Recommendation:
+- `input` and `output`
+  - Why `input`: catches unsafe user prompts before model processing.
+  - Why `output`: validates generated content against the same safety policies.
+
+Parameters / customization:
+- `policies: list[str] | None` (default: all policies enabled)
+  - Available policy constants: `O1` (violence/hate), `O2` (sexual content), `O3` (criminal planning), `O4` (guns/illegal weapons), `O5` (illegal drugs), `O6` (encourage self-harm)
+- `on_fail`
+
+Notes / limitations:
+- Remote inference requires network access to the Guardrails Hub API.
+- No programmatic fix is applied on failure — `on_fail=fix` will behave like `on_fail=exception`.
+- LlamaGuard policy classification may produce false positives in news, clinical, or legal contexts.
+
+### 8) NSFW Text Validator (`nsfw_text`)
+
+Code:
+- Config: `backend/app/core/validators/config/nsfw_text_safety_validator_config.py`
+- Source: Guardrails Hub (`hub://guardrails/nsfw_text`)
+
+What it does:
+- Detects not-safe-for-work (NSFW) text using a classifier model.
+- Validates at the sentence level by default and fails if any sentence exceeds the configured threshold.
+
+Why this is used:
+- Provides a dedicated NSFW text filter for deployments where explicit/adult content must be blocked.
+- Complements LlamaGuard-based filtering with a lightweight, CPU-friendly classifier.
+
+Recommendation:
+- `input` and `output`
+  - Why `input`: blocks NSFW user messages before model invocation.
+  - Why `output`: prevents explicit content from being surfaced to end users.
+
+Parameters / customization:
+- `threshold: float` (default: `0.8`) — minimum classifier score to flag text as NSFW. Higher = more conservative (fewer false positives).
+- `validation_method: str` (default: `"sentence"`) — `"sentence"` checks each sentence independently; `"full"` scores the entire input.
+- `device: str | None` (default: `"cpu"`) — device to run the model on (`"cpu"` or `"cuda"`).
+- `model_name: str | None` (default: `"michellejieli/NSFW_text_classifier"`)
+- `on_fail`
+
+Notes / limitations:
+- Model runs locally; first use downloads model weights. Ensure network access during setup.
+- `validation_method="sentence"` may miss NSFW content spread across multiple sentences.
+- Threshold tuning is important: lower values increase recall at the cost of false positives.
+
+### 9) Profanity Free Validator (`profanity_free`)
+
+Code:
+- Config: `backend/app/core/validators/config/profanity_free_safety_validator_config.py`
+- Source: Guardrails Hub (`hub://guardrails/profanity_free`)
+
+What it does:
+- Detects profanity in text using the `alt-profanity-check` library.
+- Fails validation if any profanity is detected.
+
+Why this is used:
+- Simple, fast rule-based check for profane language without requiring model inference.
+- Suitable as a first-pass filter before more expensive validators.
+
+Recommendation:
+- `input` and `output`
+  - Why `input`: catches profane user messages early.
+  - Why `output`: prevents model-generated profanity from reaching users.
+
+Parameters / customization:
+- `on_fail`
+
+Notes / limitations:
+- Dictionary-based approach; may miss obfuscated profanity (e.g. character substitutions, leetspeak).
+- No programmatic fix is applied — detected text is not auto-redacted.
+- English-focused; cross-lingual profanity may not be detected.
+
+### 10) Toxic Language Validator (`toxic_language`)
+
+Code:
+- Config: `backend/app/core/validators/config/toxic_language_safety_validator_config.py`
+- Source: Guardrails Hub (`hub://guardrails/toxic_language`)
+
+What it does:
+- Detects toxic language using a classifier model.
+- Validates at the sentence level by default and fails if any sentence exceeds the configured threshold.
+
+Why this is used:
+- Provides broader toxicity detection beyond explicit slurs, covering hostile, threatening, or degrading language.
+- Works as a complement to the lexical slur validator (`uli_slur_match`) for semantic toxicity.
+
+Recommendation:
+- `input` and `output`
+  - Why `input`: catches toxic user messages before they influence model behavior.
+  - Why `output`: prevents model-generated toxic content from reaching end users.
+
+Parameters / customization:
+- `threshold: float` (default: `0.5`) — minimum classifier score to flag text as toxic. Lower = more sensitive (higher recall, more false positives).
+- `validation_method: str` (default: `"sentence"`) — `"sentence"` checks each sentence independently; `"full"` scores the entire input.
+- `device: str | None` (default: `"cpu"`) — device to run the model on (`"cpu"` or `"cuda"`).
+- `model_name: str | None` (default: `"unbiased-small"`)
+- `on_fail`
+
+Notes / limitations:
+- Model runs locally; first use downloads model weights. Ensure network access during setup.
+- The `unbiased-small` model is designed to reduce bias against identity groups compared to standard toxicity classifiers.
+- `validation_method="sentence"` is recommended for conversational text; use `"full"` for short single-sentence inputs.
+- Consider using alongside `uli_slur_match` for layered toxicity coverage.
+
 ## Example Config Payloads
 
 Example: create validator config (stored shape)
@@ -339,8 +462,8 @@ Example: runtime guardrail validator object (execution shape)
 ## Operational Guidance
 
 Default stage strategy:
-- Input guardrails: `pii_remover`, `uli_slur_match`, `ban_list`, `topic_relevance` (when scope enforcement is needed)
-- Output guardrails: `pii_remover`, `uli_slur_match`, `gender_assumption_bias`, `ban_list`
+- Input guardrails: `pii_remover`, `uli_slur_match`, `ban_list`, `topic_relevance` (when scope enforcement is needed), `profanity_free`, `toxic_language`, `nsfw_text`, `llamaguard_7b`
+- Output guardrails: `pii_remover`, `uli_slur_match`, `gender_assumption_bias`, `ban_list`, `profanity_free`, `toxic_language`, `nsfw_text`, `llamaguard_7b`
 
 Tuning strategy:
 - Start with conservative defaults and log validator outcomes.
@@ -356,5 +479,9 @@ Tuning strategy:
 - `backend/app/core/validators/config/lexical_slur_safety_validator_config.py`
 - `backend/app/core/validators/config/gender_assumption_bias_safety_validator_config.py`
 - `backend/app/core/validators/config/topic_relevance_safety_validator_config.py`
+- `backend/app/core/validators/config/llamaguard_7b_safety_validator_config.py`
+- `backend/app/core/validators/config/nsfw_text_safety_validator_config.py`
+- `backend/app/core/validators/config/profanity_free_safety_validator_config.py`
+- `backend/app/core/validators/config/toxic_language_safety_validator_config.py`
 - `backend/app/schemas/guardrail_config.py`
 - `backend/app/schemas/validator_config.py`

@@ -29,6 +29,26 @@
             "type": "topic_relevance",
             "version": "0.1.0",
             "source": "local"
+        },
+        {
+            "type": "llamaguard_7b",
+            "version": "0.1.0",
+            "source": "hub://guardrails/llamaguard_7b"
+        },
+        {
+            "type": "nsfw_text",
+            "version": "0.1.0",
+            "source": "hub://guardrails/nsfw_text"
+        },
+        {
+            "type": "profanity_free",
+            "version": "0.1.0",
+            "source": "hub://guardrails/profanity_free"
+        },
+        {
+            "type": "toxic_language",
+            "version": "0.1.0",
+            "source": "hub://guardrails/toxic_language"
         }
     ]
 }
