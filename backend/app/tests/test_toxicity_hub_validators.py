@@ -14,7 +14,9 @@ from app.core.validators.config.profanity_free_safety_validator_config import (
 _LLAMAGUARD_PATCH = (
     "app.core.validators.config.llamaguard_7b_safety_validator_config.LlamaGuard7B"
 )
-
+_PROFANITY_PATCH = (
+    "app.core.validators.config.profanity_free_safety_validator_config.ProfanityFree"
+)
 
 # ---------------------------------------------------------------------------
 # LlamaGuard7B
