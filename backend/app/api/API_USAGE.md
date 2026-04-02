@@ -100,7 +100,7 @@ Endpoint:
 Optional filters:
 - `ids=<uuid>&ids=<uuid>`
 - `stage=input|output`
-- `type=uli_slur_match|pii_remover|gender_assumption_bias|ban_list|llm_critic|topic_relevance|llamaguard_7b|nsfw_text|profanity_free|toxic_language`
+- `type=uli_slur_match|pii_remover|gender_assumption_bias|ban_list|llm_critic|topic_relevance|llamaguard_7b|profanity_free`
 
 Example:
 
@@ -443,9 +443,7 @@ From `validators.json`:
 - `llm_critic`
 - `topic_relevance`
 - `llamaguard_7b`
-- `nsfw_text`
 - `profanity_free`
-- `toxic_language`
 
 Source of truth:
 - `backend/app/core/validators/validators.json`

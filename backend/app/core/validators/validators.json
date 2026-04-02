@@ -36,19 +36,9 @@
             "source": "hub://guardrails/llamaguard_7b"
         },
         {
-            "type": "nsfw_text",
-            "version": "0.1.0",
-            "source": "hub://guardrails/nsfw_text"
-        },
-        {
             "type": "profanity_free",
             "version": "0.1.0",
             "source": "hub://guardrails/profanity_free"
-        },
-        {
-            "type": "toxic_language",
-            "version": "0.1.0",
-            "source": "hub://guardrails/toxic_language"
         }
     ]
 }

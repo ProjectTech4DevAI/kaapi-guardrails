@@ -27,14 +27,8 @@ from app.core.validators.config.topic_relevance_safety_validator_config import (
 from app.core.validators.config.llamaguard_7b_safety_validator_config import (
     LlamaGuard7BSafetyValidatorConfig,
 )
-from app.core.validators.config.nsfw_text_safety_validator_config import (
-    NSFWTextSafetyValidatorConfig,
-)
 from app.core.validators.config.profanity_free_safety_validator_config import (
     ProfanityFreeSafetyValidatorConfig,
-)
-from app.core.validators.config.toxic_language_safety_validator_config import (
-    ToxicLanguageSafetyValidatorConfig,
 )
 
 ValidatorConfigItem = Annotated[
@@ -43,12 +37,10 @@ ValidatorConfigItem = Annotated[
         GenderAssumptionBiasSafetyValidatorConfig,
         LexicalSlurSafetyValidatorConfig,
         LLMCriticSafetyValidatorConfig,
-        NSFWTextSafetyValidatorConfig,
         PIIRemoverSafetyValidatorConfig,
         LlamaGuard7BSafetyValidatorConfig,
         ProfanityFreeSafetyValidatorConfig,
         TopicRelevanceSafetyValidatorConfig,
-        ToxicLanguageSafetyValidatorConfig,
     ],
     Field(discriminator="type"),
 ]
