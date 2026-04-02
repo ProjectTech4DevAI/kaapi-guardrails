@@ -19,6 +19,9 @@ _LLAMAGUARD_PATCH = (
 )
 _NSFW_PATCH = "app.core.validators.config.nsfw_text_safety_validator_config.NSFWText"
 
+_PROFANITY_PATCH = (
+    "app.core.validators.config.profanity_free_safety_validator_config.ProfanityFree"
+)
 
 # ---------------------------------------------------------------------------
 # LlamaGuard7B
