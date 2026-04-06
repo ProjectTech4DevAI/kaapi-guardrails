@@ -410,8 +410,8 @@ What it does:
 
 Why this is used:
 
-- Simple, fast rule-based check for profane language without requiring model inference.
-- Suitable as a first-pass filter before more expensive validators.
+- linear SVM model based profanity checker that is fast (100 predictions in 3.5 ms)
+- Suitable as a first-pass filter before more computationally expensive validators.
 
 Recommendation:
 
@@ -425,7 +425,7 @@ Parameters / customization:
 
 Notes / limitations:
 
-- Dictionary-based approach; may miss obfuscated profanity (e.g. character substitutions, leetspeak).
+- Not as accurate as more sophisticated ML models like finetuned RoBERTa but better than lexical matching based solutions.
 - No programmatic fix is applied — detected text is not auto-redacted.
 - English-focused; cross-lingual profanity may not be detected.
 
