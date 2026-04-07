@@ -40,7 +40,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # If your table has multiple configs of a specific validator and type combination it will be hard to downgrade the chnange
+    # If your table has multiple configs of a specific validator and type combination it will be hard to downgrade the change
     # manually delete the configurations and keep the one that won't give an error during downgrade
     op.execute(
         """
