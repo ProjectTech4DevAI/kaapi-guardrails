@@ -10,6 +10,7 @@ REPHRASE_ON_FAIL_PREFIX = "Please rephrase the query without unsafe content."
 VALIDATOR_CONFIG_SYSTEM_FIELDS = {
     "organization_id",
     "project_id",
+    "name",
     "type",
     "stage",
     "on_fail_action",

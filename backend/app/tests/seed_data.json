@@ -49,6 +49,7 @@
       "validator_id": "22222222-2222-2222-2222-222222222222",
       "organization_id": 1,
       "project_id": 1,
+      "name": "test_validator_config",
       "type": "LexicalSlur",
       "stage": "Input",
       "on_fail_action": "Fix",
@@ -63,6 +64,7 @@
       "project_id": 1,
       "payloads": {
         "lexical_slur": {
+          "name": "lexical_slur_config",
           "type": "uli_slur_match",
           "stage": "input",
           "on_fail_action": "fix",
@@ -70,16 +72,19 @@
           "languages": ["en", "hi"]
         },
         "pii_remover_input": {
+          "name": "pii_remover_input_config",
           "type": "pii_remover",
           "stage": "input",
           "on_fail_action": "fix"
         },
         "pii_remover_output": {
+          "name": "pii_remover_output_config",
           "type": "pii_remover",
           "stage": "output",
           "on_fail_action": "fix"
         },
         "minimal": {
+          "name": "minimal_config",
           "type": "gender_assumption_bias",
           "stage": "input",
           "on_fail_action": "fix"

@@ -57,6 +57,7 @@ def seed_test_data(session: Session) -> None:
             ValidatorConfig(
                 organization_id=VALIDATOR_INTEGRATION_ORGANIZATION_ID,
                 project_id=VALIDATOR_INTEGRATION_PROJECT_ID,
+                name=model_fields["name"],
                 type=ValidatorType(model_fields["type"]),
                 stage=Stage(model_fields["stage"]),
                 on_fail_action=GuardrailOnFail(model_fields["on_fail_action"]),
