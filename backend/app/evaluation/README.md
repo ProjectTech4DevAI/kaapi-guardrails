@@ -16,11 +16,15 @@ backend/app/evaluation/
 │   ├── lexical_slur_testing_dataset.csv
 │   ├── multi_validator_whatsapp_dataset.csv
 │   ├── pii_detection_testing_dataset.csv
-│   └── topic_relevance/
-│       ├── education-topic-relevance-dataset.csv
-│       ├── education_topic_config.txt
-│       ├── healthcare-topic-relevance-dataset.csv
-│       └── healthcare_topic_config.txt
+│   ├── sharechat_toxic_dataset.csv
+│   ├── topic_relevance/                   # Topic relevance datasets (downloaded separately)
+│   │   ├── education-topic-relevance-dataset.csv
+│   │   ├── education_topic_config.txt
+│   │   ├── healthcare-topic-relevance-dataset.csv
+│   │   └── healthcare_topic_config.txt
+│   └── toxicity/                          # Toxicity evaluation datasets
+│       ├── toxicity_test_hasoc.csv
+│       └── toxicity_test_sharechat.csv
 ├── gender_assumption_bias/
 │   └── run.py                             # Gender assumption bias evaluation script
 ├── lexical_slur/
@@ -35,12 +39,16 @@ backend/app/evaluation/
 │   ├── multi_validator_whatsapp/
 │   ├── multiple_validators/
 │   ├── pii_remover/
-│   └── topic_relevance/
+│   ├── topic_relevance/
+│   └── toxicity/
+│       ├── hasoc/
+│       └── sharechat/
 ├── pii/
 │   ├── entity_metrics.py                  # Per-entity PII metrics computation
 │   └── run.py                             # PII evaluation script
-└── topic_relevance/
-    └── run.py                             # Topic relevance evaluation script
+├── topic_relevance/
+│   └── run.py                             # Topic relevance evaluation script
+└── toxicity/                              # Toxicity evaluation scripts
 ```
 
 ## Prerequisites
@@ -369,7 +377,7 @@ All `metrics.json` files include a `performance` block:
 | `latency_ms.max`  | Worst-case latency across all samples                             |
 | `memory_mb`       | Peak memory usage during the evaluation run (via `tracemalloc`) |
 
-## Datasets
+## Dataset Structure
 
 Download all datasets from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89). The Drive contains one folder per validator. Download the CSV files and place them in `backend/app/evaluation/datasets/`.
 
