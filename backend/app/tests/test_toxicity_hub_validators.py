@@ -37,7 +37,7 @@ class TestLlamaGuard7BSafetyValidatorConfig:
     def test_build_with_explicit_policies(self):
         config = LlamaGuard7BSafetyValidatorConfig(
             type="llamaguard_7b",
-            policies=["O1", "O2"],
+            policies=["no_violence_hate", "no_sexual_content"],
         )
 
         with patch(_LLAMAGUARD_PATCH) as mock_validator:
@@ -56,7 +56,14 @@ class TestLlamaGuard7BSafetyValidatorConfig:
         assert kwargs["policies"] == []
 
     def test_build_with_all_policy_codes(self):
-        all_policies = ["O1", "O2", "O3", "O4", "O5", "O6"]
+        all_policies = [
+            "no_violence_hate",
+            "no_sexual_content",
+            "no_criminal_planning",
+            "no_guns_and_illegal_weapons",
+            "no_illegal_drugs",
+            "no_encourage_self_harm",
+        ]
         config = LlamaGuard7BSafetyValidatorConfig(
             type="llamaguard_7b", policies=all_policies
         )
@@ -65,11 +72,11 @@ class TestLlamaGuard7BSafetyValidatorConfig:
             config.build()
 
         _, kwargs = mock_validator.call_args
-        assert kwargs["policies"] == all_policies
+        assert kwargs["policies"] == ["O1", "O2", "O3", "O4", "O5", "O6"]
 
     def test_build_with_single_policy(self):
         config = LlamaGuard7BSafetyValidatorConfig(
-            type="llamaguard_7b", policies=["O3"]
+            type="llamaguard_7b", policies=["no_criminal_planning"]
         )
 
         with patch(_LLAMAGUARD_PATCH) as mock_validator:
@@ -77,6 +84,15 @@ class TestLlamaGuard7BSafetyValidatorConfig:
 
         _, kwargs = mock_validator.call_args
         assert kwargs["policies"] == ["O3"]
+
+    def test_build_with_invalid_policy_raises(self):
+        config = LlamaGuard7BSafetyValidatorConfig(
+            type="llamaguard_7b", policies=["O1"]
+        )
+
+        with patch(_LLAMAGUARD_PATCH):
+            with pytest.raises(ValueError, match="Unknown policy"):
+                config.build()
 
     def test_build_returns_validator_instance(self):
         config = LlamaGuard7BSafetyValidatorConfig(type="llamaguard_7b")
