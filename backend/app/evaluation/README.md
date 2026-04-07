@@ -52,35 +52,32 @@ uv sync
 source .venv/bin/activate
 ```
 
+### Install Guardrails Hub validators
+
+If running for the first time, install the hub-sourced validators (ban list, llm critic, llamaguard 7b, profanity free) using:
+
+```bash
+GUARDRAILS_HUB_API_KEY=<your-key> bash scripts/install_guardrails_from_hub.sh
+```
+
+The script reads `backend/app/core/validators/validators.json` to determine which validators to install. Set `ENABLE_REMOTE_INFERENCING=true` if any validator requires remote inference (e.g. `llamaguard_7b`):
+
+```bash
+GUARDRAILS_HUB_API_KEY=<your-key> ENABLE_REMOTE_INFERENCING=true bash scripts/install_guardrails_from_hub.sh
+```
+
+If `GUARDRAILS_HUB_API_KEY` is not set, hub validator installs are skipped — only local validators will be available.
+
+### Additional setup
+
 For PII evaluation, also install the spaCy model:
 
 ```bash
 python -m spacy download en_core_web_lg
 ```
 
-For topic relevance evaluation, set `OPENAI_API_KEY` in your `.env` file.
+Validators that use LLM-as-judge approach will require credentials for LLM providers. To use Open AI ensure that `OPENAI_API_KEY` is set in the `.env` file. Currently topic relevance validator uses it.
 
-## Datasets
-
-Download all datasets from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89). The Drive contains one folder per validator. Download the CSV files and place them in `backend/app/evaluation/datasets/`.
-
-Each evaluation script expects a specific filename — files must be named exactly as listed below:
-
-| Validator              | Expected filename                                                                                                     |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Lexical Slur           | `lexical_slur_testing_dataset.csv`                                                                                  |
-| PII Remover            | `pii_detection_testing_dataset.csv`                                                                                 |
-| Gender Assumption Bias | `gender_bias_assumption_dataset.csv`                                                                                |
-| Ban List               | `ban_list_testing_dataset.csv`                                                                                      |
-| Multiple Validators    | `multi_validator_whatsapp_dataset.csv`                                                                              |
-| Topic Relevance        | `topic_relevance/education-topic-relevance-dataset.csv`, `topic_relevance/healthcare-topic-relevance-dataset.csv` |
-
-Topic relevance also requires plain-text topic config files alongside each dataset:
-
-- `topic_relevance/education_topic_config.txt`
-- `topic_relevance/healthcare_topic_config.txt`
-
-These describe the allowed topic scope for each domain and are read at runtime to construct the validator prompt.
 
 ## Running All Evaluations
 
@@ -371,3 +368,25 @@ All `metrics.json` files include a `performance` block:
 | `latency_ms.p95`  | 95th-percentile latency — useful for tail-latency analysis       |
 | `latency_ms.max`  | Worst-case latency across all samples                             |
 | `memory_mb`       | Peak memory usage during the evaluation run (via `tracemalloc`) |
+
+## Datasets
+
+Download all datasets from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89). The Drive contains one folder per validator. Download the CSV files and place them in `backend/app/evaluation/datasets/`.
+
+Each evaluation script expects a specific filename — files must be named exactly as listed below:
+
+| Validator              | Expected filename                                                                                                     |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Lexical Slur           | `lexical_slur_testing_dataset.csv`                                                                                  |
+| PII Remover            | `pii_detection_testing_dataset.csv`                                                                                 |
+| Gender Assumption Bias | `gender_bias_assumption_dataset.csv`                                                                                |
+| Ban List               | `ban_list_testing_dataset.csv`                                                                                      |
+| Multiple Validators    | `multi_validator_whatsapp_dataset.csv`                                                                              |
+| Topic Relevance        | `topic_relevance/education-topic-relevance-dataset.csv`, `topic_relevance/healthcare-topic-relevance-dataset.csv` |
+
+Topic relevance also requires plain-text topic config files alongside each dataset:
+
+- `topic_relevance/education_topic_config.txt`
+- `topic_relevance/healthcare_topic_config.txt`
+
+These describe the allowed topic scope for each domain and are read at runtime to construct the validator prompt.
