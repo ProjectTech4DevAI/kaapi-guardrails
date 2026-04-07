@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
 
 from pydantic import ConfigDict
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, Field
 
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 
@@ -11,6 +10,7 @@ from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 class ValidatorBase(SQLModel):
     model_config = ConfigDict(extra="allow")
 
+    name: str = Field(min_length=5, max_length=225)
     type: ValidatorType
     stage: Stage
     on_fail_action: GuardrailOnFail = GuardrailOnFail.Fix
@@ -24,6 +24,7 @@ class ValidatorCreate(ValidatorBase):
 class ValidatorUpdate(SQLModel):
     model_config = ConfigDict(extra="forbid")
 
+    name: Optional[str] = None
     type: Optional[ValidatorType] = None
     stage: Optional[Stage] = None
     on_fail_action: Optional[GuardrailOnFail] = None
