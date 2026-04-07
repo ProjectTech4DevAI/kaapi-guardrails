@@ -425,7 +425,7 @@ Parameters / customization:
 - `threshold: float` (default: `0.8`) — probability threshold above which text is classified as NSFW
 - `validation_method: str` (default: `"sentence"`) — granularity of validation; `"sentence"` checks each sentence independently. `"full"` validates the entire text.
 - `device: str | None` (default: `"cpu"`) — inference device (`"cpu"` or `"cuda"`)
-- `model_name: str | None` (default: `"michellejieli/NSFW_text_classifier"`) — HuggingFace model identifier used for classification
+- `model_name: str | None` (default: `"michellejieli/NSFW_text_classifier"`) — HuggingFace model identifier used for classification. However, we won't be using the default clasifier. We will be using the `"textdetox/xlmr-large-toxicity-classifier"` for multilingual detection of toxic content. 
 - `on_fail`
 
 Notes / limitations:
