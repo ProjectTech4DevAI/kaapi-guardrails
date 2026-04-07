@@ -423,7 +423,7 @@ Recommendation:
 Parameters / customization:
 
 - `threshold: float` (default: `0.8`) — probability threshold above which text is classified as NSFW
-- `validation_method: str` (default: `"sentence"`) — granularity of validation; `"sentence"` checks each sentence independently
+- `validation_method: str` (default: `"sentence"`) — granularity of validation; `"sentence"` checks each sentence independently. `"full"` validates the entire text.
 - `device: str | None` (default: `"cpu"`) — inference device (`"cpu"` or `"cuda"`)
 - `model_name: str | None` (default: `"michellejieli/NSFW_text_classifier"`) — HuggingFace model identifier used for classification
 - `on_fail`
