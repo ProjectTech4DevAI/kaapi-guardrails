@@ -258,6 +258,9 @@ def add_validator_logs(
     for log in iteration.outputs.validator_logs:
         result = log.validation_result
 
+        if result is None:
+            continue
+
         if suppress_pass_logs and isinstance(result, PassResult):
             continue
 
