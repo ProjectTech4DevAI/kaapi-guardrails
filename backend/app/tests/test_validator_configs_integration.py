@@ -87,6 +87,116 @@ class TestCreateValidator(BaseValidatorTest):
 
         assert response.status_code == 422
 
+    def test_create_multiple_validators_success(
+        self, integration_client, clear_database
+    ):
+        """Test creating multiple validators and verifying they're all stored."""
+        # Create multiple validators with different configs
+        validators_to_create = [
+            ("lexical_slur", "uli_slur_match", "lexical_slur_config"),
+            ("pii_remover_input", "pii_remover", "pii_remover_input_config"),
+            ("pii_remover_output", "pii_remover", "pii_remover_output_config"),
+            ("minimal", "gender_assumption_bias", "minimal_config"),
+        ]
+
+        created_validators = []
+
+        # Create all validators
+        for payload_key, expected_type, expected_name in validators_to_create:
+            response = self.create_validator(integration_client, payload_key)
+            assert response.status_code == 200
+            data = response.json()["data"]
+            assert data["type"] == expected_type
+            assert data["name"] == expected_name
+            assert "id" in data
+            created_validators.append(
+                {"id": data["id"], "name": expected_name, "type": expected_type}
+            )
+
+        # Verify all validators are in the database
+        list_response = self.list_validators(integration_client)
+        assert list_response.status_code == 200
+
+        all_validators = list_response.json()["data"]
+        assert len(all_validators) == 4
+
+        # Verify all created IDs are present
+        retrieved_ids = {v["id"] for v in all_validators}
+        created_ids = {v["id"] for v in created_validators}
+        assert created_ids == retrieved_ids
+
+        # Verify each validator can be retrieved individually with correct name
+        for validator in created_validators:
+            get_response = self.get_validator(integration_client, validator["id"])
+            assert get_response.status_code == 200
+            response_data = get_response.json()["data"]
+            assert response_data["id"] == validator["id"]
+            assert response_data["name"] == validator["name"]
+            assert response_data["type"] == validator["type"]
+
+    def test_create_and_update_multiple_validators(
+        self, integration_client, clear_database
+    ):
+        """Test creating multiple validators, then updating each one."""
+        # Create three validators
+        validator1 = self.create_validator(integration_client, "lexical_slur")
+        validator2 = self.create_validator(integration_client, "pii_remover_input")
+        validator3 = self.create_validator(integration_client, "minimal")
+
+        assert validator1.status_code == 200
+        assert validator2.status_code == 200
+        assert validator3.status_code == 200
+
+        id1 = validator1.json()["data"]["id"]
+        id2 = validator2.json()["data"]["id"]
+        id3 = validator3.json()["data"]["id"]
+
+        # Update all three validators with different settings including name
+        update1 = self.update_validator(
+            integration_client,
+            id1,
+            {"is_enabled": False, "name": "updated_slur_config"},
+        )
+        update2 = self.update_validator(
+            integration_client,
+            id2,
+            {"on_fail_action": "exception", "name": "updated_pii_config"},
+        )
+        update3 = self.update_validator(
+            integration_client,
+            id3,
+            {
+                "is_enabled": False,
+                "on_fail_action": "rephrase",
+                "name": "updated_minimal_config",
+            },
+        )
+
+        assert update1.status_code == 200
+        assert update2.status_code == 200
+        assert update3.status_code == 200
+
+        # Verify updates persisted
+        assert update1.json()["data"]["is_enabled"] is False
+        assert update1.json()["data"]["name"] == "updated_slur_config"
+        assert update2.json()["data"]["on_fail_action"] == "exception"
+        assert update2.json()["data"]["name"] == "updated_pii_config"
+        assert update3.json()["data"]["is_enabled"] is False
+        assert update3.json()["data"]["on_fail_action"] == "rephrase"
+        assert update3.json()["data"]["name"] == "updated_minimal_config"
+
+        # Verify all three are still in the database with updated names
+        list_response = self.list_validators(integration_client)
+        all_validators = list_response.json()["data"]
+        assert len(all_validators) == 3
+
+        validator_names = {v["name"] for v in all_validators}
+        assert validator_names == {
+            "updated_slur_config",
+            "updated_pii_config",
+            "updated_minimal_config",
+        }
+
 
 class TestListValidators(BaseValidatorTest):
     """Tests for GET /guardrails/validators/configs endpoint."""
