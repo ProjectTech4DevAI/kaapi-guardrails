@@ -426,7 +426,6 @@ Parameters / customization:
 - `validation_method: str` (default: `"sentence"`) — granularity of validation; `"sentence"` checks each sentence independently. `"full"` validates the entire text.
 - `device: str | None` (default: `"cpu"`) — inference device (`"cpu"` or `"cuda"`)
 - `model_name: str | None` (default: `"textdetox/xlmr-large-toxicity-classifier"`) — HuggingFace model identifier used for classification. Other acceptable value: `"michellejieli/NSFW_text_classifier"`
-
 - `on_fail`
 
 Notes / limitations:
