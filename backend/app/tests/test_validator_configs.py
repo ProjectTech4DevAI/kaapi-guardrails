@@ -9,6 +9,7 @@ from app.models.config.validator_config import ValidatorConfig
 from app.tests.seed_data import (
     VALIDATOR_TEST_CONFIG,
     VALIDATOR_TEST_ID,
+    VALIDATOR_TEST_NAME,
     VALIDATOR_TEST_ON_FAIL,
     VALIDATOR_TEST_ORGANIZATION_ID,
     VALIDATOR_TEST_PROJECT_ID,
@@ -43,6 +44,7 @@ class TestFlatten:
             id=VALIDATOR_TEST_ID,
             organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
             project_id=VALIDATOR_TEST_PROJECT_ID,
+            name=VALIDATOR_TEST_NAME,
             type=VALIDATOR_TEST_TYPE,
             stage=VALIDATOR_TEST_STAGE,
             on_fail_action=VALIDATOR_TEST_ON_FAIL,
