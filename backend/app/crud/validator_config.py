@@ -40,7 +40,7 @@ class ValidatorConfigCrud:
             session.rollback()
             raise HTTPException(
                 400,
-                "Validator already exists for this type and stage",
+                "Validator configuration with this name already exists",
             )
 
         session.refresh(obj)
@@ -110,7 +110,7 @@ class ValidatorConfigCrud:
             session.rollback()
             raise HTTPException(
                 400,
-                "Validator already exists for this type and stage",
+                "Validator configuration with this name already exists",
             )
         except Exception:
             session.rollback()
