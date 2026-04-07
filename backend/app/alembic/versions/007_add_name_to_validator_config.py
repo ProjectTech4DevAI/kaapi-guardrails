@@ -19,7 +19,7 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         "validator_config",
-        sa.Column("name", sa.String(), nullable=True),
+        sa.Column("name", sa.String(225), nullable=True),
     )
     op.execute(
         """
@@ -36,7 +36,6 @@ def upgrade() -> None:
         "validator_config",
         ["organization_id", "project_id", "name"],
     )
-    op.create_index("idx_validator_name", "validator_config", ["name"])
 
 
 def downgrade() -> None:
@@ -60,7 +59,6 @@ def downgrade() -> None:
         """
     )
 
-    op.drop_index("idx_validator_name", table_name="validator_config")
     op.drop_constraint("uq_validator_name", "validator_config", type_="unique")
     op.create_unique_constraint(
         "uq_validator_identity",
