@@ -388,7 +388,17 @@ Recommendation:
 Parameters / customization:
 
 - `policies: list[str] | None` (default: all policies enabled)
-  - Available policy constants: `O1` (violence/hate), `O2` (sexual content), `O3` (criminal planning), `O4` (guns/illegal weapons), `O5` (illegal drugs), `O6` (encourage self-harm)
+  - Pass human-readable policy names; they are mapped to internal constants in `llamaguard_7b_safety_validator_config.py`:
+
+  | Value                       | Policy enforced                  |
+  |-----------------------------|----------------------------------|
+  | `no_violence_hate`          | No violence or hate speech       |
+  | `no_sexual_content`         | No sexual content                |
+  | `no_criminal_planning`      | No criminal planning             |
+  | `no_guns_and_illegal_weapons` | No guns or illegal weapons     |
+  | `no_illegal_drugs`          | No illegal drugs                 |
+  | `no_encourage_self_harm`    | No encouragement of self-harm    |
+
 - `on_fail`
 
 Notes / limitations:
