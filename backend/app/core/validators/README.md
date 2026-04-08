@@ -194,7 +194,6 @@ Notes / limitations:
 - Threshold and entity selection should be tuned per deployment context.
 - Runtime requirement: this validator is configured to use spaCy model `en_core_web_lg`.
   The model is pre-installed at build time in the Docker image to ensure fast startup and no runtime internet dependency.
-  For local development without Docker, manually install the model using: `python -m spacy download en_core_web_lg`
   Evidence and evaluation:
 - Compared approaches:
   - Custom PII validator (this codebase)
@@ -402,8 +401,11 @@ Parameters / customization:
 
 Notes / limitations:
 
-- Remote inference requires network access to the Guardrails Hub API.
-- No programmatic fix is applied on failure — `on_fail=fix` will behave like `on_fail=exception`.
+- **Requires remote inferencing to be enabled.** LlamaGuard-7B runs on the Guardrails Hub — the validator will not work unless `ENABLE_REMOTE_INFERENCING=true` was passed when running `install_guardrails_from_hub.sh`:
+  ```bash
+  GUARDRAILS_HUB_API_KEY=<your-key> ENABLE_REMOTE_INFERENCING=true bash scripts/install_guardrails_from_hub.sh
+  ```
+- `on_fail=fix` behaves like `on_fail=exception` — LlamaGuard has no programmatic fix, so validation stops immediately on failure to prevent downstream validators from receiving `None` as input.
 - LlamaGuard policy classification may produce false positives in news, clinical, or legal contexts.
 
 ### 8) Profanity Free Validator (`profanity_free`)
