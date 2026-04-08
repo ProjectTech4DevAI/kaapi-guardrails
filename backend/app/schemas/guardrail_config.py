@@ -24,6 +24,12 @@ from app.core.validators.config.pii_remover_safety_validator_config import (
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
+from app.core.validators.config.llamaguard_7b_safety_validator_config import (
+    LlamaGuard7BSafetyValidatorConfig,
+)
+from app.core.validators.config.profanity_free_safety_validator_config import (
+    ProfanityFreeSafetyValidatorConfig,
+)
 
 ValidatorConfigItem = Annotated[
     Union[
@@ -32,6 +38,8 @@ ValidatorConfigItem = Annotated[
         LexicalSlurSafetyValidatorConfig,
         LLMCriticSafetyValidatorConfig,
         PIIRemoverSafetyValidatorConfig,
+        LlamaGuard7BSafetyValidatorConfig,
+        ProfanityFreeSafetyValidatorConfig,
         TopicRelevanceSafetyValidatorConfig,
     ],
     Field(discriminator="type"),

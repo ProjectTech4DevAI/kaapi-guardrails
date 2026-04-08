@@ -13,7 +13,7 @@ from app.api.routes.ban_lists import (
     delete_ban_list,
 )
 from app.schemas.ban_list import BanListUpdate
-from app.tests.seed_data import (
+from app.tests.seed.seed_data import (
     BAN_LIST_TEST_ID,
     BAN_LIST_TEST_ORGANIZATION_ID,
     BAN_LIST_TEST_PROJECT_ID,

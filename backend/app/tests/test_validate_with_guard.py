@@ -8,8 +8,8 @@ from app.api.routes.guardrails import (
     _validate_with_guard,
 )
 from app.schemas.guardrail_config import GuardrailRequest
-from app.tests.guardrails_mocks import MockResult
-from app.tests.seed_data import (
+from app.tests.utils.guardrails_mocks import MockResult
+from app.tests.seed.seed_data import (
     VALIDATOR_TEST_ORGANIZATION_ID,
     VALIDATOR_TEST_PROJECT_ID,
 )

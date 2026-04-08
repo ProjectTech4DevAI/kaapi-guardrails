@@ -6,7 +6,7 @@ from sqlmodel import Session
 from app.crud.validator_config import validator_config_crud
 from app.core.enum import GuardrailOnFail, ValidatorType
 from app.models.config.validator_config import ValidatorConfig
-from app.tests.seed_data import (
+from app.tests.seed.seed_data import (
     VALIDATOR_TEST_CONFIG,
     VALIDATOR_TEST_ID,
     VALIDATOR_TEST_NAME,

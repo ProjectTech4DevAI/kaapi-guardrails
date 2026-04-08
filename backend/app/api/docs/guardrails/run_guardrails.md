@@ -8,6 +8,16 @@ Behavior notes:
 - For `ban_list`, `ban_list_id` can be resolved to `banned_words` from tenant ban list configs.
 - For `topic_relevance`, `topic_relevance_config_id` is required and is resolved to `configuration` + `prompt_schema_version` from tenant topic relevance configs in `guardrails.py`. Requires `OPENAI_API_KEY` to be configured; returns a validation failure with an explicit error if missing.
 - For `llm_critic`, `OPENAI_API_KEY` must be configured; returns `success=false` with an explicit error if missing.
+- For `llamaguard_7b`, `policies` accepts human-readable policy names (see table below). If omitted, all policies are enforced by default.
+
+  | `policies` value            | Policy enforced                  |
+  |-----------------------------|----------------------------------|
+  | `no_violence_hate`          | No violence or hate speech       |
+  | `no_sexual_content`         | No sexual content                |
+  | `no_criminal_planning`      | No criminal planning             |
+  | `no_guns_and_illegal_weapons` | No guns or illegal weapons     |
+  | `no_illegal_drugs`          | No illegal drugs                 |
+  | `no_encourage_self_harm`    | No encouragement of self-harm    |
 - `rephrase_needed=true` means the system could not safely auto-fix the input/output and wants the user to retry with a rephrased query.
 - When `rephrase_needed=true`, `safe_text` contains the rephrase prompt shown to the user.
 
