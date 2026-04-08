@@ -68,7 +68,9 @@ If running for the first time, install the hub-sourced validators (ban list, llm
 GUARDRAILS_HUB_API_KEY=<your-key> bash scripts/install_guardrails_from_hub.sh
 ```
 
-The script reads `backend/app/core/validators/validators.json` to determine which validators to install. Set `ENABLE_REMOTE_INFERENCING=true` if any validator requires remote inference (e.g. `llamaguard_7b`):
+The script reads `backend/app/core/validators/validators.json` to determine which validators to install.
+
+**Remote inferencing is enabled by default.** Some hub validators (specifically `llamaguard_7b`) do not run locally — instead, they send the text to a hosted model on the Guardrails Hub, which performs the inference and returns a classification result. This requires a valid `GUARDRAILS_HUB_API_KEY` and an active internet connection at validation time.
 
 ```bash
 GUARDRAILS_HUB_API_KEY=<your-key> ENABLE_REMOTE_INFERENCING=true bash scripts/install_guardrails_from_hub.sh
@@ -78,7 +80,7 @@ If `GUARDRAILS_HUB_API_KEY` is not set, hub validator installs are skipped — o
 
 ### Additional setup
 
-For PII evaluation, also install the spaCy model:
+For PII evaluation, install the spaCy model as well:
 
 ```bash
 python -m spacy download en_core_web_lg
@@ -113,7 +115,7 @@ python3 app/evaluation/<validator_folder>/run.py
 
 **Dataset:** `datasets/lexical_slur_testing_dataset.csv`
 
-Expected columns:
+Expected columns in input csv:
 
 - `commentText` — text to validate
 - `label` — ground truth (`1` = abusive, `0` = not abusive)
@@ -141,7 +143,7 @@ python3 app/evaluation/lexical_slur/run.py
 
 **Dataset:** `datasets/pii_detection_testing_dataset.csv`
 
-Expected columns:
+Expected columns in input csv:
 
 - `source_text` — original text containing PII
 - `target_text` — expected anonymized text with entity placeholders (e.g. `[PHONE_NUMBER]`, `[PERSON]`)
@@ -171,7 +173,7 @@ python3 app/evaluation/pii/run.py
 
 **Dataset:** `datasets/gender_bias_assumption_dataset.csv`
 
-Expected columns:
+Expected columns in input csv:
 
 - `biased input` — text containing gender-assumptive language (expected to fail)
 - `neutral output` — neutral equivalent text (expected to pass)
@@ -199,7 +201,7 @@ python3 app/evaluation/gender_assumption_bias/run.py
 
 **Dataset:** `datasets/ban_list_testing_dataset.csv`
 
-Expected columns:
+Expected columns in input csv:
 
 - `source_text` — original text
 - `target_text` — expected redacted text (used to compute exact match)
@@ -228,7 +230,7 @@ python3 app/evaluation/ban_list/run.py
 
 **Datasets:** `datasets/topic_relevance/<domain>-topic-relevance-dataset.csv`
 
-Expected columns:
+Expected columns in input csv:
 
 - `input` — user message to evaluate
 - `category` — topic category label for grouping metrics
@@ -270,7 +272,7 @@ This evaluation runs multiple validators **together** against a dataset via the 
 
 **Dataset:** `datasets/multi_validator_whatsapp_dataset.csv`
 
-Expected columns:
+Expected columns in input csv:
 
 - `ID` — row identifier
 - `Text` — input text
