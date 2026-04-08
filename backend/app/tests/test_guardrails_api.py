@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.tests.guardrails_mocks import MockResult
-from app.tests.seed_data import (
+from app.tests.utils.guardrails_mocks import MockResult
+from app.tests.seed.seed_data import (
     VALIDATOR_TEST_ORGANIZATION_ID,
     VALIDATOR_TEST_PROJECT_ID,
 )

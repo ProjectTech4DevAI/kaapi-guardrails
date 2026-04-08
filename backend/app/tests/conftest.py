@@ -19,7 +19,7 @@ from app.core.config import settings
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.models.config.ban_list import BanList
 from app.models.config.validator_config import ValidatorConfig
-from app.tests.seed_data import (
+from app.tests.seed.seed_data import (
     BAN_LIST_INTEGRATION_ORGANIZATION_ID,
     BAN_LIST_INTEGRATION_PROJECT_ID,
     BAN_LIST_PAYLOADS,

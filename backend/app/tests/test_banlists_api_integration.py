@@ -6,7 +6,7 @@ from app.schemas.ban_list import (
     MAX_BAN_LIST_DESCRIPTION_LENGTH,
     MAX_BAN_LIST_NAME_LENGTH,
 )
-from app.tests.seed_data import BAN_LIST_PAYLOADS
+from app.tests.seed.seed_data import BAN_LIST_PAYLOADS
 
 pytestmark = pytest.mark.integration
 

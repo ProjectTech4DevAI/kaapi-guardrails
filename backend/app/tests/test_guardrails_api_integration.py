@@ -1,6 +1,6 @@
 import pytest
 
-from app.tests.seed_data import (
+from app.tests.seed.seed_data import (
     VALIDATOR_INTEGRATION_ORGANIZATION_ID,
     VALIDATOR_INTEGRATION_PROJECT_ID,
 )
