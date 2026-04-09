@@ -107,14 +107,16 @@ class TestLlamaGuard7BSafetyValidatorConfig:
 
         assert result == mock_validator.return_value
 
-    def test_on_fail_fix_resolves_to_fix_action(self):
+    def test_on_fail_fix_remaps_to_exception(self):
+        # LlamaGuard has no programmatic fix; on_fail=fix is silently remapped to
+        # exception to prevent downstream validators from receiving None as input.
         config = LlamaGuard7BSafetyValidatorConfig(type="llamaguard_7b", on_fail="fix")
 
         with patch(_LLAMAGUARD_PATCH) as mock_validator:
             config.build()
 
         _, kwargs = mock_validator.call_args
-        assert kwargs["on_fail"] == OnFailAction.FIX
+        assert kwargs["on_fail"] == OnFailAction.EXCEPTION
 
     def test_on_fail_exception_resolves_to_exception_action(self):
         config = LlamaGuard7BSafetyValidatorConfig(
