@@ -407,7 +407,7 @@ Notes / limitations:
   ```bash
   GUARDRAILS_HUB_API_KEY=<your-key> ENABLE_REMOTE_INFERENCING=true bash scripts/install_guardrails_from_hub.sh
   ```
-- `on_fail=fix` behaves like `on_fail=exception` — LlamaGuard has no programmatic fix, so validation stops immediately on failure to prevent downstream validators from receiving `None` as input.
+- `on_fail=fix` returns `""` on failure — LlamaGuard has no programmatic fix, so `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
 - LlamaGuard policy classification may produce false positives in news, clinical, or legal contexts.
 
 ### 9) NSFW Text Validator (`nsfw_text`)

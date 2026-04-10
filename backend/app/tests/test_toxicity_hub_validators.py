@@ -107,16 +107,29 @@ class TestLlamaGuard7BSafetyValidatorConfig:
 
         assert result == mock_validator.return_value
 
-    def test_on_fail_fix_remaps_to_exception(self):
-        # LlamaGuard has no programmatic fix; on_fail=fix is silently remapped to
-        # exception to prevent downstream validators from receiving None as input.
+    def test_on_fail_fix_resolves_to_callable(self):
         config = LlamaGuard7BSafetyValidatorConfig(type="llamaguard_7b", on_fail="fix")
 
         with patch(_LLAMAGUARD_PATCH) as mock_validator:
             config.build()
 
         _, kwargs = mock_validator.call_args
-        assert kwargs["on_fail"] == OnFailAction.EXCEPTION
+        assert callable(kwargs["on_fail"])
+
+    def test_on_fix_sets_validator_metadata_when_fix_value_empty(self):
+        from unittest.mock import MagicMock
+        from guardrails.validators import FailResult
+
+        config = LlamaGuard7BSafetyValidatorConfig(type="llamaguard_7b", on_fail="fix")
+        fail_result = MagicMock(spec=FailResult)
+        fail_result.fix_value = None
+
+        result = config._on_fix("some unsafe input", fail_result)
+
+        assert result == ""
+        assert config.validator_metadata == {
+            "reason": "Empty string has been returned since the validation failed for: llamaguard_7b"
+        }
 
     def test_on_fail_exception_resolves_to_exception_action(self):
         config = LlamaGuard7BSafetyValidatorConfig(
