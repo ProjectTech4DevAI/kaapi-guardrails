@@ -19,14 +19,9 @@ class BaseValidatorConfig(SQLModel):
         fix_value = fail_result.fix_value if fail_result else None
         if not fix_value:
             self.validator_metadata = {
-<<<<<<< feat/toxicity-huggingface-model
-                "reason": f"Empty string has been returned since the validation failed for: {self.type}"
-            }
-=======
                 "reason": f"Empty string has been returned since the validation failed for: {self.type}"  # type: ignore[attr-defined]
             }
             return ""
->>>>>>> feat/toxicity-hub-validators
         return fix_value
 
     def resolve_on_fail(self):
