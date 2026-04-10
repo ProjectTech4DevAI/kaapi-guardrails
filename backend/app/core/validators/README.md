@@ -419,7 +419,7 @@ Code:
 
 What it does:
 
-- Classifies text as NSFW (not safe for work) using a HuggingFace transformer model.
+- Classifies text as NSFW (not safe for work) using a [HuggingFace transformer model](https://huggingface.co/textdetox/xlmr-large-toxicity-classifier).
 - Validates at the sentence level by default; fails if any sentence exceeds the configured threshold.
 
 Why this is used:
@@ -436,7 +436,9 @@ Recommendation:
 Parameters / customization:
 
 - `threshold: float` (default: `0.8`) — probability threshold above which text is classified as NSFW
-- `validation_method: str` (default: `"sentence"`) — granularity of validation; `"sentence"` checks each sentence independently. `"full"` validates the entire text.
+- `validation_method: str` (default: `"sentence"`) — granularity of validation:
+  - `"sentence"`: each sentence is classified independently; validation fails if **any** sentence exceeds the threshold. Preferred when inputs are multi-sentence and you want to catch a single offensive sentence without failing the whole message.
+  - `"full"`: the entire text is passed as one unit for classification. Use when inputs are short (single-sentence messages or responses) or when you want to evaluate overall tone rather than per-sentence content.
 - `device: str | None` (default: `"cpu"`) — inference device (`"cpu"` or `"cuda"`)
 - `model_name: str | None` (default: `"textdetox/xlmr-large-toxicity-classifier"`) — HuggingFace model identifier used for classification. Other acceptable value: `"michellejieli/NSFW_text_classifier"`
 - `on_fail`
@@ -445,8 +447,8 @@ Notes / limitations:
 
 - Model runs locally; first use will download the model weights unless pre-cached.
 - Default model is English-focused; multilingual NSFW detection may require a different `model_name`.
-- No programmatic fix is applied on failure — detected text is not auto-redacted.
-- Inference on CPU can be slow for long inputs; consider batching or GPU deployment for production.
+- No programmatic fix is applied — with `on_fail=fix`, `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
+- **Latency**: this validator runs a local transformer model on CPU. For short, single-turn WhatsApp-style messages, sentence-level inference typically adds ~200–500 ms per request on CPU. Use `validation_method="full"` for shorter inputs to avoid per-sentence overhead. For high-throughput deployments, consider using GPU (`device="cuda"`) or moving this validator to async post-processing rather than the synchronous request path.
 
 ### 8) Profanity Free Validator (`profanity_free`)
 
