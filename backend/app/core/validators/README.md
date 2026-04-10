@@ -419,7 +419,7 @@ Code:
 
 What it does:
 
-- Classifies text as NSFW (not safe for work) using a [HuggingFace transformer model](https://huggingface.co/michellejieli/NSFW_text_classifier).
+- Classifies text as NSFW (not safe for work) using a [HuggingFace transformer model](https://huggingface.co/textdetox/xlmr-large-toxicity-classifier).
 - Validates at the sentence level by default; fails if any sentence exceeds the configured threshold.
 
 Why this is used:
@@ -440,7 +440,7 @@ Parameters / customization:
   - `"sentence"`: each sentence is classified independently; validation fails if **any** sentence exceeds the threshold. Preferred when inputs are multi-sentence and you want to catch a single offensive sentence without failing the whole message.
   - `"full"`: the entire text is passed as one unit for classification. Use when inputs are short (single-sentence messages or responses) or when you want to evaluate overall tone rather than per-sentence content.
 - `device: str | None` (default: `"cpu"`) — inference device (`"cpu"` or `"cuda"`)
-- `model_name: str | None` (default: `"michellejieli/NSFW_text_classifier"`) — HuggingFace model identifier used for classification. Other acceptable value: `"textdetox/xlmr-large-toxicity-classifier"`
+- `model_name: str | None` (default: `"textdetox/xlmr-large-toxicity-classifier"`) — HuggingFace model identifier used for classification. Other acceptable value: `"michellejieli/NSFW_text_classifier"`
 - `on_fail`
 
 Notes / limitations:
