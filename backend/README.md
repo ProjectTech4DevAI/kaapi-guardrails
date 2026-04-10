@@ -212,39 +212,24 @@ If verification succeeds, tenant's scope (`organization_id`, `project_id`) is re
 > Set `OPENAI_API_KEY` in your `.env` / `.env.test` before using these validators.
 > If the key is missing, `llm_critic` will raise a `ValueError` at build time and `topic_relevance` will return a validation failure with an explicit error message.
 
-1. Ensure that the .env file contains the correct value from `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
+1. Ensure that the `.env` file contains the correct value for `GUARDRAILS_HUB_API_KEY`. The key can be fetched from [here](https://hub.guardrailsai.com/keys).
 
-2. Make the `install_guardrails_from_hub.sh` script executable using this command (run this from the `backend` folder) -
+2. Make the `install_guardrails_from_hub.sh` script executable (run from the `backend` folder):
 
 ```bash
 chmod +x scripts/install_guardrails_from_hub.sh
 ```
-3. Run this command to configure Guardrails AI -
+
+3. Run the script to configure Guardrails and install all hub validators:
 
 ```bash
-scripts/install_guardrails_from_hub.sh;        
+GUARDRAILS_HUB_API_KEY=<your-key> bash scripts/install_guardrails_from_hub.sh
 ```
 
-### Alternate Method
-Run the following commands inside your virtual environment:
-
-```bash
-uv sync
-guardrails configure
-
-Enable anonymous metrics reporting? [Y/n]: Y
-Do you wish to use remote inferencing? [Y/n]: Y
-Enter API Key below leave empty if you want to keep existing token [HBPo]
-👉 You can find your API Key at https://hub.guardrailsai.com/keys
-```
-
-To install any validator from Guardrails Hub:
-```bash
-guardrails hub install hub://guardrails/<validator-name>
-
-Example -
-guardrails hub install hub://guardrails/ban_list
-```
+> **Remote inferencing is enabled by default.** The script sets `ENABLE_REMOTE_INFERENCING=true` unless overridden. This is required for `llamaguard_7b`, which runs inference on the Guardrails Hub. You can disable it explicitly if needed:
+> ```bash
+> GUARDRAILS_HUB_API_KEY=<your-key> ENABLE_REMOTE_INFERENCING=false bash scripts/install_guardrails_from_hub.sh
+> ```
 
 ## Adding a new validator from Guardrails Hub
 To add a new validator from the Guardrails Hub to this project, follow the steps below.

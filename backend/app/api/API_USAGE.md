@@ -100,7 +100,7 @@ Endpoint:
 Optional filters:
 - `ids=<uuid>&ids=<uuid>`
 - `stage=input|output`
-- `type=uli_slur_match|pii_remover|gender_assumption_bias|ban_list|llm_critic|topic_relevance`
+- `type=uli_slur_match|pii_remover|gender_assumption_bias|ban_list|llm_critic|topic_relevance|llamaguard_7b|profanity_free`
 
 Example:
 
@@ -226,6 +226,23 @@ Possible success response:
   },
   "error": null,
   "metadata": null
+}
+```
+
+When a validator with `on_fail=fix` has no programmatic fix (e.g. `profanity_free`), `safe_text` will be `""` and `metadata` will explain why:
+
+```json
+{
+  "success": true,
+  "data": {
+    "response_id": "d676f841-4579-4b73-bf8f-fe968af842f1",
+    "rephrase_needed": false,
+    "safe_text": ""
+  },
+  "error": null,
+  "metadata": {
+    "reason": "Empty string has been returned since the validation failed for: profanity_free"
+  }
 }
 ```
 
@@ -442,6 +459,8 @@ From `validators.json`:
 - `ban_list`
 - `llm_critic`
 - `topic_relevance`
+- `llamaguard_7b`
+- `profanity_free`
 
 Source of truth:
 - `backend/app/core/validators/validators.json`

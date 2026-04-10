@@ -32,3 +32,6 @@ class ValidatorType(Enum):
     GenderAssumptionBias = "gender_assumption_bias"
     BanList = "ban_list"
     TopicRelevance = "topic_relevance"
+    LLMCritic = "llm_critic"
+    LlamaGuard7B = "llamaguard_7b"
+    ProfanityFree = "profanity_free"
