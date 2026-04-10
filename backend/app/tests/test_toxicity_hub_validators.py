@@ -304,7 +304,7 @@ class TestNSFWTextSafetyValidatorConfig:
         assert kwargs["threshold"] == 0.8
         assert kwargs["validation_method"] == "sentence"
         assert kwargs["device"] == "cpu"
-        assert kwargs["model_name"] == "michellejieli/NSFW_text_classifier"
+        assert kwargs["model_name"] == "textdetox/xlmr-large-toxicity-classifier"
 
     def test_build_with_custom_params(self):
         config = NSFWTextSafetyValidatorConfig(
