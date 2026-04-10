@@ -101,69 +101,9 @@ If you use GitHub Actions the tests will run automatically.
 
 ## Running evaluation tests
 
-We can benchmark validators on curated datasets.
+For full details on running evaluations — including dataset setup, individual validator scripts, multi-validator end-to-end evaluation, and how to interpret metrics — see:
 
-Download the dataset from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89).This contains multiple folders, one for each validator. Each folder contains a testing dataset in csv format for the validator. Download these csv files and store them in `backend/app/evaluation/datasets/`.
-
-Important: each `run.py` expects a specific filename, so dataset files must be named exactly as below:
-- `app/evaluation/lexical_slur/run.py` expects `lexical_slur_testing_dataset.csv`
-- `app/evaluation/pii/run.py` expects `pii_detection_testing_dataset.csv`
-- `app/evaluation/gender_assumption_bias/run.py` expects `gender_bias_assumption_dataset.csv`
-- `app/evaluation/ban_list/run.py` expects `ban_list_testing_dataset.csv`
-
-Once these files are in place with the exact names above, run the evaluation scripts.
-
-Unit tests for lexical slur match, ban list, and gender assumption bias validators have limited value because their logic is deterministic. Curated datasets are used to benchmark accuracy and latency for lexical slur, gender assumption bias, and ban list. The lexical slur dataset will also be used in future toxicity detection workflows.
-
-Each validator produces:
-- predictions.csv – row-level outputs for debugging and analysis
-- metrics.json – aggregated accuracy + performance metrics (latency and peak memory)
-
-Standardized output structure:
-```text
-app/evaluation/outputs/<validator-name>
-  predictions.csv
-  metrics.json
-```
-
-- To run all evaluation scripts together, use:
-```bash
-BAN_LIST_WORDS="word1,word2" bash scripts/run_all_evaluations.sh
-```
-or
-```bash
-bash scripts/run_all_evaluations.sh BAN_LIST_WORDS="word1,word2"
-```
-
-`BAN_LIST_WORDS` is required for the `ban_list` evaluator and should be a comma-separated list.
-
-This script runs the evaluators in sequence:
-- `app/evaluation/lexical_slur/run.py`
-- `app/evaluation/pii/run.py`
-- `app/evaluation/gender_assumption_bias/run.py`
-- `app/evaluation/ban_list/run.py`
-
-To evaluate any specific evaluator, run the offline evaluation script: `python <validator's eval script path>`
-
-## Multiple validators evaluation
-
-To run an end-to-end evaluation combining multiple validators against a dataset via the live API:
-
-1. Download the multi-validator dataset from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89) and place it in `backend/app/evaluation/datasets/` as `multi_validator_whatsapp_dataset.csv`.
-
-2. Edit `backend/app/evaluation/multiple_validators/config.json` to configure which validators to run, their parameters, and the dataset/output paths.
-
-   For the full list of supported validators and their config parameters (e.g. `severity`, `entity_types`, `banned_words`, `on_fail`), refer to:
-   `backend/app/core/validators/README.md`
-
-3. Ensure `GUARDRAILS_API_URL` is set in your `.env` file (see `.env.example`). Optionally set `GUARDRAILS_TIMEOUT_SECONDS` to override the default request timeout of 60s.
-
-4. Run the script from the `backend` directory:
-```bash
-python -m app.evaluation.multiple_validators.run --auth_token <your-token>
-```
-
-Output is written to `backend/app/evaluation/outputs/multiple_validators/predictions.csv`.
+`backend/app/evaluation/README.md`
 
 ## Validator configuration guide
 
