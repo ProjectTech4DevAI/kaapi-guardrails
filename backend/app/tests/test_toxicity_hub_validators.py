@@ -181,7 +181,7 @@ class TestProfanityFreeSafetyValidatorConfig:
 
         assert result == mock_validator.return_value
 
-    def test_on_fail_fix_resolves_to_fix_action(self):
+    def test_on_fail_fix_resolves_to_callable(self):
         config = ProfanityFreeSafetyValidatorConfig(
             type="profanity_free", on_fail="fix"
         )
@@ -190,7 +190,7 @@ class TestProfanityFreeSafetyValidatorConfig:
             config.build()
 
         _, kwargs = mock_validator.call_args
-        assert kwargs["on_fail"] == OnFailAction.FIX
+        assert callable(kwargs["on_fail"])
 
     def test_on_fail_exception_resolves_to_exception_action(self):
         config = ProfanityFreeSafetyValidatorConfig(
@@ -231,6 +231,36 @@ class TestProfanityFreeSafetyValidatorConfig:
             ProfanityFreeSafetyValidatorConfig(
                 type="profanity_free", unknown_field="value"
             )
+
+    def test_on_fix_sets_validator_metadata_when_fix_value_empty(self):
+        from unittest.mock import MagicMock
+        from guardrails.validators import FailResult
+
+        config = ProfanityFreeSafetyValidatorConfig(
+            type="profanity_free", on_fail="fix"
+        )
+        fail_result = MagicMock(spec=FailResult)
+        fail_result.fix_value = ""
+
+        config._on_fix("some input", fail_result)
+
+        assert config.validator_metadata == {
+            "reason": "Empty string has been returned since the validation failed for: profanity_free"
+        }
+
+    def test_on_fix_does_not_set_metadata_when_fix_value_present(self):
+        from unittest.mock import MagicMock
+        from guardrails.validators import FailResult
+
+        config = ProfanityFreeSafetyValidatorConfig(
+            type="profanity_free", on_fail="fix"
+        )
+        fail_result = MagicMock(spec=FailResult)
+        fail_result.fix_value = "clean text"
+
+        config._on_fix("some input", fail_result)
+
+        assert config.validator_metadata is None
 
     def test_only_on_fail_forwarded_to_validator(self):
         config = ProfanityFreeSafetyValidatorConfig(

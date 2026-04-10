@@ -54,8 +54,9 @@ This project supports three `on_fail` behaviors at runtime:
 
 - `fix`
 
-  - Uses Guardrails built-in fix flow (`OnFailAction.FIX`).
+  - Uses a custom fix callable that delegates to the validator's `fix_value`.
   - If a validator returns `fix_value`, validation succeeds and API returns that transformed value as `safe_text`.
+  - If the `fix_value` is empty (e.g. `profanity_free` has no programmatic fix), `safe_text` is `""` and the response `metadata` will include a `reason` field explaining which validator caused the empty output.
   - Typical outcome: redaction/anonymization/substitution without asking user to retry.
 - `exception`
 
@@ -477,7 +478,7 @@ Parameters / customization:
 Notes / limitations:
 
 - Not as accurate as more sophisticated ML models like finetuned RoBERTa but better than lexical matching based solutions.
-- No programmatic fix is applied — detected text is not auto-redacted.
+- No programmatic fix is applied — with `on_fail=fix`, `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
 - English-focused; cross-lingual profanity may not be detected.
 
 ## Example Config Payloads
