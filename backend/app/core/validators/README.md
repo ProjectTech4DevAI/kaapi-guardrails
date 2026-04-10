@@ -410,7 +410,7 @@ Notes / limitations:
 - `on_fail=fix` returns `""` on failure — LlamaGuard has no programmatic fix, so `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
 - LlamaGuard policy classification may produce false positives in news, clinical, or legal contexts.
 
-### 9) NSFW Text Validator (`nsfw_text`)
+### 8) NSFW Text Validator (`nsfw_text`)
 
 Code:
 
@@ -450,7 +450,7 @@ Notes / limitations:
 - No programmatic fix is applied — with `on_fail=fix`, `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
 - **Latency**: this validator runs a local transformer model on CPU. For short, single-turn WhatsApp-style messages, sentence-level inference typically adds ~200–500 ms per request on CPU. Use `validation_method="full"` for shorter inputs to avoid per-sentence overhead. For high-throughput deployments, consider using GPU (`device="cuda"`) or moving this validator to async post-processing rather than the synchronous request path.
 
-### 8) Profanity Free Validator (`profanity_free`)
+### 9) Profanity Free Validator (`profanity_free`)
 
 Code:
 

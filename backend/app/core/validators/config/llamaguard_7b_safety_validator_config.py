@@ -2,7 +2,6 @@ from typing import List, Literal, Optional
 
 from guardrails.hub import LlamaGuard7B
 
-from app.core.enum import GuardrailOnFail
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 POLICY_NAME_MAP = {
