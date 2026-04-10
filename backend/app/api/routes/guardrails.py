@@ -183,7 +183,11 @@ def _validate_with_guard(
         )
 
         if status == RequestStatus.SUCCESS:
-            return APIResponse.success_response(data=response_model)
+            meta = next(
+                (v.validator_metadata for v in validators if v.validator_metadata),
+                None,
+            )
+            return APIResponse.success_response(data=response_model, metadata=meta)
 
         return APIResponse.failure_response(
             data=response_model,
