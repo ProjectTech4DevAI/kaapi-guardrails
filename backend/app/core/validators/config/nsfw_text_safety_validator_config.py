@@ -10,7 +10,7 @@ class NSFWTextSafetyValidatorConfig(BaseValidatorConfig):
     threshold: float = 0.8
     validation_method: str = "sentence"
     device: Optional[str] = "cpu"
-    model_name: Optional[str] = "textdetox/xlmr-large-toxicity-classifier"
+    model_name: Optional[str] = "michellejieli/NSFW_text_classifier"
 
     def build(self):
         return NSFWText(
