@@ -1,9 +1,7 @@
 from typing import List, Literal, Optional
 
-from guardrails import OnFailAction
 from guardrails.hub import LlamaGuard7B
 
-from app.core.enum import GuardrailOnFail
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 POLICY_NAME_MAP = {
@@ -34,12 +32,7 @@ class LlamaGuard7BSafetyValidatorConfig(BaseValidatorConfig):
         return resolved
 
     def build(self):
-        on_fail = self.resolve_on_fail()
-        # LlamaGuard7B has no programmatic fix. If on_fail=fix is requested,
-        # fall back to exception so downstream validators don't receive None as input.
-        if self.on_fail == GuardrailOnFail.Fix:
-            on_fail = OnFailAction.EXCEPTION
         return LlamaGuard7B(
             policies=self._resolve_policies(),
-            on_fail=on_fail,  # type: ignore[arg-type]
+            on_fail=self.resolve_on_fail(),  # type: ignore[arg-type]
         )
