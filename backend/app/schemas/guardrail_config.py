@@ -73,13 +73,13 @@ class GuardrailRequest(SQLModel):
 
         drop_fields = {
             "id",
+            "name",
             "organization_id",
             "project_id",
             "stage",
             "is_enabled",
             "created_at",
             "updated_at",
-            "name",
         }
 
         for validator in validators:
