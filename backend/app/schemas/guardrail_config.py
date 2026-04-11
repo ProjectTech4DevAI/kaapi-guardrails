@@ -79,6 +79,7 @@ class GuardrailRequest(SQLModel):
             "is_enabled",
             "created_at",
             "updated_at",
+            "name",
         }
 
         for validator in validators:
