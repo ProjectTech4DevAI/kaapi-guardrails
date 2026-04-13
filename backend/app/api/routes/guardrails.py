@@ -184,7 +184,7 @@ def _validate_with_guard(
 
         if status == RequestStatus.SUCCESS:
             meta = next(
-                (v.validator_metadata for v in validators if v.validator_metadata),
+                (v._validator_metadata for v in validators if v._validator_metadata),
                 None,
             )
             return APIResponse.success_response(data=response_model, metadata=meta)
