@@ -219,7 +219,11 @@ def _validate_with_guard(
                 for log in logs:
                     log_result = log.validation_result
                     if isinstance(log_result, FailResult) and log_result.error_message:
-                        error_message = log_result.error_message
+                        error_message = (
+                            _redact_input(log_result.error_message, data)
+                            if log.validator_name == "nsfw_text"
+                            else log_result.error_message
+                        )
                         break
 
         return _finalize(
@@ -229,10 +233,17 @@ def _validate_with_guard(
 
     except Exception as exc:
         # Case 3: unexpected system / runtime failure
+        safe_msg = _safe_error_message(exc)
+        if "nsfw" in safe_msg.lower():
+            safe_msg = _redact_input(safe_msg, data)
         return _finalize(
             status=RequestStatus.ERROR,
-            error_message=_safe_error_message(exc),
+            error_message=safe_msg,
         )
+
+
+def _redact_input(error_message: str, input_text: str) -> str:
+    return error_message.replace(input_text, "[REDACTED]")
 
 
 def add_validator_logs(
