@@ -11,6 +11,7 @@ RUNNERS=(
   "$EVAL_DIR/gender_assumption_bias/run.py"
   "$EVAL_DIR/ban_list/run.py"
   "$EVAL_DIR/topic_relevance/run.py"
+  "$EVAL_DIR/toxicity/run.py"
 )
 
 echo "Running validator evaluations..."
