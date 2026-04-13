@@ -96,6 +96,7 @@ def test_validate_with_guard_uses_fail_result_error_message():
     """Case 2: when guard returns no validated_output, the error message should
     be extracted from the first FailResult in the last iteration's validator logs."""
     mock_log = MagicMock()
+    mock_log.validator_name = "some_validator"
     mock_log.validation_result = GRFailResult(error_message="specific validator error")
 
     mock_outputs = MagicMock()
@@ -267,3 +268,95 @@ def test_resolve_validator_configs_uses_inline_topic_relevance_without_lookup():
     validator = payload.validators[0]
     assert validator.configuration == "inline config"
     mock_get.assert_not_called()
+
+
+def _build_mock_guard_with_fail_result(validator_name: str, error_message: str):
+    mock_log = MagicMock()
+    mock_log.validator_name = validator_name
+    mock_log.validation_result = GRFailResult(error_message=error_message)
+
+    mock_outputs = MagicMock()
+    mock_outputs.validator_logs = [mock_log]
+
+    mock_iteration = MagicMock()
+    mock_iteration.outputs = mock_outputs
+
+    mock_last = MagicMock()
+    mock_last.iterations = [mock_iteration]
+
+    mock_history = MagicMock()
+    mock_history.last = mock_last
+
+    class MockGuard:
+        history = mock_history
+
+        def validate(self, data):
+            return MockResult(validated_output=None)
+
+    return MockGuard()
+
+
+def test_nsfw_error_message_redacts_input():
+    """Case 2: when the failing validator is nsfw_text, the original input should
+    be replaced with [REDACTED] in the error response."""
+    unsafe_input = "this is some unsafe content"
+    error_msg = f"The following sentences in your response were found to be NSFW:\n\n- {unsafe_input}"
+
+    with patch(
+        "app.api.routes.guardrails.build_guard",
+        return_value=_build_mock_guard_with_fail_result("nsfw_text", error_msg),
+    ), patch("app.api.routes.guardrails.add_validator_logs"):
+        response = _validate_with_guard(
+            payload=_build_payload(unsafe_input),
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+        )
+
+    assert response.success is False
+    assert unsafe_input not in response.error
+    assert "[REDACTED]" in response.error
+
+
+def test_non_nsfw_error_message_is_not_redacted():
+    """Case 2: when the failing validator is not nsfw_text, the error message
+    should be returned unchanged."""
+    input_text = "some input text"
+    error_msg = f"Found banned word in: {input_text}"
+
+    with patch(
+        "app.api.routes.guardrails.build_guard",
+        return_value=_build_mock_guard_with_fail_result("ban_list", error_msg),
+    ), patch("app.api.routes.guardrails.add_validator_logs"):
+        response = _validate_with_guard(
+            payload=_build_payload(input_text),
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+        )
+
+    assert response.success is False
+    assert response.error == error_msg
+
+
+def test_nsfw_exception_redacts_input():
+    """Case 3: when an exception message contains 'nsfw', the original input
+    should be replaced with [REDACTED] in the error response."""
+    unsafe_input = "this is some unsafe content"
+
+    with patch(
+        "app.api.routes.guardrails.build_guard",
+        side_effect=Exception(
+            f"Validation failed for field with errors: The following sentences in your response were found to be NSFW:\n\n- {unsafe_input}"
+        ),
+    ):
+        response = _validate_with_guard(
+            payload=_build_payload(unsafe_input),
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+        )
+
+    assert response.success is False
+    assert unsafe_input not in response.error
+    assert "[REDACTED]" in response.error
