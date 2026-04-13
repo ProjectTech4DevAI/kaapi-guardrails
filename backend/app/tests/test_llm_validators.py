@@ -9,6 +9,7 @@ from app.core.validators.config.topic_relevance_safety_validator_config import (
 from app.core.validators.config.llm_critic_safety_validator_config import (
     LLMCriticSafetyValidatorConfig,
 )
+from app.api.routes.guardrails import _normalize_llm_critic_error
 
 _SAMPLE_TOPIC_CONFIG = dict(
     type="topic_relevance",
@@ -97,3 +98,21 @@ def test_llm_critic_build_proceeds_when_openai_key_present():
         config.build()
 
     mock_llm_critic.assert_called_once()
+
+
+def test__normalize_llm_critic_error_maps_failed_metrics():
+    raw = "The response failed the following metrics: ['quality']."
+    result = _normalize_llm_critic_error(raw)
+    assert result == "The response did not meet the required quality criteria."
+
+
+def test__normalize_llm_critic_error_maps_missing_invalid_metrics():
+    raw = "The response is missing or has invalid evaluations for the following metrics: ['quality']."
+    result = _normalize_llm_critic_error(raw)
+    assert "could not evaluate" in result
+    assert "Please retry" in result
+
+
+def test__normalize_llm_critic_error_passes_through_unknown_messages():
+    raw = "Some other validator error."
+    assert _normalize_llm_critic_error(raw) == raw
