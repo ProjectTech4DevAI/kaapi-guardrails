@@ -117,7 +117,7 @@ def validate_multitenant_key(
     if x_api_key and x_api_key.strip():
         return _fetch_tenant_from_backend({"X-API-KEY": x_api_key.strip()})
 
-    if credentials is not None:
+    if credentials is not None and credentials.credentials.strip():
         return _fetch_tenant_from_backend(
             {"Authorization": f"Bearer {credentials.credentials}"}
         )
