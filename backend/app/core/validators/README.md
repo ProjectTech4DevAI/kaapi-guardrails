@@ -14,6 +14,7 @@ Current validator manifest:
 - `topic_relevance` (source: `local`)
 - `llamaguard_7b` (source: `hub://guardrails/llamaguard_7b`)
 - `profanity_free` (source: `hub://guardrails/profanity_free`)
+- `nsfw_text` (source: `hub://guardrails/nsfw_text`)
 
 ## Configuration Model
 
@@ -409,7 +410,47 @@ Notes / limitations:
 - `on_fail=fix` returns `""` on failure — LlamaGuard has no programmatic fix, so `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
 - LlamaGuard policy classification may produce false positives in news, clinical, or legal contexts.
 
-### 8) Profanity Free Validator (`profanity_free`)
+### 8) NSFW Text Validator (`nsfw_text`)
+
+Code:
+
+- Config: `backend/app/core/validators/config/nsfw_text_safety_validator_config.py`
+- Source: Guardrails Hub (`hub://guardrails/nsfw_text`)
+
+What it does:
+
+- Classifies text as NSFW (not safe for work) using a [HuggingFace transformer model](https://huggingface.co/textdetox/xlmr-large-toxicity-classifier).
+- Validates at the sentence level by default; fails if any sentence exceeds the configured threshold.
+
+Why this is used:
+
+- Catches sexually explicit or otherwise inappropriate content that may not be covered by profanity or slur lists.
+- Model-based approach handles paraphrased or implicit NSFW content better than keyword matching.
+
+Recommendation:
+
+- `input` and `output`
+  - Why `input`: prevents explicit user messages from being processed or logged.
+  - Why `output`: prevents the model from returning NSFW content to end users.
+
+Parameters / customization:
+
+- `threshold: float` (default: `0.8`) — probability threshold above which text is classified as NSFW
+- `validation_method: str` (default: `"sentence"`) — granularity of validation:
+  - `"sentence"`: each sentence is classified independently; validation fails if **any** sentence exceeds the threshold. Preferred when inputs are multi-sentence and you want to catch a single offensive sentence without failing the whole message.
+  - `"full"`: the entire text is passed as one unit for classification. Use when inputs are short (single-sentence messages or responses) or when you want to evaluate overall tone rather than per-sentence content.
+- `device: str | None` (default: `"cpu"`) — inference device (`"cpu"` or `"cuda"`)
+- `model_name: str | None` (default: `"textdetox/xlmr-large-toxicity-classifier"`) — HuggingFace model identifier used for classification. Other acceptable value: `"michellejieli/NSFW_text_classifier"`
+- `on_fail`
+
+Notes / limitations:
+
+- Model runs locally; first use will download the model weights unless pre-cached.
+- Default model is English-focused; multilingual NSFW detection may require a different `model_name`.
+- No programmatic fix is applied — with `on_fail=fix`, `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
+- **Latency**: this validator runs a local transformer model on CPU. For short, single-turn WhatsApp-style messages, sentence-level inference typically adds ~200–500 ms per request on CPU. Use `validation_method="full"` for shorter inputs to avoid per-sentence overhead. For high-throughput deployments, consider using GPU (`device="cuda"`) or moving this validator to async post-processing rather than the synchronous request path.
+
+### 9) Profanity Free Validator (`profanity_free`)
 
 Code:
 
@@ -491,6 +532,7 @@ Tuning strategy:
 - `backend/app/core/validators/config/gender_assumption_bias_safety_validator_config.py`
 - `backend/app/core/validators/config/topic_relevance_safety_validator_config.py`
 - `backend/app/core/validators/config/llamaguard_7b_safety_validator_config.py`
+- `backend/app/core/validators/config/nsfw_text_safety_validator_config.py`
 - `backend/app/core/validators/config/profanity_free_safety_validator_config.py`
 - `backend/app/schemas/guardrail_config.py`
 - `backend/app/schemas/validator_config.py`

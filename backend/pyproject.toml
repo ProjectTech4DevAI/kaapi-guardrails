@@ -32,6 +32,8 @@ dependencies = [
     "python-dotenv<2.0.0,>=1.0.0",
     "scikit-learn>=1.6.0,<2.0.0",
     "huggingface-hub>=1.5.0,<2.0",
+    "transformers>=5.0.0",
+    "torch>=2.0.0",
 ]
 
 [dependency-groups]
@@ -44,6 +46,16 @@ dev = [
     "coverage<8.0.0,>=7.4.3",
     "pytest-asyncio",
 ]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [build-system]
 requires = ["hatchling"]

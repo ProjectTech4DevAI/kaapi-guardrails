@@ -47,6 +47,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Install pinned spaCy model in the final environment used at runtime.
 RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
 
+# Set HuggingFace cache directory
+ENV HF_HOME=/app/hf_cache
+
+# Pre-download HuggingFace model
+RUN /app/.venv/bin/python -c "from transformers import AutoTokenizer, AutoModelForSequenceClassification; \
+AutoTokenizer.from_pretrained('textdetox/xlmr-large-toxicity-classifier', cache_dir='/app/hf_cache'); \
+AutoModelForSequenceClassification.from_pretrained('textdetox/xlmr-large-toxicity-classifier', cache_dir='/app/hf_cache')"
+
 # -------------------------------
 # Entrypoint (runtime setup)
 # -------------------------------
