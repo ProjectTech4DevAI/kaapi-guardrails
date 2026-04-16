@@ -318,9 +318,9 @@ def test_nsfw_error_message_redacts_input():
     assert "[REDACTED]" in response.error
 
 
-def test_non_nsfw_error_message_is_not_redacted():
-    """Case 2: when the failing validator is not nsfw_text, the error message
-    should be returned unchanged."""
+def test_all_validators_redact_input_from_error_message():
+    """Case 2: input text should be redacted from the error message for any validator,
+    not just nsfw_text."""
     input_text = "some input text"
     error_msg = f"Found banned word in: {input_text}"
 
@@ -336,18 +336,64 @@ def test_non_nsfw_error_message_is_not_redacted():
         )
 
     assert response.success is False
-    assert response.error == error_msg
+    assert input_text not in response.error
+    assert "[REDACTED]" in response.error
+
+
+def test_profanity_free_error_message_redacts_input():
+    """Case 2: when the failing validator is profanity_free, the original input
+    should be replaced with [REDACTED] in the error response."""
+    unsafe_input = "this contains profane words"
+    error_msg = f"Profanity detected in: {unsafe_input}"
+
+    with patch(
+        "app.api.routes.guardrails.build_guard",
+        return_value=_build_mock_guard_with_fail_result("profanity_free", error_msg),
+    ), patch("app.api.routes.guardrails.add_validator_logs"):
+        response = _validate_with_guard(
+            payload=_build_payload(unsafe_input),
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+        )
+
+    assert response.success is False
+    assert unsafe_input not in response.error
+    assert "[REDACTED]" in response.error
 
 
 def test_nsfw_exception_redacts_input():
-    """Case 3: when an exception message contains 'nsfw', the original input
-    should be replaced with [REDACTED] in the error response."""
+    """Case 3: when an nsfw_text exception message contains the input, the original
+    input should be replaced with [REDACTED] in the error response."""
     unsafe_input = "this is some unsafe content"
 
     with patch(
         "app.api.routes.guardrails.build_guard",
         side_effect=Exception(
             f"Validation failed for field with errors: The following sentences in your response were found to be NSFW:\n\n- {unsafe_input}"
+        ),
+    ):
+        response = _validate_with_guard(
+            payload=_build_payload(unsafe_input),
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+        )
+
+    assert response.success is False
+    assert unsafe_input not in response.error
+    assert "[REDACTED]" in response.error
+
+
+def test_profanity_free_exception_redacts_input():
+    """Case 3: when a profanity_free exception message contains the input, the
+    original input should be replaced with [REDACTED] in the error response."""
+    unsafe_input = "this contains profane words"
+
+    with patch(
+        "app.api.routes.guardrails.build_guard",
+        side_effect=Exception(
+            f"Validation failed for field with errors: Profanity detected in: {unsafe_input}"
         ),
     ):
         response = _validate_with_guard(
