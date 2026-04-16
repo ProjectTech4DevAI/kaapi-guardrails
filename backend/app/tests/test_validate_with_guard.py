@@ -298,7 +298,7 @@ def _build_mock_guard_with_fail_result(validator_name: str, error_message: str):
 
 def test_nsfw_error_message_redacts_input():
     """Case 2: when the failing validator is nsfw_text, the original input should
-    be replaced with [REDACTED] in the error response."""
+    be stripped from the error response."""
     unsafe_input = "this is some unsafe content"
     error_msg = f"The following sentences in your response were found to be NSFW:\n\n- {unsafe_input}"
 
@@ -315,12 +315,11 @@ def test_nsfw_error_message_redacts_input():
 
     assert response.success is False
     assert unsafe_input not in response.error
-    assert "[REDACTED]" in response.error
 
 
 def test_all_validators_redact_input_from_error_message():
-    """Case 2: input text should be redacted from the error message for any validator,
-    not just nsfw_text."""
+    """Case 2: input text should be stripped from the error message for any validator,
+    not just nsfw_text (everything after the first colon is dropped)."""
     input_text = "some input text"
     error_msg = f"Found banned word in: {input_text}"
 
@@ -337,12 +336,12 @@ def test_all_validators_redact_input_from_error_message():
 
     assert response.success is False
     assert input_text not in response.error
-    assert "[REDACTED]" in response.error
 
 
 def test_profanity_free_error_message_redacts_input():
     """Case 2: when the failing validator is profanity_free, the original input
-    should be replaced with [REDACTED] in the error response."""
+    should be stripped from the error response (everything after the first colon is dropped).
+    """
     unsafe_input = "this contains profane words"
     error_msg = f"Profanity detected in: {unsafe_input}"
 
@@ -359,12 +358,12 @@ def test_profanity_free_error_message_redacts_input():
 
     assert response.success is False
     assert unsafe_input not in response.error
-    assert "[REDACTED]" in response.error
 
 
 def test_nsfw_exception_redacts_input():
     """Case 3: when an nsfw_text exception message contains the input, the original
-    input should be replaced with [REDACTED] in the error response."""
+    input should be stripped from the error response (everything after the first colon is dropped).
+    """
     unsafe_input = "this is some unsafe content"
 
     with patch(
@@ -382,12 +381,12 @@ def test_nsfw_exception_redacts_input():
 
     assert response.success is False
     assert unsafe_input not in response.error
-    assert "[REDACTED]" in response.error
 
 
 def test_profanity_free_exception_redacts_input():
     """Case 3: when a profanity_free exception message contains the input, the
-    original input should be replaced with [REDACTED] in the error response."""
+    original input should be stripped from the error response (everything after the first colon is dropped).
+    """
     unsafe_input = "this contains profane words"
 
     with patch(
@@ -405,4 +404,3 @@ def test_profanity_free_exception_redacts_input():
 
     assert response.success is False
     assert unsafe_input not in response.error
-    assert "[REDACTED]" in response.error

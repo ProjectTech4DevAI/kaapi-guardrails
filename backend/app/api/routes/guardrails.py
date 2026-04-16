@@ -237,7 +237,8 @@ def _validate_with_guard(
 
 
 def _redact_input(error_message: str, input_text: str) -> str:
-    return error_message.replace(input_text, "[REDACTED]")
+    error_message = error_message.split(":\n\n")[0]
+    return error_message.replace(input_text, "")
 
 
 def add_validator_logs(
