@@ -224,7 +224,9 @@ def _validate_with_guard(
                                 log_result.error_message
                             )
                         else:
-                            error_message = _redact_input(log_result.error_message, data)
+                            error_message = _redact_input(
+                                log_result.error_message, data
+                            )
                         break
 
         return _finalize(
