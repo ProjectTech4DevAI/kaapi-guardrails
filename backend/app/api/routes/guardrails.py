@@ -219,7 +219,14 @@ def _validate_with_guard(
                 for log in logs:
                     log_result = log.validation_result
                     if isinstance(log_result, FailResult) and log_result.error_message:
-                        error_message = _redact_input(log_result.error_message, data)
+                        if log.validator_name == "guardrails/llm_critic":
+                            error_message = _normalize_llm_critic_error(
+                                log_result.error_message
+                            )
+                        else:
+                            error_message = _redact_input(
+                                log_result.error_message, data
+                            )
                         break
 
         return _finalize(
@@ -290,3 +297,15 @@ def add_validator_logs(
         )
 
         validator_log_crud.create(log=validator_log)
+
+
+def _normalize_llm_critic_error(message: str) -> str:
+    if "failed the following metrics" in message:
+        return "The response did not meet the required quality criteria."
+    if "missing or has invalid evaluations" in message:
+        return (
+            "The LLM critic could not evaluate one or more metrics. "
+            "The critic model returned an incomplete or malformed response. "
+            "Please retry."
+        )
+    return message
