@@ -184,7 +184,7 @@ def _validate_with_guard(
 
         if status == RequestStatus.SUCCESS:
             meta = next(
-                (v.validator_metadata for v in validators if v.validator_metadata),
+                (v._validator_metadata for v in validators if v._validator_metadata),
                 None,
             )
             return APIResponse.success_response(data=response_model, metadata=meta)
@@ -224,7 +224,7 @@ def _validate_with_guard(
                                 log_result.error_message
                             )
                         else:
-                            error_message = log_result.error_message
+                            error_message = _redact_input(log_result.error_message, data)
                         break
 
         return _finalize(
@@ -234,10 +234,16 @@ def _validate_with_guard(
 
     except Exception as exc:
         # Case 3: unexpected system / runtime failure
+        safe_msg = _redact_input(_safe_error_message(exc), data)
         return _finalize(
             status=RequestStatus.ERROR,
-            error_message=_safe_error_message(exc),
+            error_message=safe_msg,
         )
+
+
+def _redact_input(error_message: str, input_text: str) -> str:
+    error_message = error_message.split(":\n\n")[0]
+    return error_message.replace(input_text, "")
 
 
 def add_validator_logs(

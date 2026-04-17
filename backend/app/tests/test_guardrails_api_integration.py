@@ -324,6 +324,65 @@ def test_input_guardrails_with_llamaguard_7b_on_unsafe_text(integration_client):
 
 
 # ---------------------------------------------------------------------------
+# NSFWText
+# ---------------------------------------------------------------------------
+
+
+def test_input_guardrails_with_nsfw_text_on_explicit_content(integration_client):
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        json={
+            "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "input": "She slowly undressed and they had explicit sex.",
+            "validators": [{"type": "nsfw_text", "on_fail": "exception"}],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is False
+
+
+def test_input_guardrails_with_nsfw_text_with_low_threshold(integration_client):
+    """A low threshold makes the detector more sensitive — explicit content is caught."""
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        json={
+            "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "input": "She slowly undressed and they had explicit sex.",
+            "validators": [
+                {"type": "nsfw_text", "threshold": 0.1, "on_fail": "exception"}
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is False
+
+
+def test_input_guardrails_with_nsfw_text_exception_action(integration_client):
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        json={
+            "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "input": "Explicit sexual content goes here.",
+            "validators": [{"type": "nsfw_text", "on_fail": "exception"}],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is False
+
+
+# ---------------------------------------------------------------------------
 # Combinations of toxicity detectors
 # ---------------------------------------------------------------------------
 
@@ -373,3 +432,100 @@ def test_input_guardrails_with_profanity_free_and_llamaguard_7b_unsafe_text(
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is False
+
+
+def test_input_guardrails_with_nsfw_text_and_profanity_free_on_explicit_profane_text(
+    integration_client,
+):
+    """Profane+explicit content: profanity_free reliably catches the profanity regardless
+    of whether the NSFWText model is available, guaranteeing a failure response."""
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        json={
+            "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "input": "What the fuck, this is explicit adult sexual content.",
+            "validators": [
+                {"type": "profanity_free", "on_fail": "exception"},
+                {"type": "nsfw_text", "on_fail": "exception"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is False
+
+
+def test_input_guardrails_with_nsfw_text_and_slur_match_on_explicit_slur_text(
+    integration_client,
+):
+    """Slur+explicit content: uli_slur_match reliably catches the slur regardless
+    of whether the NSFWText model is available, guaranteeing a failure response."""
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        json={
+            "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "input": "This chakki has explicit sexual content.",
+            "validators": [
+                {"type": "uli_slur_match", "severity": "all", "on_fail": "exception"},
+                {"type": "nsfw_text", "on_fail": "exception"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is False
+
+
+def test_input_guardrails_with_profanity_free_and_ban_list_clean_text(
+    integration_client,
+):
+    """Clean text passes both profanity_free and ban_list checks unchanged."""
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        json={
+            "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "input": "Tell me about renewable energy sources.",
+            "validators": [
+                {"type": "profanity_free"},
+                {"type": "ban_list", "banned_words": ["fossil"]},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"][SAFE_TEXT_FIELD] == "Tell me about renewable energy sources."
+
+
+def test_input_guardrails_with_lexical_toxicity_detectors_on_clean_text(
+    integration_client,
+):
+    """Clean text passes uli_slur_match, profanity_free, and ban_list unchanged."""
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        json={
+            "request_id": request_id,
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "input": "What are some healthy breakfast options?",
+            "validators": [
+                {"type": "uli_slur_match", "severity": "all"},
+                {"type": "profanity_free"},
+                {"type": "ban_list", "banned_words": ["junk"]},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"][SAFE_TEXT_FIELD] == "What are some healthy breakfast options?"
