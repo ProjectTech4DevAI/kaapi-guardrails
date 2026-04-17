@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 from guardrails import OnFailAction
 from guardrails.validators import FailResult, Validator
-from pydantic import ConfigDict
+from pydantic import ConfigDict, PrivateAttr
 from sqlmodel import SQLModel
 
 from app.core.enum import GuardrailOnFail
@@ -13,12 +13,12 @@ class BaseValidatorConfig(SQLModel):
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     on_fail: GuardrailOnFail = GuardrailOnFail.Fix
-    validator_metadata: Optional[Dict[str, Any]] = None
+    _validator_metadata: Optional[Dict[str, Any]] = PrivateAttr(default=None)
 
     def _on_fix(self, value: str, fail_result: FailResult):
         fix_value = fail_result.fix_value if fail_result else None
         if not fix_value:
-            self.validator_metadata = {
+            self._validator_metadata = {
                 "reason": f"Empty string has been returned since the validation failed for: {self.type}"  # type: ignore[attr-defined]
             }
             return ""

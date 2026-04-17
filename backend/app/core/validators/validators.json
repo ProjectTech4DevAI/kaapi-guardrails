@@ -39,6 +39,11 @@
             "type": "profanity_free",
             "version": "0.1.0",
             "source": "hub://guardrails/profanity_free"
+        },
+        {
+            "type": "nsfw_text",
+            "version": "0.1.0",
+            "source": "hub://guardrails/nsfw_text"
         }
     ]
 }
