@@ -127,7 +127,7 @@ class TestLlamaGuard7BSafetyValidatorConfig:
         result = config._on_fix("some unsafe input", fail_result)
 
         assert result == ""
-        assert config.validator_metadata == {
+        assert config._validator_metadata == {
             "reason": "Empty string has been returned since the validation failed for: llamaguard_7b"
         }
 
@@ -257,7 +257,7 @@ class TestProfanityFreeSafetyValidatorConfig:
 
         config._on_fix("some input", fail_result)
 
-        assert config.validator_metadata == {
+        assert config._validator_metadata == {
             "reason": "Empty string has been returned since the validation failed for: profanity_free"
         }
 
@@ -273,7 +273,7 @@ class TestProfanityFreeSafetyValidatorConfig:
 
         config._on_fix("some input", fail_result)
 
-        assert config.validator_metadata is None
+        assert config._validator_metadata is None
 
     def test_only_on_fail_forwarded_to_validator(self):
         config = ProfanityFreeSafetyValidatorConfig(
@@ -387,7 +387,7 @@ class TestNSFWTextSafetyValidatorConfig:
 
         config._on_fix("some input", fail_result)
 
-        assert config.validator_metadata == {
+        assert config._validator_metadata == {
             "reason": "Empty string has been returned since the validation failed for: nsfw_text"
         }
 
@@ -401,7 +401,7 @@ class TestNSFWTextSafetyValidatorConfig:
 
         config._on_fix("some input", fail_result)
 
-        assert config.validator_metadata is None
+        assert config._validator_metadata is None
 
     def test_on_fail_exception_resolves_to_exception_action(self):
         config = NSFWTextSafetyValidatorConfig(type="nsfw_text", on_fail="exception")
