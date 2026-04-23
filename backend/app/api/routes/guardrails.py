@@ -8,6 +8,7 @@ from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep
 from app.core.constants import BAN_LIST, REPHRASE_ON_FAIL_PREFIX
+from app.core.enum import ValidatorType
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
 from app.core.validators.config.ban_list_safety_validator_config import (
@@ -206,29 +207,7 @@ def _validate_with_guard(
             )
 
         # Case 2: validation failed without a fix
-        error_message = "Validation failed"
-
-        history = getattr(guard, "history", None)
-        if history and getattr(history, "last", None):
-            iterations = getattr(history.last, "iterations", None)
-            if iterations:
-                iteration = iterations[-1]
-                logs = getattr(
-                    getattr(iteration, "outputs", None), "validator_logs", []
-                )
-                for log in logs:
-                    log_result = log.validation_result
-                    if isinstance(log_result, FailResult) and log_result.error_message:
-                        if log.validator_name == "guardrails/llm_critic":
-                            error_message = _normalize_llm_critic_error(
-                                log_result.error_message
-                            )
-                        else:
-                            error_message = _redact_input(
-                                log_result.error_message, data
-                            )
-                        break
-
+        error_message = _extract_error_from_guard(guard, data) or "Validation failed"
         return _finalize(
             status=RequestStatus.ERROR,
             error_message=error_message,
@@ -236,11 +215,39 @@ def _validate_with_guard(
 
     except Exception as exc:
         # Case 3: unexpected system / runtime failure
+        # First try to extract structured fail results from guard history.
+        # This handles on_fail="exception" where guardrails raises instead of returning.
+        if guard is not None:
+            extracted = _extract_error_from_guard(guard, data)
+            if extracted is not None:
+                return _finalize(status=RequestStatus.ERROR, error_message=extracted)
+
         safe_msg = _redact_input(_safe_error_message(exc), data)
         return _finalize(
             status=RequestStatus.ERROR,
             error_message=safe_msg,
         )
+
+
+def _extract_error_from_guard(guard: Guard, data: str) -> str | None:
+    """
+    Scans the guard's last history iteration for the first FailResult and returns
+    a normalized, redacted error message. Returns None if no fail result is found.
+    """
+    history = getattr(guard, "history", None)
+    if not history or not getattr(history, "last", None):
+        return None
+    iterations = getattr(history.last, "iterations", None)
+    if not iterations:
+        return None
+    logs = getattr(getattr(iterations[-1], "outputs", None), "validator_logs", [])
+    for log in logs:
+        log_result = log.validation_result
+        if isinstance(log_result, FailResult) and log_result.error_message:
+            if log.validator_name == ValidatorType.LLMCritic.name:
+                return _normalize_llm_critic_error(log_result.error_message)
+            return _redact_input(log_result.error_message, data)
+    return None
 
 
 def _redact_input(error_message: str, input_text: str) -> str:
