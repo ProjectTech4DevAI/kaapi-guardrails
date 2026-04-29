@@ -35,7 +35,7 @@ jobs:
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy kaapi-guardrails staging" \
-            --parameters commands="[\"set -eux\",\"sudo -iu ec2-user bash -lc \\\"cd ${BUILD_DIRECTORY} && git fetch --all && git pull origin main && docker compose build && docker compose run --rm backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\\\"]" \
+            --parameters commands="[\"set -eux\",\"sudo -iu ec2-user bash -lc \\\"cd ${BUILD_DIRECTORY} && git fetch --all && git pull origin enhancement/cd_staging && docker compose build && docker compose run --rm backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\\\"]" \
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --query "Command.CommandId" --output text)
           echo "cmd_id=$CMD_ID" >> "$GITHUB_OUTPUT"
