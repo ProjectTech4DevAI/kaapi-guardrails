@@ -35,8 +35,10 @@ jobs:
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy kaapi-guardrails staging" \
-            --parameters commands="[\"set -eux\",\"sudo chown -R ec2-user:ec2-user ${BUILD_DIRECTORY}\",\"sudo -iu ec2-user bash -lc \\\"cd ${BUILD_DIRECTORY} && git fetch --all && git pull origin enhancement/cd_staging && docker compose build && docker compose run --rm backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\\\"\"]" \
-            --query "Command.CommandId" --output text)
+            --parameters commands="[\"set -eux\",\"sudo chown -R ec2-user:ec2-user ${BUILD_DIRECTORY}\",\"sudo -iu ec2-user bash -lc \\\"cd ${BUILD_DIRECTORY} && git fetch origin && git reset --hard origin/enhancement/cd_staging && docker compose build && docker compose run --rm backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\\\"\"]" \
+            --query "Command.CommandId" \
+            --output text)
+
           echo "cmd_id=$CMD_ID" >> "$GITHUB_OUTPUT"
           echo "Sent SSM command: $CMD_ID"
 
@@ -45,10 +47,43 @@ jobs:
           INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
           CMD_ID: ${{ steps.ssm.outputs.cmd_id }}
         run: |
-          WAIT_EXIT=0
-          aws ssm wait command-executed \
-            --command-id "$CMD_ID" \
-            --instance-id "$INSTANCE_ID" || WAIT_EXIT=$?
+          for i in {1..60}; do
+            STATUS=$(aws ssm get-command-invocation \
+              --command-id "$CMD_ID" \
+              --instance-id "$INSTANCE_ID" \
+              --query "Status" \
+              --output text)
+
+            echo "Current Status: $STATUS"
+
+            if [ "$STATUS" = "Success" ]; then
+              echo "Deployment completed successfully."
+
+              aws ssm get-command-invocation \
+                --command-id "$CMD_ID" \
+                --instance-id "$INSTANCE_ID" \
+                --query '{Status:Status,Stdout:StandardOutputContent,Stderr:StandardErrorContent}' \
+                --output json
+
+              exit 0
+            fi
+
+            if [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ] || [ "$STATUS" = "TimedOut" ]; then
+              echo "Deployment failed."
+
+              aws ssm get-command-invocation \
+                --command-id "$CMD_ID" \
+                --instance-id "$INSTANCE_ID" \
+                --query '{Status:Status,Stdout:StandardOutputContent,Stderr:StandardErrorContent}' \
+                --output json
+
+              exit 1
+            fi
+
+            sleep 30
+          done
+
+          echo "Deployment timed out after waiting too long."
 
           aws ssm get-command-invocation \
             --command-id "$CMD_ID" \
@@ -56,4 +91,4 @@ jobs:
             --query '{Status:Status,Stdout:StandardOutputContent,Stderr:StandardErrorContent}' \
             --output json
 
-          exit $WAIT_EXIT
+          exit 1
