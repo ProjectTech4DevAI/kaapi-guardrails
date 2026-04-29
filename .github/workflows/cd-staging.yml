@@ -22,19 +22,20 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ secrets.STAGING_EC2_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.EC2_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Trigger deploy on EC2 via SSM
         id: ssm
         env:
           INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+          BUILD_DIRECTORY: ${{ secrets.BUILD_DIRECTORY }}
         run: |
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy kaapi-guardrails staging" \
-            --parameters commands='["set -eux","sudo -iu ubuntu bash -lc \"cd /data/kaapi-guardrails && git fetch --all && git pull origin main && docker compose build && docker compose run --rm backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\""]' \
+            --parameters commands='["set -eux","sudo -iu ec2-user bash -lc \"cd ${BUILD_DIRECTORY} && git fetch --all && git pull origin main && docker compose build && docker compose run --rm backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\"]' \
             --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --query "Command.CommandId" --output text)
           echo "cmd_id=$CMD_ID" >> "$GITHUB_OUTPUT"
