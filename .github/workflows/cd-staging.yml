@@ -2,7 +2,7 @@ name: Deploy Kaapi Guardrails Staging To EC2
 
 on:
   push:
-    branches: [enhancement/cd_staging]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -35,7 +35,7 @@ jobs:
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy kaapi-guardrails staging" \
-            --parameters commands="[\"set -eux\",\"sudo chown -R ec2-user:ec2-user ${BUILD_DIRECTORY}\",\"sudo -iu ec2-user bash -lc \\\"cd ${BUILD_DIRECTORY} && git fetch origin && git reset --hard origin/enhancement/cd_staging && docker compose build && docker compose exec backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\\\"\"]" \
+            --parameters commands="[\"set -eux\",\"sudo chown -R ec2-user:ec2-user ${BUILD_DIRECTORY}\",\"sudo -iu ec2-user bash -lc \\\"cd ${BUILD_DIRECTORY} && git fetch origin && git reset --hard origin/main && docker compose build && docker compose run --rm backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\\\"\"]" \
             --query "Command.CommandId" \
             --output text)
 
