@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "v*" # Deploy only when tags like v1.0.0, v2.1.0, etc., are created
-  workflow_dispatch:
 
 concurrency:
   group: guardrail-production-ec2-deploy
@@ -32,11 +31,13 @@ jobs:
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
           BUILD_DIRECTORY: ${{ secrets.BUILD_DIRECTORY }}
         run: |
+          DEPLOY_CMD="cd ${BUILD_DIRECTORY} && git fetch --tags origin && git checkout --force ${{ github.sha }} && docker compose build && docker compose run --rm --entrypoint '' backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f"
+
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy kaapi-guardrails production" \
-            --parameters commands="[\"set -eux\",\"sudo chown -R ec2-user:ec2-user ${BUILD_DIRECTORY}\",\"sudo -iu ec2-user bash -lc \\\"cd ${BUILD_DIRECTORY} && git fetch --tags origin && git checkout --force ${{ github.sha }} && docker compose build && docker compose run --rm --entrypoint \\\\\\\"\\\\\\\" backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\\\"\"]" \
+            --parameters "commands=[\"set -eux\", \"sudo chown -R ec2-user:ec2-user ${BUILD_DIRECTORY}\", \"sudo -iu ec2-user bash -lc \\\"${DEPLOY_CMD}\\\"\"]" \
             --query "Command.CommandId" \
             --output text)
 
