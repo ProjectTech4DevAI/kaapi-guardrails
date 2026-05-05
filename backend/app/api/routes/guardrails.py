@@ -244,7 +244,11 @@ def _extract_error_from_guard(guard: Guard, data: str) -> str | None:
     for log in logs:
         log_result = log.validation_result
         if isinstance(log_result, FailResult) and log_result.error_message:
-            if log.validator_name == ValidatorType.LLMCritic.name:
+            if log.validator_name in (
+                ValidatorType.LLMCritic.name,
+                ValidatorType.LLMCritic.value,
+                "LLM_Critic",
+            ):
                 return _normalize_llm_critic_error(log_result.error_message)
             return _redact_input(log_result.error_message, data)
     return None
@@ -307,12 +311,9 @@ def add_validator_logs(
 
 
 def _normalize_llm_critic_error(message: str) -> str:
-    if "failed the following metrics" in message:
+    if (
+        "failed the following metrics"
+        or "missing or has invalid evaluations" in message
+    ):
         return "The response did not meet the required quality criteria."
-    if "missing or has invalid evaluations" in message:
-        return (
-            "The LLM critic could not evaluate one or more metrics. "
-            "The critic model returned an incomplete or malformed response. "
-            "Please retry."
-        )
     return message

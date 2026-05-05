@@ -5,7 +5,7 @@ from guardrails.validators import FailResult, Validator
 from pydantic import ConfigDict, PrivateAttr
 from sqlmodel import SQLModel
 
-from app.core.enum import GuardrailOnFail
+from app.core.enum import GuardrailOnFail, ValidatorType
 from app.core.on_fail_actions import rephrase_query_on_fail
 
 
@@ -30,7 +30,14 @@ class BaseValidatorConfig(SQLModel):
         elif self.on_fail == GuardrailOnFail.Exception:
             return OnFailAction.EXCEPTION
         elif self.on_fail == GuardrailOnFail.Rephrase:
-            return rephrase_query_on_fail
+            include_reason = True
+            if self.type == ValidatorType.LLMCritic.value:
+                include_reason = False  # For LLM critic, we don't want to include the reason in the rephrase to avoid confusion
+
+            return lambda value, fail_result: rephrase_query_on_fail(
+                value, fail_result, include_reason=include_reason
+            )
+
         raise ValueError(
             f"Invalid on_fail value: {self.on_fail}. "
             "Expected one of: exception, fix, rephrase."
