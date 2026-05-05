@@ -268,7 +268,7 @@ python3 app/evaluation/topic_relevance/run.py
 **Script:** `app/evaluation/toxicity/run.py`
 
 **Datasets:**
-- `datasets/toxicity/toxicity_test_hasoc.csv`
+- `datasets/toxicity/toxicity_test_hasoc.csv` (The HASOC (Hate Speech and Offensive Content) dataset is a multilingual benchmark (mainly Hindi, English, and code-mixed text) used to train and evaluate models for detecting hate speech, offensive language, and abusive content in social media.)
 - `datasets/toxicity/toxicity_test_sharechat.csv`
 
 Expected columns — HASOC dataset:
