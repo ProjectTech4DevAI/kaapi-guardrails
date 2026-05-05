@@ -109,10 +109,12 @@ def test__normalize_llm_critic_error_maps_failed_metrics():
 def test__normalize_llm_critic_error_maps_missing_invalid_metrics():
     raw = "The response is missing or has invalid evaluations for the following metrics: ['quality']."
     result = _normalize_llm_critic_error(raw)
-    assert "could not evaluate" in result
-    assert "Please retry" in result
+    assert result == "The response did not meet the required quality criteria."
 
 
 def test__normalize_llm_critic_error_passes_through_unknown_messages():
     raw = "Some other validator error."
-    assert _normalize_llm_critic_error(raw) == raw
+    assert (
+        _normalize_llm_critic_error(raw)
+        == "The response did not meet the required quality criteria."
+    )
