@@ -19,7 +19,7 @@ Behavior notes:
   | `no_illegal_drugs`          | No illegal drugs                 |
   | `no_encourage_self_harm`    | No encouragement of self-harm    |
 - `rephrase_needed=true` means the system could not safely auto-fix the input/output and wants the user to retry with a rephrased query.
-- When a validator with `on_fail=fix` has no programmatic fix (e.g. `profanity_free`), `safe_text` will be `""` and the response `metadata.reason` will explain which validator caused the empty output.
+- When a validator with `on_fail=fix` has no programmatic fix (e.g. `profanity_free`), `safe_text` will be an empty string and the response `metadata.reason` will explain which validator caused the empty output.
 
 Failure behavior:
 - `success=false` is returned when validation fails without a recoverable fix or an internal runtime error occurs.
