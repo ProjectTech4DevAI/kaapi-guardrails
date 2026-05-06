@@ -7,7 +7,11 @@ from guardrails.validators import FailResult, PassResult
 from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep
-from app.core.constants import BAN_LIST, REPHRASE_ON_FAIL_PREFIX
+from app.core.constants import (
+    BAN_LIST,
+    LLM_CRITIC_ERROR_MESSAGE,
+    REPHRASE_ON_FAIL_PREFIX,
+)
 from app.core.enum import ValidatorType
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
@@ -315,5 +319,5 @@ def _normalize_llm_critic_error(message: str) -> str:
         "failed the following metrics"
         or "missing or has invalid evaluations" in message
     ):
-        return "The response did not meet the required quality criteria."
+        return LLM_CRITIC_ERROR_MESSAGE
     return message

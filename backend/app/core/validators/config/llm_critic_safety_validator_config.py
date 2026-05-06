@@ -3,7 +3,13 @@ from typing import Literal
 from guardrails.hub import LLMCritic
 
 from app.core.config import settings
+from app.core.constants import LLM_CRITIC_ERROR_MESSAGE
+from app.core.enum import GuardrailOnFail
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
+
+LLM_CRITIC_REPHRASE_MESSAGE = (
+    f"{LLM_CRITIC_ERROR_MESSAGE} Please rephrase without unsafe content."
+)
 
 
 class LLMCriticSafetyValidatorConfig(BaseValidatorConfig):
@@ -11,6 +17,11 @@ class LLMCriticSafetyValidatorConfig(BaseValidatorConfig):
     metrics: dict
     max_score: int
     llm_callable: str
+
+    def resolve_on_fail(self):
+        if self.on_fail == GuardrailOnFail.Rephrase:
+            return lambda value, fail_result: LLM_CRITIC_REPHRASE_MESSAGE
+        return super().resolve_on_fail()
 
     def build(self):
         if not settings.OPENAI_API_KEY:
