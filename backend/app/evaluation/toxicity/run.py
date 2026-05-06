@@ -37,6 +37,7 @@ VALIDATORS = {
         device="cpu",
         model_name="textdetox/xlmr-large-toxicity-classifier",
         on_fail="noop",
+        use_local=True,
     ),
     "profanity_free": lambda: ProfanityFree(on_fail="noop"),
 }
