@@ -10,6 +10,7 @@ from app.api.deps import AuthDep, SessionDep
 from app.core.constants import (
     BAN_LIST,
     LLM_CRITIC_ERROR_MESSAGE,
+    LLM_CRITIC_REPHRASE_MESSAGE,
     REPHRASE_ON_FAIL_PREFIX,
 )
 from app.core.enum import ValidatorType
@@ -177,8 +178,9 @@ def _validate_with_guard(
                 guard, request_log_id, validator_log_crud, payload, suppress_pass_logs
             )
 
-        rephrase_needed = validated_output is not None and validated_output.startswith(
-            REPHRASE_ON_FAIL_PREFIX
+        rephrase_needed = (
+            validated_output is not None
+            and validated_output == LLM_CRITIC_REPHRASE_MESSAGE
         )
 
         response_model = GuardrailResponse(

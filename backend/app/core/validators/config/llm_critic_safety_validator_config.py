@@ -3,13 +3,9 @@ from typing import Literal
 from guardrails.hub import LLMCritic
 
 from app.core.config import settings
-from app.core.constants import LLM_CRITIC_ERROR_MESSAGE
+from app.core.constants import LLM_CRITIC_REPHRASE_MESSAGE
 from app.core.enum import GuardrailOnFail
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
-
-LLM_CRITIC_REPHRASE_MESSAGE = (
-    f"{LLM_CRITIC_ERROR_MESSAGE} Please rephrase without unsafe content."
-)
 
 
 class LLMCriticSafetyValidatorConfig(BaseValidatorConfig):

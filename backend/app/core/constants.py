@@ -7,6 +7,9 @@ SCORE = "score"
 
 REPHRASE_ON_FAIL_PREFIX = "Please rephrase the query without unsafe content."
 LLM_CRITIC_ERROR_MESSAGE = "The query did not meet the required quality criteria."
+LLM_CRITIC_REPHRASE_MESSAGE = (
+    f"{LLM_CRITIC_ERROR_MESSAGE} Please rephrase without unsafe content."
+)
 
 VALIDATOR_CONFIG_SYSTEM_FIELDS = {
     "organization_id",
