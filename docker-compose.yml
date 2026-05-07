@@ -1,5 +1,11 @@
 version: "3.9"
 
+secrets:
+  HF_TOKEN:
+    environment: HF_TOKEN
+  GUARDRAILS_HUB_API_KEY:
+    environment: GUARDRAILS_HUB_API_KEY
+
 services:
 
   prestart:
@@ -8,9 +14,9 @@ services:
     entrypoint: []
     build:
       context: ./backend
-      args:
-        - HF_TOKEN=${HF_TOKEN:-}
-        - GUARDRAILS_HUB_API_KEY=${GUARDRAILS_HUB_API_KEY:-}
+      secrets:
+        - HF_TOKEN
+        - GUARDRAILS_HUB_API_KEY
     command: bash scripts/prestart.sh
     env_file:
       - .env
@@ -24,9 +30,9 @@ services:
     restart: always
     build:
       context: ./backend
-      args:
-        - HF_TOKEN=${HF_TOKEN:-}
-        - GUARDRAILS_HUB_API_KEY=${GUARDRAILS_HUB_API_KEY:-}
+      secrets:
+        - HF_TOKEN
+        - GUARDRAILS_HUB_API_KEY
     env_file:
       - .env
     extra_hosts:
