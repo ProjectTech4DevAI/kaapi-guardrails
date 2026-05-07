@@ -8,6 +8,9 @@ services:
     entrypoint: []
     build:
       context: ./backend
+      args:
+        - HF_TOKEN=${HF_TOKEN:-}
+        - GUARDRAILS_HUB_API_KEY=${GUARDRAILS_HUB_API_KEY:-}
     command: bash scripts/prestart.sh
     env_file:
       - .env
@@ -21,6 +24,9 @@ services:
     restart: always
     build:
       context: ./backend
+      args:
+        - HF_TOKEN=${HF_TOKEN:-}
+        - GUARDRAILS_HUB_API_KEY=${GUARDRAILS_HUB_API_KEY:-}
     env_file:
       - .env
     extra_hosts:
