@@ -7,7 +7,12 @@ from guardrails.validators import FailResult, PassResult
 from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep
-from app.core.constants import BAN_LIST, REPHRASE_ON_FAIL_PREFIX
+from app.core.constants import (
+    BAN_LIST,
+    LLM_CRITIC_ERROR_MESSAGE,
+    LLM_CRITIC_REPHRASE_MESSAGE,
+    REPHRASE_ON_FAIL_PREFIX,
+)
 from app.core.enum import ValidatorType
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
@@ -173,8 +178,9 @@ def _validate_with_guard(
                 guard, request_log_id, validator_log_crud, payload, suppress_pass_logs
             )
 
-        rephrase_needed = validated_output is not None and validated_output.startswith(
-            REPHRASE_ON_FAIL_PREFIX
+        rephrase_needed = (
+            validated_output is not None
+            and validated_output == LLM_CRITIC_REPHRASE_MESSAGE
         )
 
         response_model = GuardrailResponse(
@@ -244,7 +250,11 @@ def _extract_error_from_guard(guard: Guard, data: str) -> str | None:
     for log in logs:
         log_result = log.validation_result
         if isinstance(log_result, FailResult) and log_result.error_message:
-            if log.validator_name == ValidatorType.LLMCritic.name:
+            if log.validator_name in (
+                ValidatorType.LLMCritic.name,
+                ValidatorType.LLMCritic.value,
+                "LLM_Critic",
+            ):
                 return _normalize_llm_critic_error(log_result.error_message)
             return _redact_input(log_result.error_message, data)
     return None
@@ -307,12 +317,9 @@ def add_validator_logs(
 
 
 def _normalize_llm_critic_error(message: str) -> str:
-    if "failed the following metrics" in message:
-        return "The response did not meet the required quality criteria."
-    if "missing or has invalid evaluations" in message:
-        return (
-            "The LLM critic could not evaluate one or more metrics. "
-            "The critic model returned an incomplete or malformed response. "
-            "Please retry."
-        )
+    if (
+        "failed the following metrics"
+        or "missing or has invalid evaluations" in message
+    ):
+        return LLM_CRITIC_ERROR_MESSAGE
     return message
