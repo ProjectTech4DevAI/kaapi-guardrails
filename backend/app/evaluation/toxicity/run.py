@@ -51,8 +51,17 @@ def run_dataset(dataset_name: str, dataset_cfg: dict):
 
     if label_map is not None:
         df["y_true"] = df[label_col].map(label_map)
+        unmapped = df.loc[df["y_true"].isna(), label_col].unique().tolist()
+        if unmapped:
+            raise ValueError(
+                f"[{dataset_name}] label_col '{label_col}' contains values not in label_map: {unmapped}"
+            )
     else:
         df["y_true"] = df[label_col].astype(int)
+
+    missing_text = df[text_col].isna()
+    if missing_text.any():
+        df = df[~missing_text].copy()
 
     all_metrics = {}
 
@@ -61,12 +70,8 @@ def run_dataset(dataset_name: str, dataset_cfg: dict):
         validator = build_fn()
 
         with Profiler() as p:
-            df[f"{validator_name}_result"] = (
-                df[text_col]
-                .astype(str)
-                .apply(
-                    lambda x: p.record(lambda t: validator.validate(t, metadata={}), x)
-                )
+            df[f"{validator_name}_result"] = df[text_col].apply(
+                lambda x: p.record(lambda t: validator.validate(t, metadata={}), x)
             )
 
         df[f"{validator_name}_pred"] = df[f"{validator_name}_result"].apply(
