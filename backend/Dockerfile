@@ -63,7 +63,6 @@ RUN GUARDRAILS_HUB_API_KEY="${GUARDRAILS_HUB_API_KEY}" \
     ENABLE_METRICS="false" \
     ENABLE_REMOTE_INFERENCING="true" \
     /app/scripts/install_guardrails_from_hub.sh
-
 # -------------------------------
 # Entrypoint (runtime setup)
 # -------------------------------
