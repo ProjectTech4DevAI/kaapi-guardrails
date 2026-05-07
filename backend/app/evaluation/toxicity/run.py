@@ -78,6 +78,9 @@ def run_dataset(dataset_name: str, dataset_cfg: dict):
             lambda r: int(isinstance(r, FailResult))
         )
 
+        if validator_name == "llamaguard_7b":
+            df["llamaguard_7b_latency_ms"] = p.latencies
+
         metrics = compute_binary_metrics(df["y_true"], df[f"{validator_name}_pred"])
         all_metrics[validator_name] = build_evaluation_report(
             guardrail=validator_name,
@@ -90,8 +93,11 @@ def run_dataset(dataset_name: str, dataset_cfg: dict):
         df = df.drop(columns=[f"{validator_name}_result"])
 
     pred_cols = ["y_true"] + [f"{v}_pred" for v in VALIDATORS]
+    latency_cols = (
+        ["llamaguard_7b_latency_ms"] if "llamaguard_7b_latency_ms" in df.columns else []
+    )
     write_csv(
-        df[[text_col, *pred_cols]],
+        df[[text_col, *pred_cols, *latency_cols]],
         OUT_DIR / f"predictions_{dataset_name}.csv",
     )
     write_json(all_metrics, OUT_DIR / f"metrics_{dataset_name}.json")
