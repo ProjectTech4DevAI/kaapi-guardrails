@@ -19,10 +19,14 @@ from app.core.exception_handlers import _safe_error_message
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
+from app.crud.answer_relevance_prompt import answer_relevance_prompt_crud
 from app.crud.ban_list import ban_list_crud
 from app.crud.topic_relevance import topic_relevance_crud
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
+from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
+    AnswerRelevanceCustomLLMSafetyValidatorConfig,
+)
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
@@ -125,6 +129,16 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 )
                 validator.configuration = config.configuration
                 validator.prompt_schema_version = config.prompt_schema_version
+
+        elif isinstance(validator, AnswerRelevanceCustomLLMSafetyValidatorConfig):
+            if validator.custom_prompt_id is not None:
+                prompt_config = answer_relevance_prompt_crud.get(
+                    session=session,
+                    id=validator.custom_prompt_id,
+                    organization_id=payload.organization_id,
+                    project_id=payload.project_id,
+                )
+                validator.prompt_template = prompt_config.prompt_template
 
 
 def _validate_with_guard(
