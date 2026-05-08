@@ -7,6 +7,7 @@ This guide explains how to use the current API surface for:
 - Guardrail execution
 - Ban list CRUD for multi-tenant projects
 - Topic relevance config CRUD for multi-tenant projects
+- Answer relevance prompt config CRUD for multi-tenant projects
 
 ## Base URL and Version
 
@@ -184,8 +185,8 @@ Request fields:
 Important:
 - Runtime validators use `on_fail`.
 - If you pass objects from config APIs, server normalization supports `on_fail_action` and strips non-runtime fields.
-- For `topic_relevance`, pass `topic_relevance_config_id` only.
-- The API resolves `configuration` + `prompt_schema_version` in `guardrails.py` before validator execution, so the validator always executes with both values.
+- For `topic_relevance`, pass `topic_relevance_config_id` only. The API resolves `configuration` + `prompt_schema_version` in `guardrails.py` before validator execution.
+- For `answer_relevance_custom_llm`, `input` must be a JSON string `{"query": "...", "answer": "..."}`. Pass `custom_prompt_id` to use a stored tenant prompt, or omit to use the built-in default prompt.
 
 Example:
 
@@ -421,7 +422,84 @@ curl -X DELETE "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/
   -H "X-API-KEY: <api-key>"
 ```
 
-## 7) End-to-End Usage Pattern
+## 7) Answer Relevance Prompt APIs (multi-tenant)
+
+These endpoints manage tenant-scoped custom prompt templates for the `answer_relevance_custom_llm` validator and use `X-API-KEY` auth.
+
+Base path:
+- `/api/v1/guardrails/answer_relevance_prompts`
+
+## 7.1 Create answer relevance prompt
+
+Endpoint:
+- `POST /api/v1/guardrails/answer_relevance_prompts/`
+
+Example:
+
+```bash
+curl -X POST "http://localhost:8001/api/v1/guardrails/answer_relevance_prompts/" \
+  -H "X-API-KEY: <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Maternal Health Relevance",
+    "description": "Checks if LLM answer addresses a maternal health query",
+    "prompt_template": "You are evaluating a maternal health assistant.\nQuery: {query}\nAnswer: {answer}\n\nDoes the answer directly address the maternal health query with accurate information?\nAnswer only YES or NO."
+  }'
+```
+
+## 7.2 List answer relevance prompts
+
+Endpoint:
+- `GET /api/v1/guardrails/answer_relevance_prompts/?offset=0&limit=20`
+
+Example:
+
+```bash
+curl -X GET "http://localhost:8001/api/v1/guardrails/answer_relevance_prompts/?offset=0&limit=20" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 7.3 Get answer relevance prompt by id
+
+Endpoint:
+- `GET /api/v1/guardrails/answer_relevance_prompts/{id}`
+
+Example:
+
+```bash
+curl -X GET "http://localhost:8001/api/v1/guardrails/answer_relevance_prompts/<prompt_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 7.4 Update answer relevance prompt
+
+Endpoint:
+- `PATCH /api/v1/guardrails/answer_relevance_prompts/{id}`
+
+Example:
+
+```bash
+curl -X PATCH "http://localhost:8001/api/v1/guardrails/answer_relevance_prompts/<prompt_id>" \
+  -H "X-API-KEY: <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt_template": "Query: {query}\nAnswer: {answer}\n\nIs this answer helpful and relevant?\nAnswer only YES or NO."
+  }'
+```
+
+## 7.5 Delete answer relevance prompt
+
+Endpoint:
+- `DELETE /api/v1/guardrails/answer_relevance_prompts/{id}`
+
+Example:
+
+```bash
+curl -X DELETE "http://localhost:8001/api/v1/guardrails/answer_relevance_prompts/<prompt_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 8) End-to-End Usage Pattern
 
 Recommended request flow:
 1. Create/update validator configs via `/guardrails/validators/configs`.
@@ -431,15 +509,16 @@ Recommended request flow:
 5. If `rephrase_needed=true`, ask user to rephrase.
 6. For `ban_list` validators without inline `banned_words`, create/manage a ban list first and pass `ban_list_id`.
 7. For `topic_relevance`, create/manage a topic relevance config and pass `topic_relevance_config_id` at runtime. The server resolves the configuration string internally.
+8. For `answer_relevance_custom_llm`, format `input` as `{"query": "...", "answer": "..."}`. Optionally create a custom prompt via the Answer Relevance Prompt APIs and pass `custom_prompt_id`. If no `custom_prompt_id` is given, the built-in default prompt is used.
 
-## 8) Common Errors
+## 9) Common Errors
 
 - `401 Missing Authorization header`
   - Add `Authorization: Bearer <token>`.
 - `401 Invalid authorization token`
   - Verify plaintext token matches server-side hash.
 - `401 Missing X-API-KEY header`
-  - Add `X-API-KEY: <api-key>` for ban list and topic relevance config endpoints.
+  - Add `X-API-KEY: <api-key>` for ban list, topic relevance config, and answer relevance prompt endpoints.
 - `401 Invalid API key`
   - Verify the API key is valid in the upstream Kaapi auth service.
 - `Invalid request_id`
@@ -450,8 +529,10 @@ Recommended request flow:
   - Confirm `id`, `organization_id`, and `project_id` match.
 - `Topic relevance preset not found`
   - Confirm topic relevance config `id` exists within your tenant scope.
+- `Answer relevance prompt not found`
+  - Confirm the answer relevance prompt `id` exists within your tenant scope.
 
-## 9) Current Validator Types
+## 10) Current Validator Types
 
 From `validators.json`:
 - `uli_slur_match`
@@ -463,6 +544,7 @@ From `validators.json`:
 - `llamaguard_7b`
 - `profanity_free`
 - `nsfw_text`
+- `answer_relevance_custom_llm`
 
 Source of truth:
 - `backend/app/core/validators/validators.json`

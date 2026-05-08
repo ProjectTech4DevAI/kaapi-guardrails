@@ -10,7 +10,7 @@ from app.schemas.answer_relevance_prompt import (
     AnswerRelevancePromptResponse,
     AnswerRelevancePromptUpdate,
 )
-from app.utils import APIResponse
+from app.utils import APIResponse, load_description
 
 router = APIRouter(
     prefix="/guardrails/answer_relevance_prompts",
@@ -18,7 +18,11 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=APIResponse[AnswerRelevancePromptResponse])
+@router.post(
+    "/",
+    description=load_description("answer_relevance_prompts/create_prompt.md"),
+    response_model=APIResponse[AnswerRelevancePromptResponse],
+)
 def create_answer_relevance_prompt(
     payload: AnswerRelevancePromptCreate,
     session: SessionDep,
@@ -30,7 +34,11 @@ def create_answer_relevance_prompt(
     return APIResponse.success_response(data=obj)
 
 
-@router.get("/", response_model=APIResponse[list[AnswerRelevancePromptResponse]])
+@router.get(
+    "/",
+    description=load_description("answer_relevance_prompts/list_prompts.md"),
+    response_model=APIResponse[list[AnswerRelevancePromptResponse]],
+)
 def list_answer_relevance_prompts(
     session: SessionDep,
     auth: MultitenantAuthDep,
@@ -43,7 +51,11 @@ def list_answer_relevance_prompts(
     return APIResponse.success_response(data=objs)
 
 
-@router.get("/{id}", response_model=APIResponse[AnswerRelevancePromptResponse])
+@router.get(
+    "/{id}",
+    description=load_description("answer_relevance_prompts/get_prompt.md"),
+    response_model=APIResponse[AnswerRelevancePromptResponse],
+)
 def get_answer_relevance_prompt(
     id: UUID,
     session: SessionDep,
@@ -55,7 +67,11 @@ def get_answer_relevance_prompt(
     return APIResponse.success_response(data=obj)
 
 
-@router.patch("/{id}", response_model=APIResponse[AnswerRelevancePromptResponse])
+@router.patch(
+    "/{id}",
+    description=load_description("answer_relevance_prompts/update_prompt.md"),
+    response_model=APIResponse[AnswerRelevancePromptResponse],
+)
 def update_answer_relevance_prompt(
     id: UUID,
     payload: AnswerRelevancePromptUpdate,
@@ -68,7 +84,11 @@ def update_answer_relevance_prompt(
     return APIResponse.success_response(data=obj)
 
 
-@router.delete("/{id}", response_model=APIResponse[dict])
+@router.delete(
+    "/{id}",
+    description=load_description("answer_relevance_prompts/delete_prompt.md"),
+    response_model=APIResponse[dict],
+)
 def delete_answer_relevance_prompt(
     id: UUID,
     session: SessionDep,

@@ -1,0 +1,12 @@
+Lists answer relevance prompt configs for the tenant resolved from `X-API-KEY`.
+
+Behavior notes:
+- Returns all prompt configs scoped to the tenant's `organization_id` and `project_id`.
+- Supports pagination via `offset` and `limit`.
+- `offset` defaults to `0`.
+- `limit` is optional; when omitted, no limit is applied.
+- Results are ordered by `created_at` ascending, then `id`.
+
+Common failure cases:
+- Missing or invalid API key.
+- Invalid pagination values.

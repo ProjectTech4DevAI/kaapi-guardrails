@@ -15,6 +15,7 @@ Current validator manifest:
 - `llamaguard_7b` (source: `hub://guardrails/llamaguard_7b`)
 - `profanity_free` (source: `hub://guardrails/profanity_free`)
 - `nsfw_text` (source: `hub://guardrails/nsfw_text`)
+- `answer_relevance_custom_llm` (source: `local`)
 
 ## Configuration Model
 
@@ -483,6 +484,54 @@ Notes / limitations:
 - No programmatic fix is applied — with `on_fail=fix`, `safe_text` will be `""` and the response `metadata.reason` will identify this validator as the cause.
 - English-focused; cross-lingual profanity may not be detected.
 
+### 10) Answer Relevance Custom LLM Validator (`answer_relevance_custom_llm`)
+
+Code:
+
+- Config: `backend/app/core/validators/config/answer_relevance_custom_llm_safety_validator_config.py`
+- Runtime validator: `backend/app/core/validators/answer_relevance_custom_llm.py`
+
+What it does:
+
+- Evaluates whether an LLM's answer is relevant to the user's query by asking a configurable LLM to respond YES or NO.
+- Accepts `input` as a JSON string `{"query": "...", "answer": "..."}`.
+- Uses a customizable prompt template with `{query}` and `{answer}` placeholders; falls back to a built-in default prompt if none is provided.
+- Supports per-tenant custom prompts stored via the Answer Relevance Prompt APIs and referenced by `custom_prompt_id`.
+
+Why this is used:
+
+- Detects hallucinated or off-topic LLM responses before they are shown to users.
+- Each NGO can tune the relevance criteria via a custom prompt without code changes (e.g. stricter domain constraints, language-specific phrasing).
+
+Recommendation:
+
+- primarily `output`
+  - Why `output`: answer relevance is a property of the LLM's generated response relative to the user's query.
+
+Parameters / customization:
+
+- `llm_callable: str` (default: `gpt-4o-mini`) — model identifier passed to LiteLLM for the YES/NO evaluation
+- `prompt_template: str` (optional) — inline prompt with `{query}` and `{answer}` placeholders
+- `custom_prompt_id: UUID` (optional) — reference to a tenant-stored prompt config; resolved to `prompt_template` before execution
+- `on_fail`
+
+Default prompt:
+```
+Query: {query}
+Answer: {answer}
+
+Does the answer fully satisfy the query and constraints?
+Answer only YES or NO.
+```
+
+Notes / limitations:
+
+- **Requires `OPENAI_API_KEY` to be set in environment variables.**
+- `input` to the guardrail endpoint must be a JSON string: `{"query": "...", "answer": "..."}`. Both fields must be non-empty.
+- LLM-judge responses can vary; YES/NO parsing uses prefix matching.
+- `on_fail=fix` has no programmatic fix for irrelevant answers — `safe_text` will be `""` and `metadata.reason` will identify this validator.
+- If `custom_prompt_id` is deleted after being referenced, the guardrail will return a 404 at resolution time.
+
 ## Example Config Payloads
 
 Example: create validator config (stored shape)
@@ -514,7 +563,7 @@ Example: runtime guardrail validator object (execution shape)
 Default stage strategy:
 
 - Input guardrails: `pii_remover`, `uli_slur_match`, `ban_list`, `topic_relevance` (when scope enforcement is needed), `profanity_free`, `llamaguard_7b`
-- Output guardrails: `pii_remover`, `uli_slur_match`, `gender_assumption_bias`, `ban_list`, `profanity_free`, `llamaguard_7b`
+- Output guardrails: `pii_remover`, `uli_slur_match`, `gender_assumption_bias`, `ban_list`, `profanity_free`, `llamaguard_7b`, `answer_relevance_custom_llm` (when answer quality must be verified)
 
 Tuning strategy:
 
@@ -534,5 +583,8 @@ Tuning strategy:
 - `backend/app/core/validators/config/llamaguard_7b_safety_validator_config.py`
 - `backend/app/core/validators/config/nsfw_text_safety_validator_config.py`
 - `backend/app/core/validators/config/profanity_free_safety_validator_config.py`
+- `backend/app/core/validators/config/answer_relevance_custom_llm_safety_validator_config.py`
+- `backend/app/core/validators/answer_relevance_custom_llm.py`
+- `backend/app/models/config/answer_relevance_prompt.py`
 - `backend/app/schemas/guardrail_config.py`
 - `backend/app/schemas/validator_config.py`
