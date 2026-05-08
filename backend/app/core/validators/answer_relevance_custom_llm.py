@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from typing import Callable, Optional
 
+from litellm import completion
 from guardrails import OnFailAction
 from guardrails.validators import (
     FailResult,
@@ -61,8 +62,6 @@ class AnswerRelevanceCustomLLM(Validator):
             return FailResult(error_message=f"Prompt template missing placeholder: {e}")
 
         try:
-            from litellm import completion
-
             response = completion(
                 model=self.llm_callable,
                 messages=[{"role": "user", "content": prompt}],
