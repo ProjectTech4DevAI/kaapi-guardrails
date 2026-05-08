@@ -51,10 +51,19 @@ RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
 ENV HF_HOME=/app/hf_cache
 
 # Pre-download HuggingFace model
-RUN /app/.venv/bin/python -c "from transformers import AutoTokenizer, AutoModelForSequenceClassification; \
+RUN --mount=type=secret,id=HF_TOKEN \
+    HF_TOKEN="$(cat /run/secrets/HF_TOKEN 2>/dev/null || true)" \
+    /app/.venv/bin/python -c "from transformers import AutoTokenizer, AutoModelForSequenceClassification; \
 AutoTokenizer.from_pretrained('textdetox/xlmr-large-toxicity-classifier', cache_dir='/app/hf_cache'); \
 AutoModelForSequenceClassification.from_pretrained('textdetox/xlmr-large-toxicity-classifier', cache_dir='/app/hf_cache')"
 
+# Pre-install Guardrails hub validators so container startup is not blocked by downloads
+RUN --mount=type=secret,id=GUARDRAILS_HUB_API_KEY \
+    GUARDRAILS_HUB_API_KEY="$(cat /run/secrets/GUARDRAILS_HUB_API_KEY 2>/dev/null || true)" \
+    ENABLE_METRICS="false" \
+    ENABLE_REMOTE_INFERENCING="true" \
+    /app/scripts/install_guardrails_from_hub.sh
+    
 # -------------------------------
 # Entrypoint (runtime setup)
 # -------------------------------
