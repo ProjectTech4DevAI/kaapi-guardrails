@@ -2,6 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.tests.guardrails_mocks import MockResult
 from app.tests.seed_data import (
     VALIDATOR_TEST_ORGANIZATION_ID,
@@ -78,6 +79,35 @@ def test_validate_guardrails_failure(client, mock_crud):
     assert body["success"] is False
     assert SAFE_TEXT_FIELD not in body["data"]
     assert body["error"]
+
+
+def test_rephrase_needed_is_true_when_on_fail_is_rephrase(client, mock_crud):
+    rephrase_output = (
+        f"{REPHRASE_ON_FAIL_PREFIX} Input is outside the allowed topic scope."
+    )
+
+    class MockGuard:
+        def validate(self, data):
+            return MockResult(validated_output=rephrase_output)
+
+    with patch(build_guard_path, return_value=MockGuard()):
+        response = client.post(
+            VALIDATE_API_PATH,
+            json={
+                "request_id": request_id,
+                "organization_id": organization_id,
+                "project_id": project_id,
+                "input": "tell me about buildings",
+                "validators": [],
+            },
+        )
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"]["rephrase_needed"] is True
+    assert body["data"][SAFE_TEXT_FIELD] == rephrase_output
 
 
 def test_guardrails_internal_error(client, mock_crud):
