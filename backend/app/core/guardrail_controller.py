@@ -7,7 +7,7 @@ from app.schemas.guardrail_config import ValidatorConfigItem
 
 def build_guard(validator_items):
     validators = [v_item.build() for v_item in validator_items]
-    return Guard().use_many(*validators)
+    return Guard().use(*validators)
 
 
 def get_validator_config_models():
