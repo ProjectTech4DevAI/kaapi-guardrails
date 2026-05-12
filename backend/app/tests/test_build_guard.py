@@ -31,11 +31,11 @@ def test_build_guard_with_validators():
     # Guard instantiated
     GuardMock.assert_called_once()
 
-    # use_many called with correct validators
-    mock_guard.use_many.assert_called_once_with(v1, v2)
+    # use called with correct validators
+    mock_guard.use.assert_called_once_with(v1, v2)
 
-    # return value is whatever Guard().use_many returns
-    assert result == mock_guard.use_many.return_value
+    # return value is whatever Guard().use returns
+    assert result == mock_guard.use.return_value
 
 
 def test_build_guard_with_no_validators():
@@ -47,8 +47,8 @@ def test_build_guard_with_no_validators():
     ):
         result = build_guard([])
 
-    mock_guard.use_many.assert_called_once_with()
-    assert result == mock_guard.use_many.return_value
+    mock_guard.use.assert_called_once_with()
+    assert result == mock_guard.use.return_value
 
 
 def test_build_guard_build_failure_propagates():
@@ -60,12 +60,12 @@ def test_build_guard_build_failure_propagates():
             build_guard([cfg])
 
 
-def test_build_guard_use_many_failure():
+def test_build_guard_use_failure():
     cfg = Mock()
     cfg.build.return_value = Mock()
 
     mock_guard = Mock()
-    mock_guard.use_many.side_effect = RuntimeError("guard failure")
+    mock_guard.use.side_effect = RuntimeError("guard failure")
 
     with patch(
         "app.core.guardrail_controller.Guard",
