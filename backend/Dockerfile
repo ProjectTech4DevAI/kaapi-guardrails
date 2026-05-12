@@ -42,7 +42,7 @@ COPY ./app /app/app
 # Sync the project
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync
+    uv sync --frozen
 
 # Install pinned spaCy model in the final environment used at runtime.
 RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
