@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "validators": {
+    "guardrails/ban_list": {
+      "import_path": "guardrails_grhub_ban_list",
+      "exports": [
+        "BanList"
+      ],
+      "installed_at": "2026-05-12T05:28:55.036165+00:00",
+      "package_name": "guardrails-grhub-ban-list"
+    },
+    "guardrails/llm_critic": {
+      "import_path": "guardrails_grhub_llm_critic",
+      "exports": [
+        "LLMCritic"
+      ],
+      "installed_at": "2026-05-12T05:29:05.596003+00:00",
+      "package_name": "guardrails-grhub-llm-critic"
+    },
+    "guardrails/llamaguard_7b": {
+      "import_path": "guardrails_grhub_llamaguard_7b",
+      "exports": [
+        "LlamaGuard7B"
+      ],
+      "installed_at": "2026-05-12T05:29:16.995441+00:00",
+      "package_name": "guardrails-grhub-llamaguard-7b"
+    },
+    "guardrails/profanity_free": {
+      "import_path": "guardrails_grhub_profanity_free",
+      "exports": [
+        "ProfanityFree"
+      ],
+      "installed_at": "2026-05-12T05:29:28.079410+00:00",
+      "package_name": "guardrails-grhub-profanity-free"
+    },
+    "guardrails/nsfw_text": {
+      "import_path": "guardrails_grhub_nsfw_text",
+      "exports": [
+        "NSFWText"
+      ],
+      "installed_at": "2026-05-12T05:29:50.654888+00:00",
+      "package_name": "guardrails-grhub-nsfw-text"
+    }
+  }
+}
