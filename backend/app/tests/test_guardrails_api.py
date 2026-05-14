@@ -1,7 +1,6 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
-
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.tests.guardrails_mocks import MockResult
 from app.tests.seed_data import (
     VALIDATOR_TEST_ORGANIZATION_ID,
@@ -15,14 +14,6 @@ crud_path = "app.api.routes.guardrails.RequestLogCrud"
 request_id = "123e4567-e89b-12d3-a456-426614174000"
 organization_id = VALIDATOR_TEST_ORGANIZATION_ID
 project_id = VALIDATOR_TEST_PROJECT_ID
-
-
-@pytest.fixture
-def mock_crud():
-    with patch(crud_path) as mock:
-        instance = mock.return_value
-        instance.create.return_value = MagicMock(id=1)
-        yield instance
 
 
 def test_route_exists(client):
@@ -55,7 +46,7 @@ def test_validate_guardrails_success(client):
     assert "response_id" in body["data"]
 
 
-def test_validate_guardrails_failure(client, mock_crud):
+def test_validate_guardrails_failure(client):
     class MockGuard:
         def validate(self, data):
             return MockResult(validated_output=None)
@@ -80,7 +71,36 @@ def test_validate_guardrails_failure(client, mock_crud):
     assert body["error"]
 
 
-def test_guardrails_internal_error(client, mock_crud):
+def test_rephrase_needed_is_true_when_on_fail_is_rephrase(client):
+    rephrase_output = (
+        f"{REPHRASE_ON_FAIL_PREFIX} Input is outside the allowed topic scope."
+    )
+
+    class MockGuard:
+        def validate(self, data):
+            return MockResult(validated_output=rephrase_output)
+
+    with patch(build_guard_path, return_value=MockGuard()):
+        response = client.post(
+            VALIDATE_API_PATH,
+            json={
+                "request_id": request_id,
+                "organization_id": organization_id,
+                "project_id": project_id,
+                "input": "tell me about buildings",
+                "validators": [],
+            },
+        )
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"]["rephrase_needed"] is True
+    assert body["data"][SAFE_TEXT_FIELD] == rephrase_output
+
+
+def test_guardrails_internal_error(client):
     with patch(build_guard_path, side_effect=Exception("Invalid validator config")):
         response = client.post(
             VALIDATE_API_PATH,

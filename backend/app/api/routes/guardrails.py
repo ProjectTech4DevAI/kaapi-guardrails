@@ -178,9 +178,9 @@ def _validate_with_guard(
                 guard, request_log_id, validator_log_crud, payload, suppress_pass_logs
             )
 
-        rephrase_needed = (
-            validated_output is not None
-            and validated_output == LLM_CRITIC_REPHRASE_MESSAGE
+        rephrase_needed = validated_output is not None and (
+            validated_output == LLM_CRITIC_REPHRASE_MESSAGE
+            or validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
         )
 
         response_model = GuardrailResponse(
