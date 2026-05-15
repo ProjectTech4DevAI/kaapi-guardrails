@@ -6,7 +6,7 @@ export ENVIRONMENT=testing
 
 python app/tests_pre_start.py
 
-uv run alembic upgrade head
+uv run --frozen alembic upgrade head
 if [ $? -ne 0 ]; then
     echo 'Error: Test database migrations failed'
     exit 1

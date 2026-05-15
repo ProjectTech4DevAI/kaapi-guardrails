@@ -30,7 +30,7 @@ jobs:
           INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
           BUILD_DIRECTORY: ${{ secrets.BUILD_DIRECTORY }}
         run: |
-          DEPLOY_CMD='sudo -iu ec2-user bash -lc \"cd '"${BUILD_DIRECTORY}"' && git fetch origin && git reset --hard origin/main && docker compose build && docker compose run --rm --entrypoint \\\"\\\" backend uv run alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\"'
+          DEPLOY_CMD='sudo -iu ec2-user bash -lc \"cd '"${BUILD_DIRECTORY}"' && git fetch origin && git reset --hard origin/main && docker compose build && docker compose run --rm --entrypoint \\\"\\\" backend uv run --frozen alembic upgrade head && docker compose up -d --remove-orphans && docker image prune -f\"'
 
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
