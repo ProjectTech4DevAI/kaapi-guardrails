@@ -270,6 +270,84 @@ def test_resolve_validator_configs_uses_inline_topic_relevance_without_lookup():
     mock_get.assert_not_called()
 
 
+def test_resolve_validator_configs_answer_relevance_from_custom_prompt_id():
+    custom_prompt_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[
+            {
+                "type": "answer_relevance_custom_llm",
+                "custom_prompt_id": custom_prompt_id,
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch(
+        "app.api.routes.guardrails.answer_relevance_prompt_crud.get"
+    ) as mock_get:
+        mock_get.return_value = MagicMock(
+            prompt_template="Q: {query}\nA: {answer}\nYES or NO."
+        )
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.prompt_template == "Q: {query}\nA: {answer}\nYES or NO."
+    mock_get.assert_called_once_with(
+        session=mock_session,
+        id=validator.custom_prompt_id,
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+    )
+
+
+def test_resolve_validator_configs_skips_answer_relevance_lookup_when_no_prompt_id():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[{"type": "answer_relevance_custom_llm"}],
+    )
+    mock_session = MagicMock()
+
+    with patch(
+        "app.api.routes.guardrails.answer_relevance_prompt_crud.get"
+    ) as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    mock_get.assert_not_called()
+
+
+def test_resolve_validator_configs_uses_inline_answer_relevance_prompt_without_lookup():
+    inline_template = "Query: {query}\nAnswer: {answer}\nYES or NO."
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[
+            {
+                "type": "answer_relevance_custom_llm",
+                "prompt_template": inline_template,
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch(
+        "app.api.routes.guardrails.answer_relevance_prompt_crud.get"
+    ) as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.prompt_template == inline_template
+    mock_get.assert_not_called()
+
+
 def _build_mock_guard_with_fail_result(validator_name: str, error_message: str):
     mock_log = MagicMock()
     mock_log.validator_name = validator_name

@@ -33,9 +33,13 @@ from app.core.validators.config.nsfw_text_safety_validator_config import (
 from app.core.validators.config.profanity_free_safety_validator_config import (
     ProfanityFreeSafetyValidatorConfig,
 )
+from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
+    AnswerRelevanceCustomLLMSafetyValidatorConfig,
+)
 
 ValidatorConfigItem = Annotated[
     Union[
+        AnswerRelevanceCustomLLMSafetyValidatorConfig,
         BanListSafetyValidatorConfig,
         GenderAssumptionBiasSafetyValidatorConfig,
         LexicalSlurSafetyValidatorConfig,

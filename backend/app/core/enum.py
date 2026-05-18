@@ -36,3 +36,4 @@ class ValidatorType(Enum):
     LlamaGuard7B = "llamaguard_7b"
     ProfanityFree = "profanity_free"
     NSFWText = "nsfw_text"
+    AnswerRelevanceCustomLLM = "answer_relevance_custom_llm"
