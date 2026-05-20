@@ -1,19 +1,17 @@
 from fastapi import APIRouter
 
 from app.api.routes import (
-    answer_relevance_prompts,
     ban_lists,
     guardrails,
-    topic_relevance_configs,
+    llm_prompt_configs,
     validator_configs,
     utils,
 )
 
 api_router = APIRouter()
-api_router.include_router(answer_relevance_prompts.router)
 api_router.include_router(ban_lists.router)
 api_router.include_router(guardrails.router)
-api_router.include_router(topic_relevance_configs.router)
+api_router.include_router(llm_prompt_configs.router)
 api_router.include_router(validator_configs.router)
 api_router.include_router(utils.router)
 

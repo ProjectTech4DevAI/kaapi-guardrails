@@ -1,27 +1,24 @@
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from app.models.config.answer_relevance_prompt import AnswerRelevancePrompt
-from app.schemas.answer_relevance_prompt import (
-    AnswerRelevancePromptCreate,
-    AnswerRelevancePromptUpdate,
-)
+from app.core.enum import LLMValidatorName
+from app.models.config.llm_prompt_config import LLMPromptConfig
 from app.utils import now
 
 
-class AnswerRelevancePromptCrud:
+class LLMPromptConfigCrud:
     def create(
         self,
         session: Session,
-        payload: AnswerRelevancePromptCreate,
+        payload,
         organization_id: int,
         project_id: int,
-    ) -> AnswerRelevancePrompt:
-        obj = AnswerRelevancePrompt(
+    ) -> LLMPromptConfig:
+        obj = LLMPromptConfig(
             **payload.model_dump(),
             organization_id=organization_id,
             project_id=project_id,
@@ -33,7 +30,7 @@ class AnswerRelevancePromptCrud:
             session.rollback()
             raise HTTPException(
                 400,
-                "Answer relevance prompt with the same configuration already exists",
+                "A prompt config with the same configuration already exists",
             )
         except Exception:
             session.rollback()
@@ -48,15 +45,15 @@ class AnswerRelevancePromptCrud:
         id: UUID,
         organization_id: int,
         project_id: int,
-    ) -> AnswerRelevancePrompt:
-        query = select(AnswerRelevancePrompt).where(
-            AnswerRelevancePrompt.id == id,
-            AnswerRelevancePrompt.organization_id == organization_id,
-            AnswerRelevancePrompt.project_id == project_id,
+    ) -> LLMPromptConfig:
+        query = select(LLMPromptConfig).where(
+            LLMPromptConfig.id == id,
+            LLMPromptConfig.organization_id == organization_id,
+            LLMPromptConfig.project_id == project_id,
         )
         obj = session.exec(query).first()
         if not obj:
-            raise HTTPException(404, "Answer relevance prompt not found")
+            raise HTTPException(404, "LLM prompt config not found")
         return obj
 
     def list(
@@ -64,17 +61,19 @@ class AnswerRelevancePromptCrud:
         session: Session,
         organization_id: int,
         project_id: int,
+        validator_name: Optional[LLMValidatorName] = None,
         offset: int = 0,
-        limit: int | None = None,
-    ) -> List[AnswerRelevancePrompt]:
-        query = (
-            select(AnswerRelevancePrompt)
-            .where(
-                AnswerRelevancePrompt.organization_id == organization_id,
-                AnswerRelevancePrompt.project_id == project_id,
-            )
-            .order_by(AnswerRelevancePrompt.created_at, AnswerRelevancePrompt.id)
+        limit: Optional[int] = None,
+    ) -> List[LLMPromptConfig]:
+        query = select(LLMPromptConfig).where(
+            LLMPromptConfig.organization_id == organization_id,
+            LLMPromptConfig.project_id == project_id,
         )
+
+        if validator_name is not None:
+            query = query.where(LLMPromptConfig.validator_name == validator_name)
+
+        query = query.order_by(LLMPromptConfig.created_at, LLMPromptConfig.id)
 
         if offset:
             query = query.offset(offset)
@@ -89,8 +88,8 @@ class AnswerRelevancePromptCrud:
         id: UUID,
         organization_id: int,
         project_id: int,
-        payload: AnswerRelevancePromptUpdate,
-    ) -> AnswerRelevancePrompt:
+        payload,
+    ) -> LLMPromptConfig:
         obj = self.get(session, id, organization_id, project_id)
 
         update_data = payload.model_dump(exclude_unset=True)
@@ -105,7 +104,7 @@ class AnswerRelevancePromptCrud:
             session.rollback()
             raise HTTPException(
                 400,
-                "Answer relevance prompt with the same configuration already exists",
+                "A prompt config with the same configuration already exists",
             )
         except Exception:
             session.rollback()
@@ -114,7 +113,7 @@ class AnswerRelevancePromptCrud:
         session.refresh(obj)
         return obj
 
-    def delete(self, session: Session, obj: AnswerRelevancePrompt) -> None:
+    def delete(self, session: Session, obj: LLMPromptConfig) -> None:
         session.delete(obj)
         try:
             session.commit()
@@ -123,4 +122,4 @@ class AnswerRelevancePromptCrud:
             raise
 
 
-answer_relevance_prompt_crud = AnswerRelevancePromptCrud()
+llm_prompt_config_crud = LLMPromptConfigCrud()

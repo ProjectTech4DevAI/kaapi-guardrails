@@ -1,18 +1,20 @@
-from datetime import datetime
 from uuid import UUID, uuid4
+from datetime import datetime
 
-from sqlmodel import Field, SQLModel
+from sqlalchemy import UniqueConstraint
+from sqlmodel import SQLModel, Field
 
+from app.core.enum import LLMValidatorName
 from app.utils import now
 
 
-class AnswerRelevancePrompt(SQLModel, table=True):
-    __tablename__ = "answer_relevance_prompt"
+class LLMPromptConfig(SQLModel, table=True):
+    __tablename__ = "llm_prompt"
 
     id: UUID = Field(
         default_factory=uuid4,
         primary_key=True,
-        sa_column_kwargs={"comment": "Unique identifier for the prompt config"},
+        sa_column_kwargs={"comment": "Unique identifier for the LLM prompt config"},
     )
 
     organization_id: int = Field(
@@ -27,6 +29,12 @@ class AnswerRelevancePrompt(SQLModel, table=True):
         sa_column_kwargs={"comment": "Identifier for the project"},
     )
 
+    validator_name: LLMValidatorName = Field(
+        nullable=False,
+        index=True,
+        sa_column_kwargs={"comment": "Validator type this prompt config belongs to"},
+    )
+
     name: str = Field(
         nullable=False,
         sa_column_kwargs={"comment": "Human-readable name for this prompt config"},
@@ -37,12 +45,16 @@ class AnswerRelevancePrompt(SQLModel, table=True):
         sa_column_kwargs={"comment": "Description of what this prompt evaluates"},
     )
 
-    # Must contain {query} and {answer} placeholders.
-    prompt_template: str = Field(
+    prompt_schema_version: int = Field(
+        default=1,
+        index=True,
         nullable=False,
-        sa_column_kwargs={
-            "comment": "Prompt template with {query} and {answer} placeholders"
-        },
+        sa_column_kwargs={"comment": "Version of the prompt schema"},
+    )
+
+    llm_prompt: str = Field(
+        nullable=False,
+        sa_column_kwargs={"comment": "Prompt text used by the LLM validator"},
     )
 
     is_active: bool = Field(
@@ -65,4 +77,15 @@ class AnswerRelevancePrompt(SQLModel, table=True):
             "comment": "Timestamp when the entry was last updated",
             "onupdate": now,
         },
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "organization_id",
+            "project_id",
+            "validator_name",
+            "prompt_schema_version",
+            "llm_prompt",
+            name="uq_validator_prompt_config",
+        ),
     )

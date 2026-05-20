@@ -213,9 +213,9 @@ def test_resolve_validator_configs_topic_relevance_from_config_id():
     )
     mock_session = MagicMock()
 
-    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         mock_get.return_value = MagicMock(
-            configuration="Topic scope prompt text",
+            llm_prompt="Topic scope prompt text",
             prompt_schema_version=2,
         )
         _resolve_validator_configs(payload, mock_session)
@@ -241,7 +241,7 @@ def test_resolve_validator_configs_skips_topic_relevance_lookup_when_no_config_i
     )
     mock_session = MagicMock()
 
-    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         _resolve_validator_configs(payload, mock_session)
 
     mock_get.assert_not_called()
@@ -262,7 +262,7 @@ def test_resolve_validator_configs_uses_inline_topic_relevance_without_lookup():
     )
     mock_session = MagicMock()
 
-    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         _resolve_validator_configs(payload, mock_session)
 
     validator = payload.validators[0]
@@ -286,11 +286,9 @@ def test_resolve_validator_configs_answer_relevance_from_custom_prompt_id():
     )
     mock_session = MagicMock()
 
-    with patch(
-        "app.api.routes.guardrails.answer_relevance_prompt_crud.get"
-    ) as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         mock_get.return_value = MagicMock(
-            prompt_template="Q: {query}\nA: {answer}\nYES or NO."
+            llm_prompt="Q: {query}\nA: {answer}\nYES or NO."
         )
         _resolve_validator_configs(payload, mock_session)
 
@@ -314,9 +312,7 @@ def test_resolve_validator_configs_skips_answer_relevance_lookup_when_no_prompt_
     )
     mock_session = MagicMock()
 
-    with patch(
-        "app.api.routes.guardrails.answer_relevance_prompt_crud.get"
-    ) as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         _resolve_validator_configs(payload, mock_session)
 
     mock_get.assert_not_called()
@@ -338,9 +334,7 @@ def test_resolve_validator_configs_uses_inline_answer_relevance_prompt_without_l
     )
     mock_session = MagicMock()
 
-    with patch(
-        "app.api.routes.guardrails.answer_relevance_prompt_crud.get"
-    ) as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         _resolve_validator_configs(payload, mock_session)
 
     validator = payload.validators[0]

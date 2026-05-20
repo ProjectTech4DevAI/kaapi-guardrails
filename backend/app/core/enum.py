@@ -1,6 +1,11 @@
 from enum import Enum
 
 
+class LLMValidatorName(str, Enum):
+    TopicRelevance = "topic_relevance"
+    AnswerRelevanceCustomLLM = "answer_relevance_custom_llm"
+
+
 class SlurSeverity(Enum):
     Low = "low"
     Medium = "medium"

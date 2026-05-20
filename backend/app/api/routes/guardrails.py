@@ -19,9 +19,8 @@ from app.core.exception_handlers import _safe_error_message
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
-from app.crud.answer_relevance_prompt import answer_relevance_prompt_crud
 from app.crud.ban_list import ban_list_crud
-from app.crud.topic_relevance import topic_relevance_crud
+from app.crud.llm_prompt_config import llm_prompt_config_crud
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
@@ -121,24 +120,24 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
 
         elif isinstance(validator, TopicRelevanceSafetyValidatorConfig):
             if validator.topic_relevance_config_id is not None:
-                config = topic_relevance_crud.get(
+                config = llm_prompt_config_crud.get(
                     session=session,
                     id=validator.topic_relevance_config_id,
                     organization_id=payload.organization_id,
                     project_id=payload.project_id,
                 )
-                validator.configuration = config.configuration
+                validator.configuration = config.llm_prompt
                 validator.prompt_schema_version = config.prompt_schema_version
 
         elif isinstance(validator, AnswerRelevanceCustomLLMSafetyValidatorConfig):
             if validator.custom_prompt_id is not None:
-                prompt_config = answer_relevance_prompt_crud.get(
+                prompt_config = llm_prompt_config_crud.get(
                     session=session,
                     id=validator.custom_prompt_id,
                     organization_id=payload.organization_id,
                     project_id=payload.project_id,
                 )
-                validator.prompt_template = prompt_config.prompt_template
+                validator.prompt_template = prompt_config.llm_prompt
 
 
 def _validate_with_guard(

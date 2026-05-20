@@ -1,7 +1,8 @@
-Lists answer relevance prompt configs for the tenant resolved from `X-API-KEY`.
+Lists LLM prompt configs for the tenant resolved from `X-API-KEY`.
 
 Behavior notes:
-- Returns all prompt configs scoped to the tenant's `organization_id` and `project_id`.
+- Returns configs scoped to the tenant's `organization_id` and `project_id`.
+- Optionally filter by `validator_name` to retrieve configs for a specific validator.
 - Supports pagination via `offset` and `limit`.
 - `offset` defaults to `0`.
 - `limit` is optional; when omitted, no limit is applied.
