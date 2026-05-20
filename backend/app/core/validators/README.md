@@ -303,7 +303,7 @@ What it does:
 Why this is used:
 
 - Enables flexible, prompt-driven content evaluation for use cases not covered by rule-based validators.
-- All configuration is passed inline in the runtime request — there is no stored config object to resolve. Unlike `topic_relevance`, which looks up scope text from a persisted `TopicRelevanceConfig`, `llm_critic` receives `metrics`, `max_score`, and `llm_callable` directly in the guardrail request payload.
+- All configuration is passed inline in the runtime request — there is no stored config object to resolve. Unlike `topic_relevance`, which looks up scope text from a persisted LLM prompt config, `llm_critic` receives `metrics`, `max_score`, and `llm_callable` directly in the guardrail request payload.
 
 Recommendation:
 
@@ -360,7 +360,7 @@ Notes / limitations:
 
 - Runtime validation requires `topic_relevance_config_id`.
 - **Requires `OPENAI_API_KEY` to be set in environment variables.** If the key is not configured, validation returns a `FailResult` with an explicit message.
-- Configuration is resolved in `backend/app/api/routes/guardrails.py` from tenant Topic Relevance Config APIs.
+- Configuration is resolved in `backend/app/api/routes/guardrails.py` from tenant LLM Prompt Config APIs (`/guardrails/llm_prompt_configs`).
 - Prompt templates must include the `{{TOPIC_CONFIGURATION}}` placeholder.
 
 ### 7) LlamaGuard 7B Validator (`llamaguard_7b`)
@@ -496,7 +496,7 @@ What it does:
 - Evaluates whether an LLM's answer is relevant to the user's query by asking a configurable LLM to respond YES or NO.
 - Accepts `input` as a JSON string `{"query": "...", "answer": "..."}`.
 - Uses a customizable prompt template with `{query}` and `{answer}` placeholders; falls back to a built-in default prompt if none is provided.
-- Supports per-tenant custom prompts stored via the Answer Relevance Prompt APIs and referenced by `custom_prompt_id`.
+- Supports per-tenant custom prompts stored via the LLM Prompt Config APIs and referenced by `custom_prompt_id`.
 
 Why this is used:
 
@@ -585,6 +585,7 @@ Tuning strategy:
 - `backend/app/core/validators/config/profanity_free_safety_validator_config.py`
 - `backend/app/core/validators/config/answer_relevance_custom_llm_safety_validator_config.py`
 - `backend/app/core/validators/answer_relevance_custom_llm.py`
-- `backend/app/models/config/answer_relevance_prompt.py`
+- `backend/app/models/config/llm_prompt_config.py`
+- `backend/app/crud/llm_prompt_config.py`
 - `backend/app/schemas/guardrail_config.py`
 - `backend/app/schemas/validator_config.py`

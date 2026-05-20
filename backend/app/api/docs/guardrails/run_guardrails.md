@@ -6,7 +6,7 @@ Behavior notes:
 - The endpoint always saves a `request_log` entry for the run.
 - Validator logs are also saved; with `suppress_pass_logs=true`, only fail-case validator logs are persisted. Otherwise, all validator logs are added.
 - For `ban_list`, `ban_list_id` can be resolved to `banned_words` from tenant ban list configs.
-- For `topic_relevance`, `topic_relevance_config_id` is required and is resolved to `configuration` + `prompt_schema_version` from tenant topic relevance configs. Requires `OPENAI_API_KEY` to be configured; returns a validation failure with an explicit error if missing.
+- For `topic_relevance`, `topic_relevance_config_id` is required and is resolved to `llm_prompt` + `prompt_schema_version` from tenant LLM prompt configs. Requires `OPENAI_API_KEY` to be configured; returns a validation failure with an explicit error if missing.
 - For `llm_critic`, `OPENAI_API_KEY` must be configured; returns `success=false` with an explicit error if missing.
 - For `answer_relevance_custom_llm`, `input` must be a JSON string `{"query": "...", "answer": "..."}`. Pass `custom_prompt_id` to use a tenant-stored prompt template, or `prompt_template` inline. Requires `OPENAI_API_KEY`.
 - For `llamaguard_7b`, `policies` accepts human-readable policy names (see table below). If omitted, all policies are enforced by default.
