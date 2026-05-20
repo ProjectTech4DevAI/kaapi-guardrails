@@ -93,6 +93,19 @@ class LLMPromptConfigCrud:
         obj = self.get(session, id, organization_id, project_id)
 
         update_data = payload.model_dump(exclude_unset=True)
+
+        if (
+            "llm_prompt" in update_data
+            and obj.validator_name == LLMValidatorName.AnswerRelevanceCustomLLM
+        ):
+            new_prompt = update_data["llm_prompt"]
+            missing = [p for p in ("{query}", "{answer}") if p not in new_prompt]
+            if missing:
+                raise HTTPException(
+                    422,
+                    f"llm_prompt must contain the placeholders: {', '.join(missing)}",
+                )
+
         for key, value in update_data.items():
             setattr(obj, key, value)
 

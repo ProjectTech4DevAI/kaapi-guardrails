@@ -302,6 +302,62 @@ class TestUpdateLLMPromptConfig(BaseLLMPromptConfigTest):
 
         assert response.status_code == 404
 
+    def test_update_answer_relevance_llm_prompt_missing_query_placeholder(
+        self, integration_client, clear_database
+    ):
+        create_resp = self.create_answer(integration_client)
+        config_id = create_resp.json()["data"]["id"]
+
+        response = self.update(
+            integration_client,
+            config_id,
+            {"llm_prompt": "Answer: {answer}\nRelevant? YES or NO."},
+        )
+
+        assert response.status_code == 422
+
+    def test_update_answer_relevance_llm_prompt_missing_answer_placeholder(
+        self, integration_client, clear_database
+    ):
+        create_resp = self.create_answer(integration_client)
+        config_id = create_resp.json()["data"]["id"]
+
+        response = self.update(
+            integration_client,
+            config_id,
+            {"llm_prompt": "Query: {query}\nRelevant? YES or NO."},
+        )
+
+        assert response.status_code == 422
+
+    def test_update_answer_relevance_valid_llm_prompt_succeeds(
+        self, integration_client, clear_database
+    ):
+        create_resp = self.create_answer(integration_client)
+        config_id = create_resp.json()["data"]["id"]
+
+        new_prompt = "Q: {query}\nA: {answer}\nYES or NO."
+        response = self.update(
+            integration_client, config_id, {"llm_prompt": new_prompt}
+        )
+
+        assert response.status_code == 200
+        assert response.json()["data"]["llm_prompt"] == new_prompt
+
+    def test_update_topic_relevance_llm_prompt_no_placeholder_required(
+        self, integration_client, clear_database
+    ):
+        create_resp = self.create_topic(integration_client)
+        config_id = create_resp.json()["data"]["id"]
+
+        response = self.update(
+            integration_client,
+            config_id,
+            {"llm_prompt": "A plain scope with no placeholders."},
+        )
+
+        assert response.status_code == 200
+
 
 class TestDeleteLLMPromptConfig(BaseLLMPromptConfigTest):
     def test_delete_success(self, integration_client, clear_database):

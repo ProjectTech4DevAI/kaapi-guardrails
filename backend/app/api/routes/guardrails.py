@@ -1,7 +1,7 @@
 from uuid import UUID
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
 from sqlmodel import Session
@@ -13,7 +13,7 @@ from app.core.constants import (
     LLM_CRITIC_REPHRASE_MESSAGE,
     REPHRASE_ON_FAIL_PREFIX,
 )
-from app.core.enum import ValidatorType
+from app.core.enum import LLMValidatorName, ValidatorType
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
 from app.core.validators.config.ban_list_safety_validator_config import (
@@ -126,6 +126,12 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                     organization_id=payload.organization_id,
                     project_id=payload.project_id,
                 )
+                if config.validator_name != LLMValidatorName.TopicRelevance:
+                    raise HTTPException(
+                        400,
+                        f"LLM prompt config '{config.id}' is for validator "
+                        f"'{config.validator_name}', not 'topic_relevance'",
+                    )
                 validator.configuration = config.llm_prompt
                 validator.prompt_schema_version = config.prompt_schema_version
 
@@ -137,6 +143,15 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                     organization_id=payload.organization_id,
                     project_id=payload.project_id,
                 )
+                if (
+                    prompt_config.validator_name
+                    != LLMValidatorName.AnswerRelevanceCustomLLM
+                ):
+                    raise HTTPException(
+                        400,
+                        f"LLM prompt config '{prompt_config.id}' is for validator "
+                        f"'{prompt_config.validator_name}', not 'answer_relevance_custom_llm'",
+                    )
                 validator.prompt_template = prompt_config.llm_prompt
 
 

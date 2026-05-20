@@ -3,7 +3,6 @@ from unittest.mock import patch
 import pytest
 from guardrails.validators import FailResult
 
-from app.core.validators.answer_relevance_custom_llm import DEFAULT_PROMPT_TEMPLATE
 from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
     AnswerRelevanceCustomLLMSafetyValidatorConfig,
 )

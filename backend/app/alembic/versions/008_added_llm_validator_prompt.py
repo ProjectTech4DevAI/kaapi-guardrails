@@ -36,7 +36,7 @@ def upgrade() -> None:
         "ALTER INDEX idx_topic_relevance_is_active RENAME TO idx_llm_prompt_is_active"
     )
 
-    # Add validator_name column (backfill existing rows as topic_relevance)
+    # Add validator_name column (server_default backfills existing rows as topic_relevance)
     op.add_column(
         "llm_prompt",
         sa.Column(
@@ -46,6 +46,8 @@ def upgrade() -> None:
             server_default="topic_relevance",
         ),
     )
+    # Drop server_default so future rows must supply validator_name explicitly
+    op.alter_column("llm_prompt", "validator_name", server_default=None)
 
     # Rename configuration → llm_prompt column
     op.alter_column("llm_prompt", "configuration", new_column_name="llm_prompt")

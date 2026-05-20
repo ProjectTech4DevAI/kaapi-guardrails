@@ -1,12 +1,15 @@
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+import pytest
+from fastapi import HTTPException
 from guardrails.validators import FailResult as GRFailResult
 
 from app.api.routes.guardrails import (
     _resolve_validator_configs,
     _validate_with_guard,
 )
+from app.core.enum import LLMValidatorName
 from app.schemas.guardrail_config import GuardrailRequest
 from app.tests.guardrails_mocks import MockResult
 from app.tests.seed_data import (
@@ -476,3 +479,60 @@ def test_profanity_free_exception_redacts_input():
 
     assert response.success is False
     assert unsafe_input not in response.error
+
+
+def test_resolve_validator_configs_rejects_topic_relevance_config_used_for_answer_relevance():
+    """Passing an answer_relevance_custom_llm config ID to the topic_relevance validator
+    must raise a 400 — validator_name mismatch."""
+    config_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {"type": "topic_relevance", "topic_relevance_config_id": config_id}
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            id=config_id,
+            validator_name=LLMValidatorName.AnswerRelevanceCustomLLM,
+            llm_prompt="Q: {query}\nA: {answer}\nYES or NO.",
+            prompt_schema_version=1,
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            _resolve_validator_configs(payload, mock_session)
+
+    assert exc_info.value.status_code == 400
+    assert "topic_relevance" in exc_info.value.detail
+
+
+def test_resolve_validator_configs_rejects_topic_relevance_config_used_for_answer_relevance_prompt():
+    """Passing a topic_relevance config ID to the answer_relevance_custom_llm validator
+    must raise a 400 — validator_name mismatch."""
+    config_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[
+            {"type": "answer_relevance_custom_llm", "custom_prompt_id": config_id}
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            id=config_id,
+            validator_name=LLMValidatorName.TopicRelevance,
+            llm_prompt="A plain scope description.",
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            _resolve_validator_configs(payload, mock_session)
+
+    assert exc_info.value.status_code == 400
+    assert "answer_relevance_custom_llm" in exc_info.value.detail
