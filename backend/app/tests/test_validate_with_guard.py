@@ -218,6 +218,7 @@ def test_resolve_validator_configs_topic_relevance_from_config_id():
 
     with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         mock_get.return_value = MagicMock(
+            validator_name=LLMValidatorName.TopicRelevance,
             llm_prompt="Topic scope prompt text",
             prompt_schema_version=2,
         )
@@ -291,7 +292,8 @@ def test_resolve_validator_configs_answer_relevance_from_custom_prompt_id():
 
     with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         mock_get.return_value = MagicMock(
-            llm_prompt="Q: {query}\nA: {answer}\nYES or NO."
+            validator_name=LLMValidatorName.AnswerRelevanceCustomLLM,
+            llm_prompt="Q: {query}\nA: {answer}\nYES or NO.",
         )
         _resolve_validator_configs(payload, mock_session)
 
