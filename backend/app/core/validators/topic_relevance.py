@@ -107,7 +107,7 @@ class TopicRelevance(Validator):
             ),
         )
 
-    def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+    def _validate(self, value: str, metadata: dict | None = None) -> ValidationResult:
         """Run the LLMCritic and return a PassResult or FailResult with the scope score."""
         if self._invalid_config_reason:
             return FailResult(error_message=self._invalid_config_reason)

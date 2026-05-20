@@ -41,7 +41,7 @@ class AnswerRelevanceCustomLLM(Validator):
         self.prompt_template = prompt_template
         self.llm_callable = llm_callable
 
-    def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+    def _validate(self, value: str, metadata: dict | None = None) -> ValidationResult:
         try:
             data = json.loads(value)
             query = data.get("query", "")
