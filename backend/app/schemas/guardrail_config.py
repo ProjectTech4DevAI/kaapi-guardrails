@@ -60,6 +60,7 @@ class GuardrailRequest(SQLModel):
     organization_id: int
     project_id: int
     input: str
+    output: Optional[str] = None
     validators: List[ValidatorConfigItem]
 
     @model_validator(mode="before")

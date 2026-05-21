@@ -38,12 +38,14 @@ def test_validate_with_guard_success():
         def validate(self, data):
             return MockResult(validated_output="clean text")
 
+    payload = _build_payload("hello")
     with patch(
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("hello"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -60,12 +62,14 @@ def test_validate_with_guard_validation_error():
         def validate(self, data):
             return MockResult(validated_output=None)
 
+    payload = _build_payload("bad text")
     with patch(
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("bad text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -78,12 +82,14 @@ def test_validate_with_guard_validation_error():
 
 
 def test_validate_with_guard_exception():
+    payload = _build_payload("text")
     with patch(
         "app.api.routes.guardrails.build_guard",
         side_effect=Exception("Invalid config"),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -120,11 +126,13 @@ def test_validate_with_guard_uses_fail_result_error_message():
         def validate(self, data):
             return MockResult(validated_output=None)
 
+    payload = _build_payload("bad text")
     with patch(
         "app.api.routes.guardrails.build_guard", return_value=MockGuard()
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
-            payload=_build_payload("bad text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -146,12 +154,14 @@ def test_validate_with_guard_handles_empty_iterations():
         def validate(self, data):
             return MockResult(validated_output=None)
 
+    payload = _build_payload("bad text")
     with patch(
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("bad text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -385,6 +395,7 @@ def test_nsfw_error_message_redacts_input():
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -406,6 +417,7 @@ def test_all_validators_redact_input_from_error_message():
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
             payload=_build_payload(input_text),
+            data=input_text,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -428,6 +440,7 @@ def test_profanity_free_error_message_redacts_input():
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -451,6 +464,7 @@ def test_nsfw_exception_redacts_input():
     ):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -474,6 +488,7 @@ def test_profanity_free_exception_redacts_input():
     ):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
