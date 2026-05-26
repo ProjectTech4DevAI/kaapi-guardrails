@@ -8,7 +8,7 @@ from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class AnswerRelevanceCustomLLMSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["answer_relevance_custom_llm"]
-    llm_callable: str = "gpt-4o-mini"
+    llm_callable: str = settings.ANSWER_RELEVANCE_LLM_MODEL
     # Inline prompt template with {query} and {answer} placeholders.
     # If None, the validator uses its built-in default.
     prompt_template: Optional[str] = None

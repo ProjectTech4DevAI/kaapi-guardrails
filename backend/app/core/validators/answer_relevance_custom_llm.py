@@ -12,6 +12,8 @@ from guardrails.validators import (
     register_validator,
 )
 
+from app.core.config import settings
+
 DEFAULT_PROMPT_TEMPLATE = (
     "Query: {query}\n"
     "Answer: {answer}\n\n"
@@ -35,7 +37,7 @@ class AnswerRelevanceCustomLLM(Validator):
     def __init__(
         self,
         prompt_template: str = DEFAULT_PROMPT_TEMPLATE,
-        llm_callable: str = "gpt-4o-mini",
+        llm_callable: str = settings.ANSWER_RELEVANCE_LLM_MODEL,
         input: str = "",
         output: str = "",
         on_fail: Optional[Callable] = OnFailAction.NOOP,
