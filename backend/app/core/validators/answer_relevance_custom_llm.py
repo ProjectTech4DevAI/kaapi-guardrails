@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from typing import Callable, Optional
 
 from litellm import completion
@@ -26,7 +25,9 @@ class AnswerRelevanceCustomLLM(Validator):
     """
     Validates whether an LLM answer is relevant to the user query.
 
-    Expects `value` to be a JSON string: {"query": "...", "answer": "..."}.
+    Expects `value` to be the plain-text answer. The query must be provided
+    via the `query` constructor argument (set by the validator config from
+    payload.input before guard execution).
     Uses a configurable prompt template with {query} and {answer} placeholders.
     Returns PassResult for YES, FailResult for NO.
     """
@@ -35,21 +36,19 @@ class AnswerRelevanceCustomLLM(Validator):
         self,
         prompt_template: str = DEFAULT_PROMPT_TEMPLATE,
         llm_callable: str = "gpt-4o-mini",
+        input: str = "",
+        output: str = "",
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
         super().__init__(on_fail=on_fail)
         self.prompt_template = prompt_template
         self.llm_callable = llm_callable
+        self.input = input
+        self.output = output
 
     def _validate(self, value: str, metadata: dict | None = None) -> ValidationResult:
-        try:
-            data = json.loads(value)
-            query = data.get("query", "")
-            answer = data.get("answer", "")
-        except (json.JSONDecodeError, TypeError):
-            return FailResult(
-                error_message="Input must be a JSON string with 'query' and 'answer' fields."
-            )
+        query = self.input
+        answer = self.output
 
         if not query.strip() or not answer.strip():
             return FailResult(

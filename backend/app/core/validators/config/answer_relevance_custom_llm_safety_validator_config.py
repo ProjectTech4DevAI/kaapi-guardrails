@@ -14,6 +14,9 @@ class AnswerRelevanceCustomLLMSafetyValidatorConfig(BaseValidatorConfig):
     prompt_template: Optional[str] = None
     # Reference to a stored custom prompt; resolved to prompt_template before build().
     custom_prompt_id: Optional[UUID] = None
+    # Set by _resolve_validator_configs from payload.input / payload.output before build().
+    input: str = ""
+    output: str = ""
 
     def build(self):
         if not settings.OPENAI_API_KEY:
@@ -23,6 +26,8 @@ class AnswerRelevanceCustomLLMSafetyValidatorConfig(BaseValidatorConfig):
             )
         kwargs = dict(
             llm_callable=self.llm_callable,
+            input=self.input,
+            output=self.output,
             on_fail=self.resolve_on_fail(),
         )
         if self.prompt_template:

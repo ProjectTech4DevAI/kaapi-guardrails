@@ -1,4 +1,3 @@
-import json
 from uuid import UUID
 import uuid
 
@@ -62,7 +61,12 @@ def run_guardrails(
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    data = _resolve_validator_configs(payload, session)
+    _resolve_validator_configs(payload, session)
+    has_output_validator = any(
+        isinstance(v, AnswerRelevanceCustomLLMSafetyValidatorConfig)
+        for v in payload.validators
+    )
+    data = (payload.output or "") if has_output_validator else payload.input
     return _validate_with_guard(
         payload,
         data,
@@ -103,19 +107,15 @@ def list_validators(_: AuthDep):
     return {"validators": validators}
 
 
-def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> str:
+def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> None:
     """
     Resolves config-backed references for all validators in-place before guard execution:
     - BanList: fetches banned_words from the stored BanList when not provided inline.
     - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
-    - AnswerRelevance: fetches custom prompt template from stored config; returns
-      JSON-encoded {"query": input, "answer": output} as the guard data.
+    - AnswerRelevance: fetches custom prompt template from stored config.
 
     Returns the data string to pass to guard.validate().
     """
-    # Input guardrails validate payload.input; output guardrails validate payload.output.
-    # AnswerRelevance is the exception: it needs both, encoded as JSON.
-    data = payload.output if payload.output is not None else payload.input
     for validator in payload.validators:
         if isinstance(validator, BanListSafetyValidatorConfig):
             if validator.type == BAN_LIST and validator.banned_words is None:
@@ -145,7 +145,8 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> s
                 validator.prompt_schema_version = config.prompt_schema_version
 
         elif isinstance(validator, AnswerRelevanceCustomLLMSafetyValidatorConfig):
-            data = json.dumps({"query": payload.input, "answer": payload.output or ""})
+            validator.input = payload.input
+            validator.output = payload.output or ""
             if validator.custom_prompt_id is not None:
                 prompt_config = llm_prompt_config_crud.get(
                     session=session,
@@ -163,8 +164,6 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> s
                         f"'{prompt_config.validator_name}', not 'answer_relevance_custom_llm'",
                     )
                 validator.prompt_template = prompt_config.llm_prompt
-
-    return data
 
 
 def _validate_with_guard(
