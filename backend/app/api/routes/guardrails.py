@@ -26,6 +26,9 @@ from app.crud.validator_log import ValidatorLogCrud
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
+from app.core.validators.config.topic_relevance_openai_safety_validator_config import (
+    TopicRelevanceOpenAISafetyValidatorConfig,
+)
 from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
@@ -115,7 +118,13 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 )
                 validator.banned_words = ban_list.banned_words
 
-        elif isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+        elif isinstance(
+            validator,
+            (
+                TopicRelevanceSafetyValidatorConfig,
+                TopicRelevanceOpenAISafetyValidatorConfig,
+            ),
+        ):
             if validator.topic_relevance_config_id is not None:
                 config = topic_relevance_crud.get(
                     session=session,

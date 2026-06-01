@@ -24,6 +24,9 @@ from app.core.validators.config.pii_remover_safety_validator_config import (
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
+from app.core.validators.config.topic_relevance_openai_safety_validator_config import (
+    TopicRelevanceOpenAISafetyValidatorConfig,
+)
 from app.core.validators.config.llamaguard_7b_safety_validator_config import (
     LlamaGuard7BSafetyValidatorConfig,
 )
@@ -45,6 +48,7 @@ ValidatorConfigItem = Annotated[
         NSFWTextSafetyValidatorConfig,
         ProfanityFreeSafetyValidatorConfig,
         TopicRelevanceSafetyValidatorConfig,
+        TopicRelevanceOpenAISafetyValidatorConfig,
     ],
     Field(discriminator="type"),
 ]
