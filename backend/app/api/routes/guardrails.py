@@ -1,5 +1,5 @@
-from uuid import UUID
 import uuid
+from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from guardrails.guard import Guard
@@ -14,24 +14,24 @@ from app.core.constants import (
     REPHRASE_ON_FAIL_PREFIX,
 )
 from app.core.enum import LLMValidatorName, ValidatorType
-from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
+from app.core.guardrail_controller import build_guard, get_validator_config_models
+from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
+    AnswerRelevanceCustomLLMSafetyValidatorConfig,
+)
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
+)
+from app.core.validators.config.topic_relevance_safety_validator_config import (
+    TopicRelevanceSafetyValidatorConfig,
 )
 from app.crud.ban_list import ban_list_crud
 from app.crud.llm_prompt_config import llm_prompt_config_crud
 from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
-from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
-    AnswerRelevanceCustomLLMSafetyValidatorConfig,
-)
-from app.core.validators.config.topic_relevance_safety_validator_config import (
-    TopicRelevanceSafetyValidatorConfig,
-)
-from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
+from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.utils import APIResponse, load_description
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
@@ -357,7 +357,7 @@ def add_validator_logs(
 
 def _normalize_llm_critic_error(message: str) -> str:
     if (
-        "failed the following metrics"
+        "failed the following metrics" in message
         or "missing or has invalid evaluations" in message
     ):
         return LLM_CRITIC_ERROR_MESSAGE

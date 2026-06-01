@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 from pydantic import StringConstraints, model_validator
@@ -51,11 +51,11 @@ class LLMPromptConfigCreate(SQLModel):
 
 
 class LLMPromptConfigUpdate(SQLModel):
-    name: Optional[LLMPromptName] = None
-    description: Optional[LLMPromptDescription] = None
-    prompt_schema_version: Optional[int] = Field(default=None, ge=1)
-    llm_prompt: Optional[LLMPromptText] = None
-    is_active: Optional[bool] = None
+    name: LLMPromptName | None = None
+    description: LLMPromptDescription | None = None
+    prompt_schema_version: int | None = Field(default=None, ge=1)
+    llm_prompt: LLMPromptText | None = None
+    is_active: bool | None = None
 
 
 class LLMPromptConfigResponse(SQLModel):

@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 from uuid import UUID
 
 from app.core.config import settings
@@ -11,9 +11,9 @@ class AnswerRelevanceCustomLLMSafetyValidatorConfig(BaseValidatorConfig):
     llm_callable: str = settings.ANSWER_RELEVANCE_LLM_MODEL
     # Inline prompt template with {query} and {answer} placeholders.
     # If None, the validator uses its built-in default.
-    prompt_template: Optional[str] = None
+    prompt_template: str | None = None
     # Reference to a stored custom prompt; resolved to prompt_template before build().
-    custom_prompt_id: Optional[UUID] = None
+    custom_prompt_id: UUID | None = None
     # Set by _resolve_validator_configs from payload.input / payload.output before build().
     input: str = ""
     output: str = ""
@@ -24,12 +24,12 @@ class AnswerRelevanceCustomLLMSafetyValidatorConfig(BaseValidatorConfig):
                 "OPENAI_API_KEY is not configured. "
                 "Answer relevance validation requires an OpenAI API key."
             )
-        kwargs = dict(
-            llm_callable=self.llm_callable,
-            input=self.input,
-            output=self.output,
-            on_fail=self.resolve_on_fail(),
-        )
+        kwargs = {
+            "llm_callable": self.llm_callable,
+            "input": self.input,
+            "output": self.output,
+            "on_fail": self.resolve_on_fail(),
+        }
         if self.prompt_template:
             kwargs["prompt_template"] = self.prompt_template
         return AnswerRelevanceCustomLLM(**kwargs)

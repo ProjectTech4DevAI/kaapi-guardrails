@@ -1,4 +1,3 @@
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -61,10 +60,10 @@ class LLMPromptConfigCrud:
         session: Session,
         organization_id: int,
         project_id: int,
-        validator_name: Optional[LLMValidatorName] = None,
+        validator_name: LLMValidatorName | None = None,
         offset: int = 0,
-        limit: Optional[int] = None,
-    ) -> List[LLMPromptConfig]:
+        limit: int | None = None,
+    ) -> list[LLMPromptConfig]:
         query = select(LLMPromptConfig).where(
             LLMPromptConfig.organization_id == organization_id,
             LLMPromptConfig.project_id == project_id,

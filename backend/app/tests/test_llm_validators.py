@@ -117,10 +117,7 @@ def test__normalize_llm_critic_error_maps_missing_invalid_metrics():
 
 def test__normalize_llm_critic_error_passes_through_unknown_messages():
     raw = "Some other validator error."
-    assert (
-        _normalize_llm_critic_error(raw)
-        == "The query did not meet the required quality criteria."
-    )
+    assert _normalize_llm_critic_error(raw) == raw
 
 
 # ---------------------------------------------------------------------------

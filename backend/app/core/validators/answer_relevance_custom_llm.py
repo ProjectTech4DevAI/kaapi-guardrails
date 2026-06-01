@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
-from litellm import completion
 from guardrails import OnFailAction
 from guardrails.validators import (
     FailResult,
@@ -11,6 +10,7 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
+from litellm import completion
 
 from app.core.config import settings
 
@@ -40,7 +40,7 @@ class AnswerRelevanceCustomLLM(Validator):
         llm_callable: str = settings.ANSWER_RELEVANCE_LLM_MODEL,
         input: str = "",
         output: str = "",
-        on_fail: Optional[Callable] = OnFailAction.NOOP,
+        on_fail: Callable | None = OnFailAction.NOOP,
     ):
         super().__init__(on_fail=on_fail)
         self.prompt_template = prompt_template

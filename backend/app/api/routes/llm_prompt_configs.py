@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Query
@@ -46,7 +46,7 @@ def create_llm_prompt_config(
 def list_llm_prompt_configs(
     session: SessionDep,
     auth: MultitenantAuthDep,
-    validator_name: Annotated[Optional[LLMValidatorName], Query()] = None,
+    validator_name: Annotated[LLMValidatorName | None, Query()] = None,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
 ) -> APIResponse[list[LLMPromptConfigResponse]]:
