@@ -22,7 +22,7 @@ def validator():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=["response_format"],
     ):
-        return TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG)
+        return TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
 
 # ---------------------------------------------------------------------------
@@ -73,7 +73,7 @@ def test_custom_threshold_of_3_fails_on_score_2():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG, threshold=3)
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=3)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 2}')
@@ -88,7 +88,7 @@ def test_custom_threshold_of_1_passes_on_score_1():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG, threshold=1)
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=1)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 1}')
@@ -116,12 +116,12 @@ def test_fails_when_value_is_whitespace(validator):
     assert "Empty message" in result.error_message
 
 
-def test_fails_when_topic_config_is_blank():
+def test_fails_when_system_prompt_is_blank():
     with patch(
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(topic_config="")
+        v = TopicRelevanceOpenAI(system_prompt="")
 
     result = v._validate("Some input")
 
@@ -129,35 +129,17 @@ def test_fails_when_topic_config_is_blank():
     assert "blank" in result.error_message
 
 
-def test_fails_when_topic_config_is_whitespace_only():
+def test_fails_when_system_prompt_is_whitespace_only():
     with patch(
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(topic_config="   ")
+        v = TopicRelevanceOpenAI(system_prompt="   ")
 
     result = v._validate("Some input")
 
     assert isinstance(result, FailResult)
     assert "blank" in result.error_message
-
-
-# ---------------------------------------------------------------------------
-# Prompt version
-# ---------------------------------------------------------------------------
-
-
-def test_invalid_prompt_version_causes_fail_on_validate():
-    with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
-        return_value=[],
-    ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG, prompt_schema_version=999)
-
-    result = v._validate("Some input")
-
-    assert isinstance(result, FailResult)
-    assert "999" in result.error_message
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +205,7 @@ def test_response_format_passed_when_supported():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=["response_format"],
     ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG)
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
@@ -238,7 +220,7 @@ def test_response_format_omitted_when_not_supported():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG)
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
@@ -253,7 +235,7 @@ def test_response_format_omitted_when_litellm_check_fails():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         side_effect=Exception("litellm unavailable"),
     ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG)
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
@@ -273,7 +255,7 @@ def test_system_prompt_contains_topic_config():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG)
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     assert TOPIC_CONFIG in v._system_prompt
 
@@ -283,7 +265,7 @@ def test_system_prompt_contains_json_instruction():
         "app.core.validators.topic_relevance_openai.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(topic_config=TOPIC_CONFIG)
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     assert "scope_violation" in v._system_prompt
     assert "JSON" in v._system_prompt

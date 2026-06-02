@@ -106,6 +106,7 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
     Resolves config-backed references for all validators in-place before guard execution:
     - BanList: fetches banned_words from the stored BanList when not provided inline.
     - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
+    - TopicRelevanceOpenAI: fetches configuration from stored config.
     """
     for validator in payload.validators:
         if isinstance(validator, BanListSafetyValidatorConfig):
@@ -118,13 +119,7 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 )
                 validator.banned_words = ban_list.banned_words
 
-        elif isinstance(
-            validator,
-            (
-                TopicRelevanceSafetyValidatorConfig,
-                TopicRelevanceOpenAISafetyValidatorConfig,
-            ),
-        ):
+        elif isinstance(validator, TopicRelevanceSafetyValidatorConfig):
             if validator.topic_relevance_config_id is not None:
                 config = topic_relevance_crud.get(
                     session=session,
@@ -134,6 +129,16 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 )
                 validator.configuration = config.configuration
                 validator.prompt_schema_version = config.prompt_schema_version
+
+        elif isinstance(validator, TopicRelevanceOpenAISafetyValidatorConfig):
+            if validator.topic_relevance_config_id is not None:
+                config = topic_relevance_crud.get(
+                    session=session,
+                    id=validator.topic_relevance_config_id,
+                    organization_id=payload.organization_id,
+                    project_id=payload.project_id,
+                )
+                validator.configuration = config.configuration
 
 
 def _validate_with_guard(

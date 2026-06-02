@@ -9,8 +9,7 @@ from app.core.config import settings
 class TopicRelevanceOpenAISafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["topic_relevance_openai"]
     configuration: Optional[str] = None
-    prompt_schema_version: Optional[int] = None
-    llm_callable: str = "gpt-4o-mini"
+    llm_callable: str = settings.DEFAULT_LLM_CALLABLE
     threshold: int = 2
     topic_relevance_config_id: Optional[UUID] = None
 
@@ -21,8 +20,7 @@ class TopicRelevanceOpenAISafetyValidatorConfig(BaseValidatorConfig):
                 "Topic relevance (OpenAI) validation requires an OpenAI API key."
             )
         return TopicRelevanceOpenAI(
-            topic_config=self.configuration or " ",
-            prompt_schema_version=self.prompt_schema_version or 1,
+            system_prompt=self.configuration or "",
             llm_callable=self.llm_callable,
             threshold=self.threshold,
             on_fail=self.resolve_on_fail(),

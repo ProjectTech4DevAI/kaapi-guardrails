@@ -13,6 +13,8 @@ from guardrails.validators import (
 )
 from guardrails.validators import FailResult, PassResult
 
+from app.core.config import settings
+
 
 # This should be present in all prompt templates to indicate where the topic configuration will be inserted
 _PROMPT_PLACEHOLDER = "{{TOPIC_CONFIGURATION}}"
@@ -62,7 +64,7 @@ class TopicRelevance(Validator):
         self,
         topic_config: str,
         prompt_schema_version: int = 1,
-        llm_callable: str = "gpt-4o-mini",
+        llm_callable: str = settings.DEFAULT_LLM_CALLABLE,
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
         """Build the LLMCritic with a scope_violation metric from the topic configuration."""

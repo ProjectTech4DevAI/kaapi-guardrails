@@ -12,7 +12,7 @@ class TopicRelevanceSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["topic_relevance"]
     configuration: Optional[str] = None
     prompt_schema_version: Optional[int] = None
-    llm_callable: str = "gpt-4o-mini"
+    llm_callable: str = settings.DEFAULT_LLM_CALLABLE
     topic_relevance_config_id: Optional[UUID] = None
 
     def build(self):

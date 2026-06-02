@@ -289,13 +289,11 @@ def test_resolve_validator_configs_topic_relevance_openai_from_config_id():
     with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
         mock_get.return_value = MagicMock(
             configuration="Healthcare topic scope text",
-            prompt_schema_version=3,
         )
         _resolve_validator_configs(payload, mock_session)
 
     validator = payload.validators[0]
     assert validator.configuration == "Healthcare topic scope text"
-    assert validator.prompt_schema_version == 3
     mock_get.assert_called_once_with(
         session=mock_session,
         id=validator.topic_relevance_config_id,
