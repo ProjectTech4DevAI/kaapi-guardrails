@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Callable, Optional
 
 from litellm import completion, get_supported_openai_params
@@ -92,9 +93,13 @@ class TopicRelevanceOpenAI(Validator):
             return FailResult(error_message=f"LLM call failed: {e}")
 
         try:
-            data = json.loads(content)
+            text = re.sub(r"```(?:json)?\s*|\s*```", "", content).strip()
+            match = re.search(r"\{[^{}]*\}", text)
+            if not match:
+                raise ValueError("no JSON object found in response")
+            data = json.loads(match.group())
             score = data.get("scope_violation")
-            if not isinstance(score, int) or score not in (1, 2, 3):
+            if type(score) is not int or score not in (1, 2, 3):
                 raise ValueError(f"unexpected score value: {score!r}")
         except Exception as e:
             return FailResult(

@@ -195,6 +195,37 @@ def test_fails_gracefully_when_score_is_a_string(validator):
     assert "unparseable" in result.error_message
 
 
+def test_passes_when_response_wrapped_in_markdown_fence(validator):
+    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(
+            '```json\n{"scope_violation": 3}\n```'
+        )
+        result = validator._validate("How do I make pasta?")
+
+    assert isinstance(result, PassResult)
+    assert result.metadata["scope_score"] == 3
+
+
+def test_passes_when_response_has_surrounding_prose(validator):
+    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(
+            'Sure! Here is my evaluation: {"scope_violation": 2}'
+        )
+        result = validator._validate("Something vaguely food related")
+
+    assert isinstance(result, PassResult)
+    assert result.metadata["scope_score"] == 2
+
+
+def test_fails_when_score_is_boolean(validator):
+    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": true}')
+        result = validator._validate("How do I bake bread?")
+
+    assert isinstance(result, FailResult)
+    assert "unparseable" in result.error_message
+
+
 # ---------------------------------------------------------------------------
 # response_format forwarding
 # ---------------------------------------------------------------------------
