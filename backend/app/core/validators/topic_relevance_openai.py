@@ -43,7 +43,7 @@ class TopicRelevanceOpenAI(Validator):
         self,
         system_prompt: str,
         llm_callable: str = settings.DEFAULT_LLM_CALLABLE,
-        threshold: int = 2,
+        threshold: int = settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
         super().__init__(on_fail=on_fail)

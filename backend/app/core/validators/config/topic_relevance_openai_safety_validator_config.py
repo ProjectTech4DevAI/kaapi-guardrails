@@ -10,7 +10,7 @@ class TopicRelevanceOpenAISafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["topic_relevance_openai"]
     configuration: Optional[str] = None
     llm_callable: str = settings.DEFAULT_LLM_CALLABLE
-    threshold: int = 2
+    threshold: int = settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD
     topic_relevance_config_id: Optional[UUID] = None
 
     def build(self):

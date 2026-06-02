@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
     OPENAI_API_KEY: str | None = None
     DEFAULT_LLM_CALLABLE: str = "gpt-4o-mini"
+    TOPIC_RELEVANCE_OPENAI_THRESHOLD: int = 2
 
     SLUR_LIST_FILENAME: ClassVar[str] = "curated_slurlist_hi_en.csv"
 

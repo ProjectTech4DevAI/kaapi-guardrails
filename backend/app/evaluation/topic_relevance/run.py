@@ -53,11 +53,11 @@ BACKENDS = [
         "build": lambda tc: TopicRelevanceOpenAI(
             system_prompt=tc,
             llm_callable=settings.DEFAULT_LLM_CALLABLE,
-            threshold=2,
+            threshold=settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
         ),
         "report_extra": {
             "llm_callable": settings.DEFAULT_LLM_CALLABLE,
-            "threshold": 2,
+            "threshold": settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
         },
     },
 ]
