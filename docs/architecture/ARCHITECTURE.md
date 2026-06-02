@@ -4,7 +4,7 @@
 
 Kaapi Guardrails is a standalone REST microservice that provides configurable safety validation for LLM-based applications. It sits between the caller (a chatbot, API gateway, etc.) and the LLM: the caller sends a piece of text through the guardrails service _before_ sending it to the LLM (input guardrail) and again _after_ receiving the LLM's reply (output guardrail), each time receiving a safe/unsafe verdict and optionally a redacted or rephrased version of the text.
 
-The service is built on **FastAPI** + **SQLModel** + **PostgreSQL**, containerised with Docker, and delegates the core validation pipeline to the [guardrails-ai](https://github.com/guardrails-ai/guardrails) SDK (pinned to a specific commit of the upstream repo).
+The service is built on **FastAPI** + **SQLModel** + **PostgreSQL**, containerised with Docker, and delegates the core validation pipeline to the [guardrails-ai](https://github.com/guardrails-ai/guardrails) SDK (pinned to version `0.10.0` of the upstream repo).
 
 ---
 
@@ -191,11 +191,16 @@ Error messages are sanitised before persistence: the input string is redacted fr
 
 ## Authentication
 
-Two auth modes coexist:
+Kaapi Guardrails is a **standalone microservice that does not authorize requests on its own** — it delegates tenant authorization to the Kaapi backend. A caller therefore presents **two keys**:
 
-**Static bearer token** (`AuthDep`): a SHA-256 hex digest configured in `AUTH_TOKEN`. Used by the core guardrails route and config management routes. Compared with `secrets.compare_digest` to prevent timing attacks.
+1. **Guardrail key** — the service's own static bearer token, proving the caller is allowed to reach the guardrails microservice.
+2. **Kaapi backend `X-API-KEY`** — forwarded to the Kaapi backend, which performs the actual authorization and identifies the tenant.
 
-**Multitenant X-API-KEY** (`MultitenantAuthDep`): an API key resolved against an external Kaapi auth service (`KAAPI_AUTH_URL`). The auth service returns `organization_id` + `project_id`, enabling per-tenant data isolation. Accepts the key as `X-API-KEY` header, `Authorization: Bearer`, or `access_token` cookie.
+These map to the two auth modes that coexist in `app/api/deps.py`:
+
+**Static bearer token** (`AuthDep`): the guardrail key — a SHA-256 hex digest configured in `AUTH_TOKEN`. Used by the core guardrails route and config management routes. Compared with `secrets.compare_digest` to prevent timing attacks.
+
+**Multitenant X-API-KEY** (`MultitenantAuthDep`): the Kaapi backend key, resolved against the external Kaapi auth service (`KAAPI_AUTH_URL`) by calling `GET /apikeys/verify`. The microservice does not validate this key itself — the Kaapi backend authorizes it and returns `organization_id` + `project_id`, enabling per-tenant data isolation. Accepts the key as the `X-API-KEY` header, `Authorization: Bearer`, or `access_token` cookie.
 
 ---
 
@@ -207,7 +212,7 @@ Two auth modes coexist:
 | ORM / schema | SQLModel (Pydantic v2 + SQLAlchemy) |
 | Database | PostgreSQL (psycopg3) |
 | Migrations | Alembic |
-| Validation engine | guardrails-ai (pinned git commit) |
+| Validation engine | guardrails-ai (pinned to v0.10.0) |
 | NLP (PII) | spaCy `en_core_web_lg` via Presidio |
 | ML (toxicity) | PyTorch CPU, `textdetox/xlmr-large-toxicity-classifier` via Transformers |
 | LLM calls | LiteLLM (used internally by `LLMCritic` / `TopicRelevance`) |
