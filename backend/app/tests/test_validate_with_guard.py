@@ -270,6 +270,77 @@ def test_resolve_validator_configs_uses_inline_topic_relevance_without_lookup():
     mock_get.assert_not_called()
 
 
+def test_resolve_validator_configs_topic_relevance_openai_from_config_id():
+    topic_relevance_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {
+                "type": "topic_relevance_openai",
+                "topic_relevance_config_id": topic_relevance_id,
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            configuration="Healthcare topic scope text",
+        )
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.configuration == "Healthcare topic scope text"
+    mock_get.assert_called_once_with(
+        session=mock_session,
+        id=validator.topic_relevance_config_id,
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+    )
+
+
+def test_resolve_validator_configs_skips_topic_relevance_openai_lookup_when_no_config_id():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[{"type": "topic_relevance_openai"}],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    mock_get.assert_not_called()
+
+
+def test_resolve_validator_configs_uses_inline_topic_relevance_openai_without_lookup():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {
+                "type": "topic_relevance_openai",
+                "configuration": "inline openai config",
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.configuration == "inline openai config"
+    mock_get.assert_not_called()
+
+
 def _build_mock_guard_with_fail_result(validator_name: str, error_message: str):
     mock_log = MagicMock()
     mock_log.validator_name = validator_name

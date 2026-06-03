@@ -5,7 +5,9 @@ from pathlib import Path
 import pandas as pd
 from guardrails.validators import FailResult
 
+from app.core.config import settings
 from app.core.validators.topic_relevance import TopicRelevance
+from app.core.validators.topic_relevance_openai import TopicRelevanceOpenAI
 from app.evaluation.common.helper import (
     Profiler,
     build_evaluation_report,
@@ -16,15 +18,9 @@ from app.evaluation.common.helper import (
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATASETS_DIR = BASE_DIR / "datasets" / "topic_relevance"
-OUT_DIR = BASE_DIR / "outputs" / "topic_relevance"
+OUTPUTS_DIR = BASE_DIR / "outputs"
 
-DEFAULT_CONFIG = {
-    "llm_callable": "gpt-4o-mini",
-    "prompt_schema_version": 1,
-}
-
-# All evaluations defined here
-EVALUATIONS = [
+DATASETS = [
     {
         "domain": "education",
         "dataset": "education-topic-relevance-dataset.csv",
@@ -37,30 +33,46 @@ EVALUATIONS = [
     },
 ]
 
+BACKENDS = [
+    {
+        "name": "topic_relevance",
+        "out_dir": OUTPUTS_DIR / "topic_relevance",
+        "build": lambda tc: TopicRelevance(
+            topic_config=tc,
+            prompt_schema_version=1,
+            llm_callable=settings.DEFAULT_LLM_CALLABLE,
+        ),
+        "report_extra": {
+            "llm_callable": settings.DEFAULT_LLM_CALLABLE,
+            "prompt_schema_version": 1,
+        },
+    },
+    {
+        "name": "topic_relevance_openai",
+        "out_dir": OUTPUTS_DIR / "topic_relevance_openai",
+        "build": lambda tc: TopicRelevanceOpenAI(
+            system_prompt=tc,
+            llm_callable=settings.DEFAULT_LLM_CALLABLE,
+            threshold=settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
+        ),
+        "report_extra": {
+            "llm_callable": settings.DEFAULT_LLM_CALLABLE,
+            "threshold": settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
+        },
+    },
+]
 
-def run_evaluation(config: dict) -> None:
-    """
-    Run the topic relevance evaluation for a single domain config.
-    Loads the dataset and topic config (the plain-text scope definition describing allowed topics,
-    distinct from DEFAULT_CONFIG which holds model and prompt version settings), runs each input
-    through the TopicRelevance validator, computes binary and per-category metrics, and writes
-    prediction CSV and metrics JSON to the output directory.
-    """
-    domain = config["domain"]
 
-    dataset_path = DATASETS_DIR / config["dataset"]
-    topic_config_path = DATASETS_DIR / config["topic_config"]
-    topic_config = topic_config_path.read_text()
+def run_evaluation(dataset: dict, backend: dict) -> None:
+    domain = dataset["domain"]
+    topic_config = (DATASETS_DIR / dataset["topic_config"]).read_text()
+    dataset_path = DATASETS_DIR / dataset["dataset"]
+    out_dir: Path = backend["out_dir"]
 
-    print(f"\nRunning topic relevance evaluation: {domain}")
+    print(f"\nRunning {backend['name']} evaluation: {domain}")
 
     df = pd.read_csv(dataset_path)
-
-    validator = TopicRelevance(
-        topic_config=topic_config,
-        prompt_schema_version=DEFAULT_CONFIG["prompt_schema_version"],
-        llm_callable=DEFAULT_CONFIG["llm_callable"],
-    )
+    validator = backend["build"](topic_config)
 
     normalized_df = pd.DataFrame(
         {
@@ -69,7 +81,6 @@ def run_evaluation(config: dict) -> None:
             "in_scope": df["scope"].apply(lambda x: 1 if x == "IN_SCOPE" else 0),
         }
     )
-
     normalized_df["y_true"] = (1 - normalized_df["in_scope"]).astype(int)
 
     with Profiler() as p:
@@ -88,7 +99,6 @@ def run_evaluation(config: dict) -> None:
     )
 
     metrics = compute_binary_metrics(normalized_df["y_true"], normalized_df["y_pred"])
-
     metrics["category_metrics"] = {
         str(cat): {
             "num_samples": int(len(g)),
@@ -97,30 +107,27 @@ def run_evaluation(config: dict) -> None:
         for cat, g in normalized_df.groupby("category", dropna=False)
     }
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    write_csv(normalized_df, OUT_DIR / f"{domain}-predictions.csv")
-
+    out_dir.mkdir(parents=True, exist_ok=True)
+    write_csv(normalized_df, out_dir / f"{domain}-predictions.csv")
     write_json(
         build_evaluation_report(
-            guardrail="topic_relevance",
+            guardrail=backend["name"],
             num_samples=len(normalized_df),
             profiler=p,
             dataset=str(dataset_path),
-            llm_callable=DEFAULT_CONFIG["llm_callable"],
-            prompt_schema_version=DEFAULT_CONFIG["prompt_schema_version"],
+            **backend["report_extra"],
             metrics=metrics,
         ),
-        OUT_DIR / f"{domain}-metrics.json",
+        out_dir / f"{domain}-metrics.json",
     )
 
-    print(f"Completed {domain} evaluation")
+    print(f"Completed {backend['name']} {domain} evaluation")
 
 
 def main() -> None:
-    """Iterate over all entries in EVALUATIONS and run each domain evaluation in sequence."""
-    for config in EVALUATIONS:
-        run_evaluation(config)
+    for backend in BACKENDS:
+        for dataset in DATASETS:
+            run_evaluation(dataset, backend)
 
 
 if __name__ == "__main__":
