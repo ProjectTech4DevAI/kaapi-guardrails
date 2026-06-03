@@ -1,16 +1,20 @@
 from typing import Literal, Optional
 from uuid import UUID
 
-from app.core.validators.topic_relevance_openai import TopicRelevanceOpenAI
-from app.core.validators.config.base_validator_config import BaseValidatorConfig
+from pydantic import Field
+
 from app.core.config import settings
+from app.core.validators.config.base_validator_config import BaseValidatorConfig
+from app.core.validators.topic_relevance_openai import TopicRelevanceOpenAI
 
 
 class TopicRelevanceOpenAISafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["topic_relevance_openai"]
     configuration: Optional[str] = None
     llm_callable: str = settings.DEFAULT_LLM_CALLABLE
-    threshold: int = settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD
+    threshold: int = Field(
+        default=settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD, ge=1, le=3
+    )
     topic_relevance_config_id: Optional[UUID] = None
 
     def build(self):

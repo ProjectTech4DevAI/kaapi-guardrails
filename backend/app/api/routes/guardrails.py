@@ -1,5 +1,5 @@
-from uuid import UUID
 import uuid
+from uuid import UUID
 
 from fastapi import APIRouter
 from guardrails.guard import Guard
@@ -14,24 +14,24 @@ from app.core.constants import (
     REPHRASE_ON_FAIL_PREFIX,
 )
 from app.core.enum import ValidatorType
-from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.exception_handlers import _safe_error_message
+from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
-)
-from app.crud.ban_list import ban_list_crud
-from app.crud.topic_relevance import topic_relevance_crud
-from app.crud.request_log import RequestLogCrud
-from app.crud.validator_log import ValidatorLogCrud
-from app.core.validators.config.topic_relevance_safety_validator_config import (
-    TopicRelevanceSafetyValidatorConfig,
 )
 from app.core.validators.config.topic_relevance_openai_safety_validator_config import (
     TopicRelevanceOpenAISafetyValidatorConfig,
 )
-from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
+from app.core.validators.config.topic_relevance_safety_validator_config import (
+    TopicRelevanceSafetyValidatorConfig,
+)
+from app.crud.ban_list import ban_list_crud
+from app.crud.request_log import RequestLogCrud
+from app.crud.topic_relevance import topic_relevance_crud
+from app.crud.validator_log import ValidatorLogCrud
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
+from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.utils import APIResponse, load_description
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
@@ -119,7 +119,13 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 )
                 validator.banned_words = ban_list.banned_words
 
-        elif isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+        elif isinstance(
+            validator,
+            (
+                TopicRelevanceSafetyValidatorConfig,
+                TopicRelevanceOpenAISafetyValidatorConfig,
+            ),
+        ):
             if validator.topic_relevance_config_id is not None:
                 config = topic_relevance_crud.get(
                     session=session,
@@ -128,17 +134,9 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                     project_id=payload.project_id,
                 )
                 validator.configuration = config.configuration
-                validator.prompt_schema_version = config.prompt_schema_version
-
-        elif isinstance(validator, TopicRelevanceOpenAISafetyValidatorConfig):
-            if validator.topic_relevance_config_id is not None:
-                config = topic_relevance_crud.get(
-                    session=session,
-                    id=validator.topic_relevance_config_id,
-                    organization_id=payload.organization_id,
-                    project_id=payload.project_id,
-                )
-                validator.configuration = config.configuration
+                # Only the LLMCritic-backed variant carries a prompt schema version.
+                if isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+                    validator.prompt_schema_version = config.prompt_schema_version
 
 
 def _validate_with_guard(

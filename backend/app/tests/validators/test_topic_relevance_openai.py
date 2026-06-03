@@ -19,7 +19,7 @@ def _make_llm_response(json_text: str) -> MagicMock:
 @pytest.fixture
 def validator():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=["response_format"],
     ):
         return TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
@@ -70,7 +70,7 @@ def test_fails_when_score_is_1(validator):
 
 def test_custom_threshold_of_3_fails_on_score_2():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=3)
@@ -85,7 +85,7 @@ def test_custom_threshold_of_3_fails_on_score_2():
 
 def test_custom_threshold_of_1_passes_on_score_1():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=1)
@@ -118,7 +118,7 @@ def test_fails_when_value_is_whitespace(validator):
 
 def test_fails_when_system_prompt_is_blank():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt="")
@@ -131,7 +131,7 @@ def test_fails_when_system_prompt_is_blank():
 
 def test_fails_when_system_prompt_is_whitespace_only():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt="   ")
@@ -233,7 +233,7 @@ def test_fails_when_score_is_boolean(validator):
 
 def test_response_format_passed_when_supported():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=["response_format"],
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
@@ -248,7 +248,7 @@ def test_response_format_passed_when_supported():
 
 def test_response_format_omitted_when_not_supported():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
@@ -263,7 +263,7 @@ def test_response_format_omitted_when_not_supported():
 
 def test_response_format_omitted_when_litellm_check_fails():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         side_effect=Exception("litellm unavailable"),
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
@@ -283,7 +283,7 @@ def test_response_format_omitted_when_litellm_check_fails():
 
 def test_system_prompt_contains_topic_config():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
@@ -293,7 +293,7 @@ def test_system_prompt_contains_topic_config():
 
 def test_system_prompt_contains_json_instruction():
     with patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)

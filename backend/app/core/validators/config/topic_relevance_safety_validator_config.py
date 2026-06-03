@@ -1,11 +1,9 @@
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import model_validator
-
 from app.core.config import settings
-from app.core.validators.topic_relevance import TopicRelevance
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
+from app.core.validators.topic_relevance import TopicRelevance
 
 
 class TopicRelevanceSafetyValidatorConfig(BaseValidatorConfig):

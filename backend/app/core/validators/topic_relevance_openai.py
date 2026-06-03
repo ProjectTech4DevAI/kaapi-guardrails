@@ -4,7 +4,6 @@ import json
 import re
 from typing import Callable, Optional
 
-from litellm import completion, get_supported_openai_params
 from guardrails import OnFailAction
 from guardrails.validators import (
     FailResult,
@@ -13,17 +12,28 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
+from litellm import completion
 
 from app.core.config import settings
+from app.core.constants import EMPTY_MESSAGE_ERROR, TOPIC_OUT_OF_SCOPE_ERROR
+from app.core.validators.llm_utils import (
+    JSON_OBJECT_RESPONSE_FORMAT,
+    supports_response_format,
+)
 
+# Valid scope scores returned by the model; the highest means "clearly in scope".
+_VALID_SCORES = (1, 2, 3)
+# Cap the response: a single ``{"scope_violation": <score>}`` object is tiny.
+_MAX_TOKENS = 50
 
 _SCORING_INSTRUCTIONS = (
     "\n\nScore using:\n"
-    "3 = clearly within scope (directly matches a topic description)\n"
-    "2 = partially related (tangentially related or implicitly within scope)\n"
-    "1 = clearly outside scope (no relation to any listed topic)\n"
+    f"{_VALID_SCORES[2]} = clearly within scope (directly matches a topic description)\n"
+    f"{_VALID_SCORES[1]} = partially related (tangentially related or implicitly within scope)\n"
+    f"{_VALID_SCORES[0]} = clearly outside scope (no relation to any listed topic)\n"
     "\nRespond ONLY with a JSON object in this exact format: "
-    '{"scope_violation": <score>} where <score> is the integer 1, 2, or 3.'
+    '{"scope_violation": <score>} where <score> is the integer '
+    f"{_VALID_SCORES[0]}, {_VALID_SCORES[1]}, or {_VALID_SCORES[2]}."
 )
 
 
@@ -36,8 +46,8 @@ class TopicRelevanceOpenAI(Validator):
     The caller supplies the full system prompt. The validator appends
     hardcoded scoring and response-format instructions.
 
-    Scores 1–3 where 3 = clearly in scope, 2 = ambiguous, 1 = outside scope.
-    Passes when score >= threshold (default 2).
+    Scores 1–3 where 3 = clearly in scope, 2 = partially related,
+    1 = outside scope. Passes when score >= threshold (default 2).
     """
 
     def __init__(
@@ -60,32 +70,28 @@ class TopicRelevanceOpenAI(Validator):
             return
 
         self._system_prompt = system_prompt.strip() + _SCORING_INSTRUCTIONS
+        self._supports_response_format = supports_response_format(llm_callable)
 
-        try:
-            self._supports_response_format = "response_format" in (
-                get_supported_openai_params(model=llm_callable) or []
-            )
-        except Exception:
-            self._supports_response_format = False
-
-    def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+    def _validate(
+        self, value: str, metadata: Optional[dict] = None
+    ) -> ValidationResult:
         if self._invalid_config_reason:
             return FailResult(error_message=self._invalid_config_reason)
 
         if not value or not value.strip():
-            return FailResult(error_message="Empty message.")
+            return FailResult(error_message=EMPTY_MESSAGE_ERROR)
 
         try:
-            kwargs = dict(
-                model=self.llm_callable,
-                messages=[
+            kwargs = {
+                "model": self.llm_callable,
+                "messages": [
                     {"role": "system", "content": self._system_prompt},
                     {"role": "user", "content": value},
                 ],
-                max_tokens=50,
-            )
+                "max_tokens": _MAX_TOKENS,
+            }
             if self._supports_response_format:
-                kwargs["response_format"] = {"type": "json_object"}
+                kwargs["response_format"] = JSON_OBJECT_RESPONSE_FORMAT
 
             response = completion(**kwargs)
             content = response.choices[0].message.content.strip()
@@ -99,7 +105,9 @@ class TopicRelevanceOpenAI(Validator):
                 raise ValueError("no JSON object found in response")
             data = json.loads(match.group())
             score = data.get("scope_violation")
-            if type(score) is not int or score not in (1, 2, 3):
+            # `type(score) is not int` (not isinstance) deliberately rejects bool,
+            # which is an int subclass, so `true`/`false` are treated as invalid.
+            if type(score) is not int or score not in _VALID_SCORES:
                 raise ValueError(f"unexpected score value: {score!r}")
         except Exception as e:
             return FailResult(
@@ -110,6 +118,6 @@ class TopicRelevanceOpenAI(Validator):
             return PassResult(value=value, metadata={"scope_score": score})
 
         return FailResult(
-            error_message="Input is outside the allowed topic scope.",
+            error_message=TOPIC_OUT_OF_SCOPE_ERROR,
             metadata={"scope_score": score},
         )

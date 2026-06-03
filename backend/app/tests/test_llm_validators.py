@@ -106,7 +106,7 @@ def test_topic_relevance_openai_blank_config_returns_fail_result():
     )
 
     with patch(_TOPIC_RELEVANCE_OPENAI_SETTINGS_PATH) as mock_settings, patch(
-        "app.core.validators.topic_relevance_openai.get_supported_openai_params",
+        "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         mock_settings.OPENAI_API_KEY = "sk-test-key"
