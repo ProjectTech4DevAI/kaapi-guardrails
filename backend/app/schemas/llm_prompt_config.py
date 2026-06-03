@@ -30,6 +30,19 @@ LLMPromptText = Annotated[
 _ANSWER_RELEVANCE_PLACEHOLDERS = ("{query}", "{answer}")
 
 
+def validate_answer_relevance_prompt(prompt: str) -> None:
+    """Ensure an answer-relevance prompt contains the required placeholders.
+
+    Raises ValueError if any placeholder is missing. Shared by the create
+    schema (Pydantic) and the CRUD update path.
+    """
+    missing = [p for p in _ANSWER_RELEVANCE_PLACEHOLDERS if p not in prompt]
+    if missing:
+        raise ValueError(
+            f"llm_prompt must contain the placeholders: {', '.join(missing)}"
+        )
+
+
 class LLMPromptConfigCreate(SQLModel):
     validator_name: LLMValidatorName
     name: LLMPromptName
@@ -40,13 +53,7 @@ class LLMPromptConfigCreate(SQLModel):
     @model_validator(mode="after")
     def validate_answer_relevance_placeholders(self) -> "LLMPromptConfigCreate":
         if self.validator_name == LLMValidatorName.AnswerRelevanceCustomLLM:
-            missing = [
-                p for p in _ANSWER_RELEVANCE_PLACEHOLDERS if p not in self.llm_prompt
-            ]
-            if missing:
-                raise ValueError(
-                    f"llm_prompt must contain the placeholders: {', '.join(missing)}"
-                )
+            validate_answer_relevance_prompt(self.llm_prompt)
         return self
 
 

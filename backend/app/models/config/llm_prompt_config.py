@@ -86,6 +86,6 @@ class LLMPromptConfig(SQLModel, table=True):
             "validator_name",
             "prompt_schema_version",
             "llm_prompt",
-            name="uq_validator_prompt_config",
+            name="uq_llm_prompt_config",
         ),
     )

@@ -13,6 +13,13 @@ from guardrails.validators import (
 from litellm import completion
 
 from app.core.config import settings
+from app.core.constants import (
+    ANSWER_RELEVANCE_EMPTY_FIELDS_ERROR,
+    ANSWER_RELEVANCE_LLM_CALL_FAILED_TEMPLATE,
+    ANSWER_RELEVANCE_MISSING_PLACEHOLDER_TEMPLATE,
+    ANSWER_RELEVANCE_NOT_RELEVANT_ERROR,
+    ANSWER_RELEVANCE_UNEXPECTED_RESPONSE_TEMPLATE,
+)
 
 DEFAULT_PROMPT_TEMPLATE = (
     "Query: {query}\n"
@@ -53,14 +60,16 @@ class AnswerRelevanceCustomLLM(Validator):
         answer = self.output
 
         if not query.strip() or not answer.strip():
-            return FailResult(
-                error_message="Both 'query' and 'answer' fields must be non-empty."
-            )
+            return FailResult(error_message=ANSWER_RELEVANCE_EMPTY_FIELDS_ERROR)
 
         try:
             prompt = self.prompt_template.format(query=query, answer=answer)
         except KeyError as e:
-            return FailResult(error_message=f"Prompt template missing placeholder: {e}")
+            return FailResult(
+                error_message=ANSWER_RELEVANCE_MISSING_PLACEHOLDER_TEMPLATE.format(
+                    placeholder=e
+                )
+            )
 
         try:
             response = completion(
@@ -70,16 +79,18 @@ class AnswerRelevanceCustomLLM(Validator):
             )
             response_text = response.choices[0].message.content.strip().upper()
         except Exception as e:
-            return FailResult(error_message=f"LLM call failed: {e}")
+            return FailResult(
+                error_message=ANSWER_RELEVANCE_LLM_CALL_FAILED_TEMPLATE.format(error=e)
+            )
 
         if response_text.startswith("YES"):
             return PassResult(value=value)
 
         if response_text.startswith("NO"):
-            return FailResult(
-                error_message="The answer is not relevant to the query.",
-            )
+            return FailResult(error_message=ANSWER_RELEVANCE_NOT_RELEVANT_ERROR)
 
         return FailResult(
-            error_message=f"Unexpected LLM response for relevance check: {response_text}"
+            error_message=ANSWER_RELEVANCE_UNEXPECTED_RESPONSE_TEMPLATE.format(
+                response=response_text
+            )
         )

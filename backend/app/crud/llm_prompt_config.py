@@ -4,8 +4,14 @@ from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
+from app.core.constants import DUPLICATE_LLM_PROMPT_CONFIG_ERROR
 from app.core.enum import LLMValidatorName
 from app.models.config.llm_prompt_config import LLMPromptConfig
+from app.schemas.llm_prompt_config import (
+    LLMPromptConfigCreate,
+    LLMPromptConfigUpdate,
+    validate_answer_relevance_prompt,
+)
 from app.utils import now
 
 
@@ -13,7 +19,7 @@ class LLMPromptConfigCrud:
     def create(
         self,
         session: Session,
-        payload,
+        payload: LLMPromptConfigCreate,
         organization_id: int,
         project_id: int,
     ) -> LLMPromptConfig:
@@ -27,10 +33,7 @@ class LLMPromptConfigCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
-            raise HTTPException(
-                400,
-                "A prompt config with the same configuration already exists",
-            )
+            raise HTTPException(400, DUPLICATE_LLM_PROMPT_CONFIG_ERROR)
         except Exception:
             session.rollback()
             raise
@@ -87,7 +90,7 @@ class LLMPromptConfigCrud:
         id: UUID,
         organization_id: int,
         project_id: int,
-        payload,
+        payload: LLMPromptConfigUpdate,
     ) -> LLMPromptConfig:
         obj = self.get(session, id, organization_id, project_id)
 
@@ -97,13 +100,10 @@ class LLMPromptConfigCrud:
             "llm_prompt" in update_data
             and obj.validator_name == LLMValidatorName.AnswerRelevanceCustomLLM
         ):
-            new_prompt = update_data["llm_prompt"]
-            missing = [p for p in ("{query}", "{answer}") if p not in new_prompt]
-            if missing:
-                raise HTTPException(
-                    422,
-                    f"llm_prompt must contain the placeholders: {', '.join(missing)}",
-                )
+            try:
+                validate_answer_relevance_prompt(update_data["llm_prompt"])
+            except ValueError as e:
+                raise HTTPException(422, str(e))
 
         for key, value in update_data.items():
             setattr(obj, key, value)
@@ -114,10 +114,7 @@ class LLMPromptConfigCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
-            raise HTTPException(
-                400,
-                "A prompt config with the same configuration already exists",
-            )
+            raise HTTPException(400, DUPLICATE_LLM_PROMPT_CONFIG_ERROR)
         except Exception:
             session.rollback()
             raise
