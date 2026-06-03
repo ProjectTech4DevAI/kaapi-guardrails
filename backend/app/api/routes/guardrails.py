@@ -1,7 +1,7 @@
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
 from sqlmodel import Session
@@ -13,9 +13,12 @@ from app.core.constants import (
     LLM_CRITIC_REPHRASE_MESSAGE,
     REPHRASE_ON_FAIL_PREFIX,
 )
-from app.core.enum import ValidatorType
+from app.core.enum import LLMValidatorName, ValidatorType
 from app.core.exception_handlers import _safe_error_message
 from app.core.guardrail_controller import build_guard, get_validator_config_models
+from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
+    AnswerRelevanceCustomLLMSafetyValidatorConfig,
+)
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
@@ -26,8 +29,8 @@ from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
 from app.crud.ban_list import ban_list_crud
+from app.crud.llm_prompt_config import llm_prompt_config_crud
 from app.crud.request_log import RequestLogCrud
-from app.crud.topic_relevance import topic_relevance_crud
 from app.crud.validator_log import ValidatorLogCrud
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
@@ -62,8 +65,14 @@ def run_guardrails(
         return APIResponse.failure_response(error="Invalid request_id")
 
     _resolve_validator_configs(payload, session)
+    has_output_validator = any(
+        isinstance(v, AnswerRelevanceCustomLLMSafetyValidatorConfig)
+        for v in payload.validators
+    )
+    data = (payload.output or "") if has_output_validator else payload.input
     return _validate_with_guard(
         payload,
+        data,
         request_log_crud,
         request_log.id,
         validator_log_crud,
@@ -107,6 +116,9 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
     - BanList: fetches banned_words from the stored BanList when not provided inline.
     - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
     - TopicRelevanceOpenAI: fetches configuration from stored config.
+    - AnswerRelevance: fetches custom prompt template from stored config.
+
+    Returns the data string to pass to guard.validate().
     """
     for validator in payload.validators:
         if isinstance(validator, BanListSafetyValidatorConfig):
@@ -127,20 +139,48 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
             ),
         ):
             if validator.topic_relevance_config_id is not None:
-                config = topic_relevance_crud.get(
+                config = llm_prompt_config_crud.get(
                     session=session,
                     id=validator.topic_relevance_config_id,
                     organization_id=payload.organization_id,
                     project_id=payload.project_id,
                 )
-                validator.configuration = config.configuration
+                if config.validator_name != LLMValidatorName.TopicRelevance:
+                    raise HTTPException(
+                        400,
+                        f"LLM prompt config '{config.id}' is for validator "
+                        f"'{config.validator_name}', not 'topic_relevance'",
+                    )
+                validator.configuration = config.llm_prompt
                 # Only the LLMCritic-backed variant carries a prompt schema version.
                 if isinstance(validator, TopicRelevanceSafetyValidatorConfig):
                     validator.prompt_schema_version = config.prompt_schema_version
 
+        elif isinstance(validator, AnswerRelevanceCustomLLMSafetyValidatorConfig):
+            validator.input = payload.input
+            validator.output = payload.output or ""
+            if validator.custom_prompt_id is not None:
+                prompt_config = llm_prompt_config_crud.get(
+                    session=session,
+                    id=validator.custom_prompt_id,
+                    organization_id=payload.organization_id,
+                    project_id=payload.project_id,
+                )
+                if (
+                    prompt_config.validator_name
+                    != LLMValidatorName.AnswerRelevanceCustomLLM
+                ):
+                    raise HTTPException(
+                        400,
+                        f"LLM prompt config '{prompt_config.id}' is for validator "
+                        f"'{prompt_config.validator_name}', not 'answer_relevance_custom_llm'",
+                    )
+                validator.prompt_template = prompt_config.llm_prompt
+
 
 def _validate_with_guard(
     payload: GuardrailRequest,
+    data: str,
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
@@ -154,7 +194,6 @@ def _validate_with_guard(
     while still safely handling unexpected runtime errors.
     """
     response_id = uuid.uuid4()
-    data = payload.input
     validators = payload.validators
     guard: Guard | None = None
 
@@ -330,7 +369,7 @@ def add_validator_logs(
 
 def _normalize_llm_critic_error(message: str) -> str:
     if (
-        "failed the following metrics"
+        "failed the following metrics" in message
         or "missing or has invalid evaluations" in message
     ):
         return LLM_CRITIC_ERROR_MESSAGE

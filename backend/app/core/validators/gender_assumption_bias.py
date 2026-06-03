@@ -30,7 +30,7 @@ class GenderAssumptionBias(Validator):
         self.gender_bias_list = self.load_gender_bias_list(self.categories)
         super().__init__(on_fail=on_fail)
 
-    def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+    def _validate(self, value: str, metadata: dict | None = None) -> ValidationResult:
         detected_biased_words = []
         bias_check = False
 

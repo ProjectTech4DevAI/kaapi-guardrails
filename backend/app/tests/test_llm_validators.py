@@ -3,6 +3,9 @@ from unittest.mock import patch
 import pytest
 from guardrails.validators import FailResult
 
+from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
+    AnswerRelevanceCustomLLMSafetyValidatorConfig,
+)
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
@@ -190,7 +193,95 @@ def test__normalize_llm_critic_error_maps_missing_invalid_metrics():
 
 def test__normalize_llm_critic_error_passes_through_unknown_messages():
     raw = "Some other validator error."
-    assert (
-        _normalize_llm_critic_error(raw)
-        == "The query did not meet the required quality criteria."
+    assert _normalize_llm_critic_error(raw) == raw
+
+
+# ---------------------------------------------------------------------------
+# AnswerRelevanceCustomLLMSafetyValidatorConfig
+# ---------------------------------------------------------------------------
+
+_ANSWER_RELEVANCE_SETTINGS_PATH = (
+    "app.core.validators.config"
+    ".answer_relevance_custom_llm_safety_validator_config.settings"
+)
+
+_SAMPLE_ANSWER_RELEVANCE_CONFIG = dict(type="answer_relevance_custom_llm")
+
+
+def test_answer_relevance_build_raises_when_openai_key_missing():
+    config = AnswerRelevanceCustomLLMSafetyValidatorConfig(
+        **_SAMPLE_ANSWER_RELEVANCE_CONFIG
     )
+
+    with patch(_ANSWER_RELEVANCE_SETTINGS_PATH) as mock_settings:
+        mock_settings.OPENAI_API_KEY = None
+
+        with pytest.raises(ValueError) as exc:
+            config.build()
+
+    assert "OPENAI_API_KEY" in str(exc.value)
+    assert "not configured" in str(exc.value)
+
+
+def test_answer_relevance_build_proceeds_when_openai_key_present():
+    config = AnswerRelevanceCustomLLMSafetyValidatorConfig(
+        **_SAMPLE_ANSWER_RELEVANCE_CONFIG
+    )
+
+    with patch(_ANSWER_RELEVANCE_SETTINGS_PATH) as mock_settings, patch(
+        "app.core.validators.config"
+        ".answer_relevance_custom_llm_safety_validator_config.AnswerRelevanceCustomLLM"
+    ) as mock_validator:
+        mock_settings.OPENAI_API_KEY = "sk-test-key"
+        config.build()
+
+    mock_validator.assert_called_once()
+
+
+def test_answer_relevance_build_uses_default_prompt_when_none():
+    config = AnswerRelevanceCustomLLMSafetyValidatorConfig(
+        **_SAMPLE_ANSWER_RELEVANCE_CONFIG
+    )
+
+    with patch(_ANSWER_RELEVANCE_SETTINGS_PATH) as mock_settings, patch(
+        "app.core.validators.config"
+        ".answer_relevance_custom_llm_safety_validator_config.AnswerRelevanceCustomLLM"
+    ) as mock_validator:
+        mock_settings.OPENAI_API_KEY = "sk-test-key"
+        config.build()
+
+    _, kwargs = mock_validator.call_args
+    assert "prompt_template" not in kwargs
+
+
+def test_answer_relevance_build_passes_inline_prompt_template():
+    custom = "Q: {query}\nA: {answer}\nYES or NO."
+    config = AnswerRelevanceCustomLLMSafetyValidatorConfig(
+        **{**_SAMPLE_ANSWER_RELEVANCE_CONFIG, "prompt_template": custom}
+    )
+
+    with patch(_ANSWER_RELEVANCE_SETTINGS_PATH) as mock_settings, patch(
+        "app.core.validators.config"
+        ".answer_relevance_custom_llm_safety_validator_config.AnswerRelevanceCustomLLM"
+    ) as mock_validator:
+        mock_settings.OPENAI_API_KEY = "sk-test-key"
+        config.build()
+
+    _, kwargs = mock_validator.call_args
+    assert kwargs["prompt_template"] == custom
+
+
+def test_answer_relevance_build_passes_llm_callable():
+    config = AnswerRelevanceCustomLLMSafetyValidatorConfig(
+        **{**_SAMPLE_ANSWER_RELEVANCE_CONFIG, "llm_callable": "gpt-4o"}
+    )
+
+    with patch(_ANSWER_RELEVANCE_SETTINGS_PATH) as mock_settings, patch(
+        "app.core.validators.config"
+        ".answer_relevance_custom_llm_safety_validator_config.AnswerRelevanceCustomLLM"
+    ) as mock_validator:
+        mock_settings.OPENAI_API_KEY = "sk-test-key"
+        config.build()
+
+    _, kwargs = mock_validator.call_args
+    assert kwargs["llm_callable"] == "gpt-4o"

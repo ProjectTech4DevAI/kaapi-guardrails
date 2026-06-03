@@ -55,6 +55,12 @@ class RequestLog(SQLModel, table=True):
         sa_column_kwargs={"comment": "Text of the request made"},
     )
 
+    output_text: Optional[str] = Field(
+        default=None,
+        nullable=True,
+        sa_column_kwargs={"comment": "LLM output text passed for output guardrails"},
+    )
+
     response_text: Optional[str] = Field(
         default=None,
         nullable=True,

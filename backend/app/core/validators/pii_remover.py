@@ -109,7 +109,7 @@ class PIIRemover(Validator):
         self.analyzer = _get_cached_analyzer(self.entity_types)
         self.anonymizer = AnonymizerEngine()
 
-    def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+    def _validate(self, value: str, metadata: dict | None = None) -> ValidationResult:
         text = value
         results = self.analyzer.analyze(
             text=text, entities=self.entity_types, language="en"

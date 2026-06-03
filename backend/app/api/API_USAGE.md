@@ -6,7 +6,7 @@ This guide explains how to use the current API surface for:
 - Runtime validator discovery
 - Guardrail execution
 - Ban list CRUD for multi-tenant projects
-- Topic relevance config CRUD for multi-tenant projects
+- LLM prompt config CRUD for multi-tenant projects (`topic_relevance` and `answer_relevance_custom_llm`)
 
 ## Base URL and Version
 
@@ -24,7 +24,7 @@ This API currently uses two auth modes:
    - Used by validator config and guardrails endpoints.
    - The server validates your plaintext bearer token against a SHA-256 digest stored in `AUTH_TOKEN`.
 2. multi-tenant API key auth (`X-API-KEY: <token>`)
-   - Used by ban list and topic relevance config endpoints.
+   - Used by ban list and LLM prompt config endpoints.
    - The API key is verified against `KAAPI_AUTH_URL` and resolves tenant's scope (`organization_id`, `project_id`).
 
 Notes:
@@ -184,8 +184,8 @@ Request fields:
 Important:
 - Runtime validators use `on_fail`.
 - If you pass objects from config APIs, server normalization supports `on_fail_action` and strips non-runtime fields.
-- For `topic_relevance`, pass `topic_relevance_config_id` only.
-- The API resolves `configuration` + `prompt_schema_version` in `guardrails.py` before validator execution, so the validator always executes with both values.
+- For `topic_relevance`, pass `topic_relevance_config_id` only. The API resolves `configuration` + `prompt_schema_version` in `guardrails.py` before validator execution.
+- For `answer_relevance_custom_llm`, `input` must be a JSON string `{"query": "...", "answer": "..."}`. Pass `custom_prompt_id` to use a stored tenant prompt, or omit to use the built-in default prompt.
 
 Example:
 
@@ -342,86 +342,107 @@ curl -X DELETE "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>"
   -H "X-API-KEY: <api-key>"
 ```
 
-## 6) Topic Relevance Config APIs (multi-tenant)
+## 6) LLM Prompt Config APIs (multi-tenant)
 
-These endpoints manage tenant-scoped topic relevance presets and use `X-API-KEY` auth.
+These endpoints manage tenant-scoped LLM prompt configs for the `topic_relevance` and `answer_relevance_custom_llm` validators. They use `X-API-KEY` auth.
 
 Base path:
-- `/api/v1/guardrails/topic_relevance_configs`
+- `/api/v1/guardrails/llm_prompt_configs`
 
-## 6.1 Create topic relevance config
+The `validator_name` field determines which validator the config applies to:
+- `"topic_relevance"` — a scope description used as the LLM topic guard prompt. No placeholder requirements.
+- `"answer_relevance_custom_llm"` — a custom evaluation prompt. Must contain `{query}` and `{answer}` placeholders.
+
+## 6.1 Create LLM prompt config
 
 Endpoint:
-- `POST /api/v1/guardrails/topic_relevance_configs/`
+- `POST /api/v1/guardrails/llm_prompt_configs/`
 
-Example:
+Example (topic relevance):
 
 ```bash
-curl -X POST "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/" \
+curl -X POST "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/" \
   -H "X-API-KEY: <api-key>" \
   -H "Content-Type: application/json" \
   -d '{
+    "validator_name": "topic_relevance",
     "name": "Maternal Health Scope",
     "description": "Topic guard for maternal health support bot",
     "prompt_schema_version": 1,
-    "configuration": "Pregnancy care: Questions about prenatal care, ANC visits, nutrition, supplements, danger signs. Postpartum care: Questions about recovery after delivery, breastfeeding, and mother health checks."
+    "llm_prompt": "Pregnancy care: Questions about prenatal care, ANC visits, nutrition, supplements, danger signs. Postpartum care: Questions about recovery after delivery, breastfeeding, and mother health checks."
   }'
 ```
 
-## 6.2 List topic relevance configs
-
-Endpoint:
-- `GET /api/v1/guardrails/topic_relevance_configs/?offset=0&limit=20`
-
-Example:
+Example (answer relevance):
 
 ```bash
-curl -X GET "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/?offset=0&limit=20" \
-  -H "X-API-KEY: <api-key>"
-```
-
-## 6.3 Get topic relevance config by id
-
-Endpoint:
-- `GET /api/v1/guardrails/topic_relevance_configs/{id}`
-
-Example:
-
-```bash
-curl -X GET "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<topic_relevance_config_id>" \
-  -H "X-API-KEY: <api-key>"
-```
-
-## 6.4 Update topic relevance config
-
-Endpoint:
-- `PATCH /api/v1/guardrails/topic_relevance_configs/{id}`
-
-Example:
-
-```bash
-curl -X PATCH "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<topic_relevance_config_id>" \
+curl -X POST "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/" \
   -H "X-API-KEY: <api-key>" \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt_schema_version": 1,
-    "configuration": "Pregnancy care: Updated scope definition"
+    "validator_name": "answer_relevance_custom_llm",
+    "name": "Maternal Health Relevance",
+    "description": "Checks if LLM answer addresses a maternal health query",
+    "llm_prompt": "You are evaluating a maternal health assistant.\nQuery: {query}\nAnswer: {answer}\n\nDoes the answer directly address the maternal health query with accurate information?\nAnswer only YES or NO."
   }'
 ```
 
-## 6.5 Delete topic relevance config
+## 6.2 List LLM prompt configs
 
 Endpoint:
-- `DELETE /api/v1/guardrails/topic_relevance_configs/{id}`
+- `GET /api/v1/guardrails/llm_prompt_configs/?offset=0&limit=20`
+
+Optional filter:
+- `validator_name=topic_relevance|answer_relevance_custom_llm`
 
 Example:
 
 ```bash
-curl -X DELETE "http://localhost:8001/api/v1/guardrails/topic_relevance_configs/<topic_relevance_config_id>" \
+curl -X GET "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/?validator_name=topic_relevance&offset=0&limit=20" \
   -H "X-API-KEY: <api-key>"
 ```
 
-## 7) End-to-End Usage Pattern
+## 6.3 Get LLM prompt config by id
+
+Endpoint:
+- `GET /api/v1/guardrails/llm_prompt_configs/{id}`
+
+Example:
+
+```bash
+curl -X GET "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/<config_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 6.4 Update LLM prompt config
+
+Endpoint:
+- `PATCH /api/v1/guardrails/llm_prompt_configs/{id}`
+
+Example:
+
+```bash
+curl -X PATCH "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/<config_id>" \
+  -H "X-API-KEY: <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "llm_prompt": "Pregnancy care: Updated scope definition"
+  }'
+```
+
+## 6.5 Delete LLM prompt config
+
+Endpoint:
+- `DELETE /api/v1/guardrails/llm_prompt_configs/{id}`
+
+Example:
+
+```bash
+curl -X DELETE "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/<config_id>" \
+  -H "X-API-KEY: <api-key>"
+```
+
+## 8) End-to-End Usage Pattern
 
 Recommended request flow:
 1. Create/update validator configs via `/guardrails/validators/configs`.
@@ -430,16 +451,17 @@ Recommended request flow:
 4. Use `safe_text` as downstream text.
 5. If `rephrase_needed=true`, ask user to rephrase.
 6. For `ban_list` validators without inline `banned_words`, create/manage a ban list first and pass `ban_list_id`.
-7. For `topic_relevance`, create/manage a topic relevance config and pass `topic_relevance_config_id` at runtime. The server resolves the configuration string internally.
+7. For `topic_relevance`, create/manage an LLM prompt config (`validator_name: "topic_relevance"`) and pass `topic_relevance_config_id` at runtime. The server resolves `llm_prompt` and `prompt_schema_version` internally.
+8. For `answer_relevance_custom_llm`, format `input` as `{"query": "...", "answer": "..."}`. Optionally create an LLM prompt config (`validator_name: "answer_relevance_custom_llm"`) and pass `custom_prompt_id`. If no `custom_prompt_id` is given, the built-in default prompt is used.
 
-## 8) Common Errors
+## 9) Common Errors
 
 - `401 Missing Authorization header`
   - Add `Authorization: Bearer <token>`.
 - `401 Invalid authorization token`
   - Verify plaintext token matches server-side hash.
 - `401 Missing X-API-KEY header`
-  - Add `X-API-KEY: <api-key>` for ban list and topic relevance config endpoints.
+  - Add `X-API-KEY: <api-key>` for ban list and LLM prompt config endpoints.
 - `401 Invalid API key`
   - Verify the API key is valid in the upstream Kaapi auth service.
 - `Invalid request_id`
@@ -448,10 +470,10 @@ Recommended request flow:
   - Type+stage is unique per organization/project scope.
 - `Validator not found`
   - Confirm `id`, `organization_id`, and `project_id` match.
-- `Topic relevance preset not found`
-  - Confirm topic relevance config `id` exists within your tenant scope.
+- `LLM prompt config not found`
+  - Confirm the LLM prompt config `id` exists within your tenant scope.
 
-## 9) Current Validator Types
+## 10) Current Validator Types
 
 From `validators.json`:
 - `uli_slur_match`
@@ -463,6 +485,7 @@ From `validators.json`:
 - `llamaguard_7b`
 - `profanity_free`
 - `nsfw_text`
+- `answer_relevance_custom_llm`
 
 Source of truth:
 - `backend/app/core/validators/validators.json`

@@ -16,6 +16,7 @@ class RequestLogCrud:
         create_request_log = RequestLog(
             request_id=request_id,
             request_text=payload.input,
+            output_text=payload.output,
             organization_id=payload.organization_id,
             project_id=payload.project_id,
         )
