@@ -22,6 +22,9 @@ from app.core.validators.config.answer_relevance_custom_llm_safety_validator_con
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
+from app.core.validators.config.topic_relevance_openai_safety_validator_config import (
+    TopicRelevanceOpenAISafetyValidatorConfig,
+)
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
@@ -112,6 +115,7 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
     Resolves config-backed references for all validators in-place before guard execution:
     - BanList: fetches banned_words from the stored BanList when not provided inline.
     - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
+    - TopicRelevanceOpenAI: fetches configuration from stored config.
     - AnswerRelevance: fetches custom prompt template from stored config.
 
     Returns the data string to pass to guard.validate().
@@ -127,7 +131,13 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 )
                 validator.banned_words = ban_list.banned_words
 
-        elif isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+        elif isinstance(
+            validator,
+            (
+                TopicRelevanceSafetyValidatorConfig,
+                TopicRelevanceOpenAISafetyValidatorConfig,
+            ),
+        ):
             if validator.topic_relevance_config_id is not None:
                 config = llm_prompt_config_crud.get(
                     session=session,
@@ -142,7 +152,9 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                         f"'{config.validator_name}', not 'topic_relevance'",
                     )
                 validator.configuration = config.llm_prompt
-                validator.prompt_schema_version = config.prompt_schema_version
+                # Only the LLMCritic-backed variant carries a prompt schema version.
+                if isinstance(validator, TopicRelevanceSafetyValidatorConfig):
+                    validator.prompt_schema_version = config.prompt_schema_version
 
         elif isinstance(validator, AnswerRelevanceCustomLLMSafetyValidatorConfig):
             validator.input = payload.input
