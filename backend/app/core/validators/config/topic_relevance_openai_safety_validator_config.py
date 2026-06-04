@@ -15,6 +15,7 @@ class TopicRelevanceOpenAISafetyValidatorConfig(BaseValidatorConfig):
     threshold: int = Field(
         default=settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD, ge=1, le=3
     )
+    prompt_schema_version: int = Field(default=1, ge=1)
     topic_relevance_config_id: Optional[UUID] = None
 
     def build(self):
@@ -27,5 +28,6 @@ class TopicRelevanceOpenAISafetyValidatorConfig(BaseValidatorConfig):
             system_prompt=self.configuration or "",
             llm_callable=self.llm_callable,
             threshold=self.threshold,
+            prompt_schema_version=self.prompt_schema_version,
             on_fail=self.resolve_on_fail(),
         )

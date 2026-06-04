@@ -291,12 +291,56 @@ def test_system_prompt_contains_topic_config():
     assert TOPIC_CONFIG in v._system_prompt
 
 
-def test_system_prompt_contains_json_instruction():
+def test_user_message_template_contains_json_instruction():
     with patch(
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
-    assert "scope_violation" in v._system_prompt
-    assert "JSON" in v._system_prompt
+    assert "scope_violation" in v._user_message_template
+    assert "JSON" in v._user_message_template
+
+
+def test_user_message_template_contains_user_prompt_placeholder():
+    with patch(
+        "app.core.validators.llm_utils.get_supported_openai_params",
+        return_value=[],
+    ):
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+
+    assert "{{USER_PROMPT}}" in v._user_message_template
+
+
+def test_prompt_schema_version_v2_loads_forbidden_template():
+    with patch(
+        "app.core.validators.llm_utils.get_supported_openai_params",
+        return_value=[],
+    ):
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, prompt_schema_version=2)
+
+    assert "forbidden" in v._user_message_template.lower()
+
+
+def test_prompt_schema_version_v3_loads_combined_template():
+    with patch(
+        "app.core.validators.llm_utils.get_supported_openai_params",
+        return_value=[],
+    ):
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, prompt_schema_version=3)
+
+    assert "forbidden" in v._user_message_template.lower()
+    assert "allowed" in v._user_message_template.lower()
+
+
+def test_invalid_prompt_schema_version_returns_fail():
+    with patch(
+        "app.core.validators.llm_utils.get_supported_openai_params",
+        return_value=[],
+    ):
+        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, prompt_schema_version=99)
+
+    result = v._validate("Some input")
+
+    assert isinstance(result, FailResult)
+    assert "not found" in result.error_message

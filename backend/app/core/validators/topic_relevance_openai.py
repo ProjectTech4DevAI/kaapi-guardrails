@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
+from pathlib import Path
 from typing import Callable, Optional
 
 from guardrails import OnFailAction
@@ -21,20 +23,34 @@ from app.core.validators.llm_utils import (
     supports_response_format,
 )
 
+# Placeholder in user-message templates marking where the user's query is injected.
+_USER_PROMPT_PLACEHOLDER = "{{USER_PROMPT}}"
+_PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_openai"
+
 # Valid scope scores returned by the model; the highest means "clearly in scope".
 _VALID_SCORES = (1, 2, 3)
 # Cap the response: a single ``{"scope_violation": <score>}`` object is tiny.
 _MAX_TOKENS = 50
 
-_SCORING_INSTRUCTIONS = (
-    "\n\nScore using:\n"
-    f"{_VALID_SCORES[2]} = clearly within scope (directly matches a topic description)\n"
-    f"{_VALID_SCORES[1]} = partially related (tangentially related or implicitly within scope)\n"
-    f"{_VALID_SCORES[0]} = clearly outside scope (no relation to any listed topic)\n"
-    "\nRespond ONLY with a JSON object in this exact format: "
-    '{"scope_violation": <score>} where <score> is the integer '
-    f"{_VALID_SCORES[0]}, {_VALID_SCORES[1]}, or {_VALID_SCORES[2]}."
-)
+
+@lru_cache(maxsize=8)
+def _load_prompt_template(prompt_schema_version: int) -> str:
+    """Load and cache the user-message prompt template for the given schema version."""
+    if prompt_schema_version < 1:
+        raise ValueError("prompt_schema_version must be a positive integer")
+
+    prompt_file = _PROMPTS_DIR / f"v{prompt_schema_version}.md"
+    if not prompt_file.exists():
+        raise ValueError(
+            f"Topic relevance (OpenAI) prompt template for version {prompt_schema_version} not found"
+        )
+
+    template = prompt_file.read_text(encoding="utf-8")
+    if _USER_PROMPT_PLACEHOLDER not in template:
+        raise ValueError(
+            f"Prompt template v{prompt_schema_version} must contain {_USER_PROMPT_PLACEHOLDER}"
+        )
+    return template
 
 
 @register_validator(name="topic-relevance-openai", data_type="string")
@@ -43,11 +59,18 @@ class TopicRelevanceOpenAI(Validator):
     Validates whether a user message is within the defined topic scope
     using a direct OpenAI/litellm call.
 
-    The caller supplies the full system prompt. The validator appends
-    hardcoded scoring and response-format instructions.
+    The caller supplies the topic configuration as ``system_prompt``, which
+    becomes the system message. Scoring and response-format instructions are
+    loaded from a versioned prompt template (v1/v2/v3) and injected as the
+    user message alongside the query.
 
     Scores 1–3 where 3 = clearly in scope, 2 = partially related,
     1 = outside scope. Passes when score >= threshold (default 2).
+
+    ``prompt_schema_version`` selects the scoring strategy:
+      v1 = allowed topics only
+      v2 = forbidden topics only
+      v3 = combined allowed + forbidden (checks forbidden first)
     """
 
     def __init__(
@@ -55,6 +78,7 @@ class TopicRelevanceOpenAI(Validator):
         system_prompt: str,
         llm_callable: str = settings.DEFAULT_LLM_CALLABLE,
         threshold: int = settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
+        prompt_schema_version: int = 1,
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
         super().__init__(on_fail=on_fail)
@@ -63,13 +87,20 @@ class TopicRelevanceOpenAI(Validator):
         self.threshold = threshold
         self._invalid_config_reason: Optional[str] = None
         self._system_prompt: Optional[str] = None
+        self._user_message_template: Optional[str] = None
         self._supports_response_format: bool = False
 
         if not system_prompt or not system_prompt.strip():
             self._invalid_config_reason = "system_prompt is blank or missing"
             return
 
-        self._system_prompt = system_prompt.strip() + _SCORING_INSTRUCTIONS
+        try:
+            self._user_message_template = _load_prompt_template(prompt_schema_version)
+        except ValueError as e:
+            self._invalid_config_reason = str(e)
+            return
+
+        self._system_prompt = system_prompt.strip()
         self._supports_response_format = supports_response_format(llm_callable)
 
     def _validate(
@@ -81,12 +112,16 @@ class TopicRelevanceOpenAI(Validator):
         if not value or not value.strip():
             return FailResult(error_message=EMPTY_MESSAGE_ERROR)
 
+        user_message = self._user_message_template.replace(
+            _USER_PROMPT_PLACEHOLDER, value
+        )
+
         try:
             kwargs = {
                 "model": self.llm_callable,
                 "messages": [
                     {"role": "system", "content": self._system_prompt},
-                    {"role": "user", "content": value},
+                    {"role": "user", "content": user_message},
                 ],
                 "max_tokens": _MAX_TOKENS,
             }
