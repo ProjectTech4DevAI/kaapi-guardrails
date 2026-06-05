@@ -22,8 +22,8 @@ from app.core.validators.config.answer_relevance_custom_llm_safety_validator_con
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
-from app.core.validators.config.topic_relevance_openai_safety_validator_config import (
-    TopicRelevanceOpenAISafetyValidatorConfig,
+from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
+    TopicRelevanceLLMSafetyValidatorConfig,
 )
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
@@ -115,7 +115,7 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
     Resolves config-backed references for all validators in-place before guard execution:
     - BanList: fetches banned_words from the stored BanList when not provided inline.
     - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
-    - TopicRelevanceOpenAI: fetches configuration from stored config.
+    - TopicRelevanceLLM: fetches configuration from stored config.
     - AnswerRelevance: fetches custom prompt template from stored config.
 
     Returns the data string to pass to guard.validate().
@@ -135,7 +135,7 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
             validator,
             (
                 TopicRelevanceSafetyValidatorConfig,
-                TopicRelevanceOpenAISafetyValidatorConfig,
+                TopicRelevanceLLMSafetyValidatorConfig,
             ),
         ):
             if validator.topic_relevance_config_id is not None:

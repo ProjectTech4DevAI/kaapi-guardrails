@@ -9,8 +9,8 @@ from app.core.validators.config.answer_relevance_custom_llm_safety_validator_con
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
 )
-from app.core.validators.config.topic_relevance_openai_safety_validator_config import (
-    TopicRelevanceOpenAISafetyValidatorConfig,
+from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
+    TopicRelevanceLLMSafetyValidatorConfig,
 )
 from app.core.validators.config.llm_critic_safety_validator_config import (
     LLMCriticSafetyValidatorConfig,
@@ -67,21 +67,21 @@ def test_topic_relevance_blank_config_returns_fail_result():
     assert "blank" in result.error_message
 
 
-_SAMPLE_OPENAI_TOPIC_CONFIG = dict(
-    type="topic_relevance_openai",
+_SAMPLE_LLM_TOPIC_CONFIG = dict(
+    type="topic_relevance_llm",
     configuration="Only answer about cooking.",
     llm_callable="gpt-4o-mini",
 )
 
-_TOPIC_RELEVANCE_OPENAI_SETTINGS_PATH = (
-    "app.core.validators.config.topic_relevance_openai_safety_validator_config.settings"
+_TOPIC_RELEVANCE_LLM_SETTINGS_PATH = (
+    "app.core.validators.config.topic_relevance_llm_safety_validator_config.settings"
 )
 
 
-def test_topic_relevance_openai_build_raises_when_openai_key_missing():
-    config = TopicRelevanceOpenAISafetyValidatorConfig(**_SAMPLE_OPENAI_TOPIC_CONFIG)
+def test_topic_relevance_llm_build_raises_when_openai_key_missing():
+    config = TopicRelevanceLLMSafetyValidatorConfig(**_SAMPLE_LLM_TOPIC_CONFIG)
 
-    with patch(_TOPIC_RELEVANCE_OPENAI_SETTINGS_PATH) as mock_settings:
+    with patch(_TOPIC_RELEVANCE_LLM_SETTINGS_PATH) as mock_settings:
         mock_settings.OPENAI_API_KEY = None
 
         with pytest.raises(ValueError) as exc:
@@ -91,11 +91,11 @@ def test_topic_relevance_openai_build_raises_when_openai_key_missing():
     assert "not configured" in str(exc.value)
 
 
-def test_topic_relevance_openai_build_proceeds_when_openai_key_present():
-    config = TopicRelevanceOpenAISafetyValidatorConfig(**_SAMPLE_OPENAI_TOPIC_CONFIG)
+def test_topic_relevance_llm_build_proceeds_when_openai_key_present():
+    config = TopicRelevanceLLMSafetyValidatorConfig(**_SAMPLE_LLM_TOPIC_CONFIG)
 
-    with patch(_TOPIC_RELEVANCE_OPENAI_SETTINGS_PATH) as mock_settings, patch(
-        "app.core.validators.config.topic_relevance_openai_safety_validator_config.TopicRelevanceOpenAI"
+    with patch(_TOPIC_RELEVANCE_LLM_SETTINGS_PATH) as mock_settings, patch(
+        "app.core.validators.config.topic_relevance_llm_safety_validator_config.TopicRelevanceLLM"
     ) as mock_validator:
         mock_settings.OPENAI_API_KEY = "sk-test-key"
         config.build()
@@ -103,12 +103,12 @@ def test_topic_relevance_openai_build_proceeds_when_openai_key_present():
     mock_validator.assert_called_once()
 
 
-def test_topic_relevance_openai_blank_config_returns_fail_result():
-    config = TopicRelevanceOpenAISafetyValidatorConfig(
-        **{**_SAMPLE_OPENAI_TOPIC_CONFIG, "configuration": None}
+def test_topic_relevance_llm_blank_config_returns_fail_result():
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        **{**_SAMPLE_LLM_TOPIC_CONFIG, "configuration": None}
     )
 
-    with patch(_TOPIC_RELEVANCE_OPENAI_SETTINGS_PATH) as mock_settings, patch(
+    with patch(_TOPIC_RELEVANCE_LLM_SETTINGS_PATH) as mock_settings, patch(
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
@@ -120,18 +120,18 @@ def test_topic_relevance_openai_blank_config_returns_fail_result():
     assert "blank" in result.error_message
 
 
-def test_topic_relevance_openai_default_threshold_is_2():
-    config = TopicRelevanceOpenAISafetyValidatorConfig(**_SAMPLE_OPENAI_TOPIC_CONFIG)
+def test_topic_relevance_llm_default_threshold_is_2():
+    config = TopicRelevanceLLMSafetyValidatorConfig(**_SAMPLE_LLM_TOPIC_CONFIG)
     assert config.threshold == 2
 
 
-def test_topic_relevance_openai_custom_threshold_forwarded_to_validator():
-    config = TopicRelevanceOpenAISafetyValidatorConfig(
-        **{**_SAMPLE_OPENAI_TOPIC_CONFIG, "threshold": 3}
+def test_topic_relevance_llm_custom_threshold_forwarded_to_validator():
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        **{**_SAMPLE_LLM_TOPIC_CONFIG, "threshold": 3}
     )
 
-    with patch(_TOPIC_RELEVANCE_OPENAI_SETTINGS_PATH) as mock_settings, patch(
-        "app.core.validators.config.topic_relevance_openai_safety_validator_config.TopicRelevanceOpenAI"
+    with patch(_TOPIC_RELEVANCE_LLM_SETTINGS_PATH) as mock_settings, patch(
+        "app.core.validators.config.topic_relevance_llm_safety_validator_config.TopicRelevanceLLM"
     ) as mock_validator:
         mock_settings.OPENAI_API_KEY = "sk-test-key"
         config.build()

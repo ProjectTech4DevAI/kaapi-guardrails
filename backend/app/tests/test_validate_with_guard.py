@@ -317,7 +317,7 @@ def test_resolve_validator_configs_answer_relevance_from_custom_prompt_id():
     )
 
 
-def test_resolve_validator_configs_topic_relevance_openai_from_config_id():
+def test_resolve_validator_configs_topic_relevance_llm_from_config_id():
     topic_relevance_id = str(uuid4())
     payload = GuardrailRequest(
         request_id=str(uuid4()),
@@ -326,7 +326,7 @@ def test_resolve_validator_configs_topic_relevance_openai_from_config_id():
         input="test",
         validators=[
             {
-                "type": "topic_relevance_openai",
+                "type": "topic_relevance_llm",
                 "topic_relevance_config_id": topic_relevance_id,
             }
         ],
@@ -366,13 +366,13 @@ def test_resolve_validator_configs_skips_answer_relevance_lookup_when_no_prompt_
     mock_get.assert_not_called()
 
 
-def test_resolve_validator_configs_skips_topic_relevance_openai_lookup_when_no_config_id():
+def test_resolve_validator_configs_skips_topic_relevance_llm_lookup_when_no_config_id():
     payload = GuardrailRequest(
         request_id=str(uuid4()),
         organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
         project_id=VALIDATOR_TEST_PROJECT_ID,
         input="test",
-        validators=[{"type": "topic_relevance_openai"}],
+        validators=[{"type": "topic_relevance_llm"}],
     )
     mock_session = MagicMock()
 
@@ -406,7 +406,7 @@ def test_resolve_validator_configs_uses_inline_answer_relevance_prompt_without_l
     mock_get.assert_not_called()
 
 
-def test_resolve_validator_configs_uses_inline_topic_relevance_openai_without_lookup():
+def test_resolve_validator_configs_uses_inline_topic_relevance_llm_without_lookup():
     payload = GuardrailRequest(
         request_id=str(uuid4()),
         organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
@@ -414,8 +414,8 @@ def test_resolve_validator_configs_uses_inline_topic_relevance_openai_without_lo
         input="test",
         validators=[
             {
-                "type": "topic_relevance_openai",
-                "configuration": "inline openai config",
+                "type": "topic_relevance_llm",
+                "configuration": "inline llm config",
             }
         ],
     )
@@ -425,7 +425,7 @@ def test_resolve_validator_configs_uses_inline_topic_relevance_openai_without_lo
         _resolve_validator_configs(payload, mock_session)
 
     validator = payload.validators[0]
-    assert validator.configuration == "inline openai config"
+    assert validator.configuration == "inline llm config"
     mock_get.assert_not_called()
 
 
