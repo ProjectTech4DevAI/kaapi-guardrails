@@ -35,8 +35,8 @@ from app.core.validators.config.pii_remover_safety_validator_config import (
 from app.core.validators.config.profanity_free_safety_validator_config import (
     ProfanityFreeSafetyValidatorConfig,
 )
-from app.core.validators.config.topic_relevance_openai_safety_validator_config import (
-    TopicRelevanceOpenAISafetyValidatorConfig,
+from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
+    TopicRelevanceLLMSafetyValidatorConfig,
 )
 from app.core.validators.config.topic_relevance_safety_validator_config import (
     TopicRelevanceSafetyValidatorConfig,
@@ -54,7 +54,7 @@ ValidatorConfigItem = Annotated[
         NSFWTextSafetyValidatorConfig,
         ProfanityFreeSafetyValidatorConfig,
         TopicRelevanceSafetyValidatorConfig,
-        TopicRelevanceOpenAISafetyValidatorConfig,
+        TopicRelevanceLLMSafetyValidatorConfig,
     ],
     Field(discriminator="type"),
 ]

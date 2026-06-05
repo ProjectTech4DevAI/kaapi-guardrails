@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from guardrails.validators import FailResult, PassResult
 
-from app.core.validators.topic_relevance_openai import (
-    TopicRelevanceOpenAI,
+from app.core.validators.topic_relevance_llm import (
+    TopicRelevanceLLM,
     _USER_PROMPT_PLACEHOLDER,
 )
 
@@ -25,7 +25,7 @@ def validator():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=["response_format"],
     ):
-        return TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        return TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
 
 # ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ def validator():
 
 
 def test_passes_when_score_is_3(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         result = validator._validate("How do I make pasta?")
 
@@ -43,7 +43,7 @@ def test_passes_when_score_is_3(validator):
 
 
 def test_passes_when_score_equals_threshold(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 2}')
         result = validator._validate("What is cooking roughly about?")
 
@@ -57,7 +57,7 @@ def test_passes_when_score_equals_threshold(validator):
 
 
 def test_fails_when_score_is_1(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 1}')
         result = validator._validate("What is the latest cricket score?")
 
@@ -76,9 +76,9 @@ def test_custom_threshold_of_3_fails_on_score_2():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        strict_validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=3)
+        strict_validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG, threshold=3)
 
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 2}')
         result = strict_validator._validate("Something vaguely food related")
 
@@ -91,11 +91,9 @@ def test_custom_threshold_of_1_passes_on_score_1():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        lenient_validator = TopicRelevanceOpenAI(
-            system_prompt=TOPIC_CONFIG, threshold=1
-        )
+        lenient_validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG, threshold=1)
 
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 1}')
         result = lenient_validator._validate("Cricket scores")
 
@@ -126,7 +124,7 @@ def test_fails_when_system_prompt_is_blank():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        blank_prompt_validator = TopicRelevanceOpenAI(system_prompt="")
+        blank_prompt_validator = TopicRelevanceLLM(system_prompt="")
 
     result = blank_prompt_validator._validate("Some input")
 
@@ -139,7 +137,7 @@ def test_fails_when_system_prompt_is_whitespace_only():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        whitespace_prompt_validator = TopicRelevanceOpenAI(system_prompt="   ")
+        whitespace_prompt_validator = TopicRelevanceLLM(system_prompt="   ")
 
     result = whitespace_prompt_validator._validate("Some input")
 
@@ -154,7 +152,7 @@ def test_fails_when_system_prompt_is_whitespace_only():
 
 def test_fails_gracefully_when_llm_raises(validator):
     with patch(
-        "app.core.validators.topic_relevance_openai.completion",
+        "app.core.validators.topic_relevance_llm.completion",
         side_effect=Exception("network timeout"),
     ):
         result = validator._validate("How do I bake bread?")
@@ -165,7 +163,7 @@ def test_fails_gracefully_when_llm_raises(validator):
 
 
 def test_fails_gracefully_when_response_is_not_json(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response("Sure, this looks great!")
         result = validator._validate("How do I bake bread?")
 
@@ -174,7 +172,7 @@ def test_fails_gracefully_when_response_is_not_json(validator):
 
 
 def test_fails_gracefully_when_score_key_is_missing(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"result": "yes"}')
         result = validator._validate("How do I bake bread?")
 
@@ -183,7 +181,7 @@ def test_fails_gracefully_when_score_key_is_missing(validator):
 
 
 def test_fails_gracefully_when_score_is_out_of_range(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 5}')
         result = validator._validate("How do I bake bread?")
 
@@ -192,7 +190,7 @@ def test_fails_gracefully_when_score_is_out_of_range(validator):
 
 
 def test_fails_gracefully_when_score_is_a_string(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": "high"}')
         result = validator._validate("How do I bake bread?")
 
@@ -201,7 +199,7 @@ def test_fails_gracefully_when_score_is_a_string(validator):
 
 
 def test_passes_when_response_wrapped_in_markdown_fence(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response(
             '```json\n{"scope_violation": 3}\n```'
         )
@@ -212,7 +210,7 @@ def test_passes_when_response_wrapped_in_markdown_fence(validator):
 
 
 def test_passes_when_response_has_surrounding_prose(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response(
             'Sure! Here is my evaluation: {"scope_violation": 2}'
         )
@@ -223,7 +221,7 @@ def test_passes_when_response_has_surrounding_prose(validator):
 
 
 def test_fails_when_score_is_boolean(validator):
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": true}')
         result = validator._validate("How do I bake bread?")
 
@@ -238,7 +236,7 @@ def test_fails_when_score_is_boolean(validator):
 
 def test_user_message_contains_query_not_placeholder(validator):
     query = "How do I make pasta?"
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         validator._validate(query)
 
@@ -258,9 +256,9 @@ def test_response_format_passed_when_supported():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=["response_format"],
     ):
-        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         validator._validate("How do I make pasta?")
 
@@ -273,9 +271,9 @@ def test_response_format_omitted_when_not_supported():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         validator._validate("How do I make pasta?")
 
@@ -288,9 +286,9 @@ def test_response_format_omitted_when_litellm_check_fails():
         "app.core.validators.llm_utils.get_supported_openai_params",
         side_effect=Exception("litellm unavailable"),
     ):
-        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
-    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         validator._validate("How do I make pasta?")
 
@@ -308,7 +306,7 @@ def test_system_prompt_contains_topic_config():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
     assert TOPIC_CONFIG in validator._system_prompt
 
@@ -318,7 +316,7 @@ def test_user_message_template_contains_json_instruction():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
     assert "scope_violation" in validator._user_message_template
     assert "JSON" in validator._user_message_template
@@ -329,7 +327,7 @@ def test_user_message_template_contains_user_prompt_placeholder():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
     assert _USER_PROMPT_PLACEHOLDER in validator._user_message_template
 
@@ -339,7 +337,7 @@ def test_prompt_schema_version_v2_loads_forbidden_template():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v2_validator = TopicRelevanceOpenAI(
+        v2_validator = TopicRelevanceLLM(
             system_prompt=TOPIC_CONFIG, prompt_schema_version=2
         )
 
@@ -351,7 +349,7 @@ def test_prompt_schema_version_v3_loads_combined_template():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v3_validator = TopicRelevanceOpenAI(
+        v3_validator = TopicRelevanceLLM(
             system_prompt=TOPIC_CONFIG, prompt_schema_version=3
         )
 
@@ -364,7 +362,7 @@ def test_invalid_prompt_schema_version_returns_fail():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        invalid_version_validator = TopicRelevanceOpenAI(
+        invalid_version_validator = TopicRelevanceLLM(
             system_prompt=TOPIC_CONFIG, prompt_schema_version=99
         )
 

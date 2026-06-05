@@ -25,7 +25,7 @@ from app.core.validators.llm_utils import (
 
 # Placeholder in user-message templates marking where the user's query is injected.
 _USER_PROMPT_PLACEHOLDER = "{{USER_PROMPT}}"
-_PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_openai"
+_PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
 
 # Valid scope scores returned by the model; the highest means "clearly in scope".
 _VALID_SCORES = (1, 2, 3)
@@ -42,7 +42,7 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
     prompt_file = _PROMPTS_DIR / f"v{prompt_schema_version}.md"
     if not prompt_file.exists():
         raise ValueError(
-            f"Topic relevance (OpenAI) prompt template for version {prompt_schema_version} not found"
+            f"Topic relevance (LLM) prompt template for version {prompt_schema_version} not found"
         )
 
     template = prompt_file.read_text(encoding="utf-8")
@@ -53,11 +53,11 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
     return template
 
 
-@register_validator(name="topic-relevance-openai", data_type="string")
-class TopicRelevanceOpenAI(Validator):
+@register_validator(name="topic-relevance-llm", data_type="string")
+class TopicRelevanceLLM(Validator):
     """
     Validates whether a user message is within the defined topic scope
-    using a direct OpenAI/litellm call.
+    using a direct LLM call via litellm.
 
     The caller supplies the topic configuration as ``system_prompt``, which
     becomes the system message. Scoring and response-format instructions are
@@ -77,7 +77,7 @@ class TopicRelevanceOpenAI(Validator):
         self,
         system_prompt: str,
         llm_callable: str = settings.DEFAULT_LLM_CALLABLE,
-        threshold: int = settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
+        threshold: int = settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
         prompt_schema_version: int = 1,
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):

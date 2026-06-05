@@ -7,7 +7,7 @@ from guardrails.validators import FailResult
 
 from app.core.config import settings
 from app.core.validators.topic_relevance import TopicRelevance
-from app.core.validators.topic_relevance_openai import TopicRelevanceOpenAI
+from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 from app.evaluation.common.helper import (
     Profiler,
     build_evaluation_report,
@@ -48,16 +48,16 @@ BACKENDS = [
         },
     },
     {
-        "name": "topic_relevance_openai",
-        "out_dir": OUTPUTS_DIR / "topic_relevance_openai",
-        "build": lambda tc: TopicRelevanceOpenAI(
+        "name": "topic_relevance_llm",
+        "out_dir": OUTPUTS_DIR / "topic_relevance_llm",
+        "build": lambda tc: TopicRelevanceLLM(
             system_prompt=tc,
             llm_callable=settings.DEFAULT_LLM_CALLABLE,
-            threshold=settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
+            threshold=settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
         ),
         "report_extra": {
             "llm_callable": settings.DEFAULT_LLM_CALLABLE,
-            "threshold": settings.TOPIC_RELEVANCE_OPENAI_THRESHOLD,
+            "threshold": settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
         },
     },
 ]
