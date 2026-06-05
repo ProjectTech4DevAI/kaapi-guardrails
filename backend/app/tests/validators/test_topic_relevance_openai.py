@@ -3,7 +3,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from guardrails.validators import FailResult, PassResult
 
-from app.core.validators.topic_relevance_openai import TopicRelevanceOpenAI
+from app.core.validators.topic_relevance_openai import (
+    TopicRelevanceOpenAI,
+    _USER_PROMPT_PLACEHOLDER,
+)
 
 TOPIC_CONFIG = "Only answer questions about cooking and recipes."
 
@@ -73,11 +76,11 @@ def test_custom_threshold_of_3_fails_on_score_2():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=3)
+        strict_validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=3)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 2}')
-        result = v._validate("Something vaguely food related")
+        result = strict_validator._validate("Something vaguely food related")
 
     assert isinstance(result, FailResult)
     assert result.metadata["scope_score"] == 2
@@ -88,11 +91,13 @@ def test_custom_threshold_of_1_passes_on_score_1():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, threshold=1)
+        lenient_validator = TopicRelevanceOpenAI(
+            system_prompt=TOPIC_CONFIG, threshold=1
+        )
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 1}')
-        result = v._validate("Cricket scores")
+        result = lenient_validator._validate("Cricket scores")
 
     assert isinstance(result, PassResult)
 
@@ -121,9 +126,9 @@ def test_fails_when_system_prompt_is_blank():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt="")
+        blank_prompt_validator = TopicRelevanceOpenAI(system_prompt="")
 
-    result = v._validate("Some input")
+    result = blank_prompt_validator._validate("Some input")
 
     assert isinstance(result, FailResult)
     assert "blank" in result.error_message
@@ -134,9 +139,9 @@ def test_fails_when_system_prompt_is_whitespace_only():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt="   ")
+        whitespace_prompt_validator = TopicRelevanceOpenAI(system_prompt="   ")
 
-    result = v._validate("Some input")
+    result = whitespace_prompt_validator._validate("Some input")
 
     assert isinstance(result, FailResult)
     assert "blank" in result.error_message
@@ -227,6 +232,23 @@ def test_fails_when_score_is_boolean(validator):
 
 
 # ---------------------------------------------------------------------------
+# User message construction
+# ---------------------------------------------------------------------------
+
+
+def test_user_message_contains_query_not_placeholder(validator):
+    query = "How do I make pasta?"
+    with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate(query)
+
+    _, kwargs = mock_llm.call_args
+    user_message = kwargs["messages"][1]["content"]
+    assert query in user_message
+    assert _USER_PROMPT_PLACEHOLDER not in user_message
+
+
+# ---------------------------------------------------------------------------
 # response_format forwarding
 # ---------------------------------------------------------------------------
 
@@ -236,11 +258,11 @@ def test_response_format_passed_when_supported():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=["response_format"],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
-        v._validate("How do I make pasta?")
+        validator._validate("How do I make pasta?")
 
     _, kwargs = mock_llm.call_args
     assert kwargs.get("response_format") == {"type": "json_object"}
@@ -251,11 +273,11 @@ def test_response_format_omitted_when_not_supported():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
-        v._validate("How do I make pasta?")
+        validator._validate("How do I make pasta?")
 
     _, kwargs = mock_llm.call_args
     assert "response_format" not in kwargs
@@ -266,11 +288,11 @@ def test_response_format_omitted_when_litellm_check_fails():
         "app.core.validators.llm_utils.get_supported_openai_params",
         side_effect=Exception("litellm unavailable"),
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
     with patch("app.core.validators.topic_relevance_openai.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
-        v._validate("How do I make pasta?")
+        validator._validate("How do I make pasta?")
 
     _, kwargs = mock_llm.call_args
     assert "response_format" not in kwargs
@@ -286,9 +308,9 @@ def test_system_prompt_contains_topic_config():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
-    assert TOPIC_CONFIG in v._system_prompt
+    assert TOPIC_CONFIG in validator._system_prompt
 
 
 def test_user_message_template_contains_json_instruction():
@@ -296,10 +318,10 @@ def test_user_message_template_contains_json_instruction():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
-    assert "scope_violation" in v._user_message_template
-    assert "JSON" in v._user_message_template
+    assert "scope_violation" in validator._user_message_template
+    assert "JSON" in validator._user_message_template
 
 
 def test_user_message_template_contains_user_prompt_placeholder():
@@ -307,9 +329,9 @@ def test_user_message_template_contains_user_prompt_placeholder():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG)
 
-    assert "{{USER_PROMPT}}" in v._user_message_template
+    assert _USER_PROMPT_PLACEHOLDER in validator._user_message_template
 
 
 def test_prompt_schema_version_v2_loads_forbidden_template():
@@ -317,9 +339,11 @@ def test_prompt_schema_version_v2_loads_forbidden_template():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, prompt_schema_version=2)
+        v2_validator = TopicRelevanceOpenAI(
+            system_prompt=TOPIC_CONFIG, prompt_schema_version=2
+        )
 
-    assert "forbidden" in v._user_message_template.lower()
+    assert "forbidden" in v2_validator._user_message_template.lower()
 
 
 def test_prompt_schema_version_v3_loads_combined_template():
@@ -327,10 +351,12 @@ def test_prompt_schema_version_v3_loads_combined_template():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, prompt_schema_version=3)
+        v3_validator = TopicRelevanceOpenAI(
+            system_prompt=TOPIC_CONFIG, prompt_schema_version=3
+        )
 
-    assert "forbidden" in v._user_message_template.lower()
-    assert "allowed" in v._user_message_template.lower()
+    assert "forbidden" in v3_validator._user_message_template.lower()
+    assert "allowed" in v3_validator._user_message_template.lower()
 
 
 def test_invalid_prompt_schema_version_returns_fail():
@@ -338,9 +364,11 @@ def test_invalid_prompt_schema_version_returns_fail():
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        v = TopicRelevanceOpenAI(system_prompt=TOPIC_CONFIG, prompt_schema_version=99)
+        invalid_version_validator = TopicRelevanceOpenAI(
+            system_prompt=TOPIC_CONFIG, prompt_schema_version=99
+        )
 
-    result = v._validate("Some input")
+    result = invalid_version_validator._validate("Some input")
 
     assert isinstance(result, FailResult)
     assert "not found" in result.error_message
