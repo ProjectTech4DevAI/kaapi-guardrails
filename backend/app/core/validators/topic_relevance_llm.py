@@ -23,8 +23,6 @@ from app.core.validators.llm_utils import (
     supports_response_format,
 )
 
-# Placeholder in user-message templates marking where the user's query is injected.
-_USER_PROMPT_PLACEHOLDER = "{{USER_PROMPT}}"
 _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
 
 # Valid scope scores returned by the model; the highest means "clearly in scope".
@@ -35,7 +33,7 @@ _MAX_TOKENS = 50
 
 @lru_cache(maxsize=8)
 def _load_prompt_template(prompt_schema_version: int) -> str:
-    """Load and cache the user-message prompt template for the given schema version."""
+    """Load and cache the scoring instruction block for the given schema version."""
     if prompt_schema_version < 1:
         raise ValueError("prompt_schema_version must be a positive integer")
 
@@ -45,12 +43,7 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
             f"Topic relevance (LLM) prompt template for version {prompt_schema_version} not found"
         )
 
-    template = prompt_file.read_text(encoding="utf-8")
-    if _USER_PROMPT_PLACEHOLDER not in template:
-        raise ValueError(
-            f"Prompt template v{prompt_schema_version} must contain {_USER_PROMPT_PLACEHOLDER}"
-        )
-    return template
+    return prompt_file.read_text(encoding="utf-8")
 
 
 @register_validator(name="topic-relevance-llm", data_type="string")
@@ -59,10 +52,10 @@ class TopicRelevanceLLM(Validator):
     Validates whether a user message is within the defined topic scope
     using a direct LLM call via litellm.
 
-    The caller supplies the topic configuration as ``system_prompt``, which
-    becomes the system message. Scoring and response-format instructions are
-    loaded from a versioned prompt template (v1/v2/v3) and injected as the
-    user message alongside the query.
+    The caller supplies the topic configuration as ``system_prompt``. Scoring
+    and response-format instructions are loaded from a versioned prompt template
+    (v1/v2/v3) and appended to the system message. The user message contains
+    only the raw query.
 
     Scores 1–3 where 3 = clearly in scope, 2 = partially related,
     1 = outside scope. Passes when score >= threshold (default 2).
@@ -87,7 +80,6 @@ class TopicRelevanceLLM(Validator):
         self.threshold = threshold
         self._invalid_config_reason: Optional[str] = None
         self._system_prompt: Optional[str] = None
-        self._user_message_template: Optional[str] = None
         self._supports_response_format: bool = False
 
         if not system_prompt or not system_prompt.strip():
@@ -95,12 +87,12 @@ class TopicRelevanceLLM(Validator):
             return
 
         try:
-            self._user_message_template = _load_prompt_template(prompt_schema_version)
+            scoring_rules = _load_prompt_template(prompt_schema_version)
         except ValueError as e:
             self._invalid_config_reason = str(e)
             return
 
-        self._system_prompt = system_prompt.strip()
+        self._system_prompt = f"{system_prompt.strip()}\n\n{scoring_rules}"
         self._supports_response_format = supports_response_format(llm_callable)
 
     def _validate(
@@ -112,16 +104,12 @@ class TopicRelevanceLLM(Validator):
         if not value or not value.strip():
             return FailResult(error_message=EMPTY_MESSAGE_ERROR)
 
-        user_message = self._user_message_template.replace(
-            _USER_PROMPT_PLACEHOLDER, value
-        )
-
         try:
             kwargs = {
                 "model": self.llm_callable,
                 "messages": [
                     {"role": "system", "content": self._system_prompt},
-                    {"role": "user", "content": user_message},
+                    {"role": "user", "content": value},
                 ],
                 "max_tokens": _MAX_TOKENS,
             }
