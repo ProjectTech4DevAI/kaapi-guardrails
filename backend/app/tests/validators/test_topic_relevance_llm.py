@@ -3,10 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from guardrails.validators import FailResult, PassResult
 
-from app.core.validators.topic_relevance_llm import (
-    TopicRelevanceLLM,
-    _USER_PROMPT_PLACEHOLDER,
-)
+from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 
 TOPIC_CONFIG = "Only answer questions about cooking and recipes."
 
@@ -234,7 +231,7 @@ def test_fails_when_score_is_boolean(validator):
 # ---------------------------------------------------------------------------
 
 
-def test_user_message_contains_query_not_placeholder(validator):
+def test_user_message_is_exactly_the_query(validator):
     query = "How do I make pasta?"
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
@@ -242,8 +239,7 @@ def test_user_message_contains_query_not_placeholder(validator):
 
     _, kwargs = mock_llm.call_args
     user_message = kwargs["messages"][1]["content"]
-    assert query in user_message
-    assert _USER_PROMPT_PLACEHOLDER not in user_message
+    assert user_message == query
 
 
 # ---------------------------------------------------------------------------
@@ -311,25 +307,15 @@ def test_system_prompt_contains_topic_config():
     assert TOPIC_CONFIG in validator._system_prompt
 
 
-def test_user_message_template_contains_json_instruction():
+def test_system_prompt_contains_json_instruction():
     with patch(
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
         validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
-    assert "scope_violation" in validator._user_message_template
-    assert "JSON" in validator._user_message_template
-
-
-def test_user_message_template_contains_user_prompt_placeholder():
-    with patch(
-        "app.core.validators.llm_utils.get_supported_openai_params",
-        return_value=[],
-    ):
-        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
-
-    assert _USER_PROMPT_PLACEHOLDER in validator._user_message_template
+    assert "scope_violation" in validator._system_prompt
+    assert "JSON" in validator._system_prompt
 
 
 def test_prompt_schema_version_v2_loads_forbidden_template():
@@ -341,7 +327,7 @@ def test_prompt_schema_version_v2_loads_forbidden_template():
             system_prompt=TOPIC_CONFIG, prompt_schema_version=2
         )
 
-    assert "forbidden" in v2_validator._user_message_template.lower()
+    assert "forbidden" in v2_validator._system_prompt.lower()
 
 
 def test_prompt_schema_version_v3_loads_combined_template():
@@ -353,8 +339,8 @@ def test_prompt_schema_version_v3_loads_combined_template():
             system_prompt=TOPIC_CONFIG, prompt_schema_version=3
         )
 
-    assert "forbidden" in v3_validator._user_message_template.lower()
-    assert "allowed" in v3_validator._user_message_template.lower()
+    assert "forbidden" in v3_validator._system_prompt.lower()
+    assert "allowed" in v3_validator._system_prompt.lower()
 
 
 def test_invalid_prompt_schema_version_returns_fail():
