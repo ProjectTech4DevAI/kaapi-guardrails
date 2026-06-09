@@ -1,6 +1,6 @@
 """
 Live integration tests for TopicRelevanceLLM — these call the real LLM and are
-skipped automatically when OPENAI_API_KEY is not set in the environment.
+skipped automatically when OPENAI_API_KEY is not set or is a placeholder value.
 
 Run them explicitly with:
     pytest -m llm_live
@@ -16,8 +16,8 @@ from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 pytestmark = pytest.mark.llm_live
 
 _needs_key = pytest.mark.skipif(
-    not os.environ.get("OPENAI_API_KEY"),
-    reason="OPENAI_API_KEY not set — skipping live LLM tests",
+    not os.environ.get("OPENAI_API_KEY", "").startswith("sk-"),
+    reason="OPENAI_API_KEY not set or not a valid key — skipping live LLM tests",
 )
 
 _COOKING_SCOPE = "Only answer questions about cooking and recipes."
