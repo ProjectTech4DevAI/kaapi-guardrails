@@ -206,6 +206,15 @@ def test_passes_when_response_wrapped_in_markdown_fence(validator):
     assert result.metadata["scope_score"] == 3
 
 
+def test_passes_when_response_wrapped_in_plain_markdown_fence(validator):
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('```\n{"scope_violation": 3}\n```')
+        result = validator._validate("How do I make pasta?")
+
+    assert isinstance(result, PassResult)
+    assert result.metadata["scope_score"] == 3
+
+
 def test_passes_when_response_has_surrounding_prose(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response(
@@ -215,6 +224,73 @@ def test_passes_when_response_has_surrounding_prose(validator):
 
     assert isinstance(result, PassResult)
     assert result.metadata["scope_score"] == 2
+
+
+# ---------------------------------------------------------------------------
+# Richer 4-field response format
+# ---------------------------------------------------------------------------
+
+_RICH_PASS = (
+    '{"interpreted_meaning": "How to cook pasta",'
+    ' "reasoning": "Directly about cooking.",'
+    ' "scope_violation": 3,'
+    ' "classification_confidence_score": "high"}'
+)
+
+_RICH_FAIL = (
+    '{"interpreted_meaning": "Latest cricket score",'
+    ' "reasoning": "Unrelated to cooking.",'
+    ' "scope_violation": 1,'
+    ' "classification_confidence_score": "high"}'
+)
+
+
+def test_passes_with_rich_format_and_exposes_extra_metadata(validator):
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(_RICH_PASS)
+        result = validator._validate("How do I make pasta?")
+
+    assert isinstance(result, PassResult)
+    assert result.metadata["scope_score"] == 3
+    assert result.metadata["interpreted_meaning"] == "How to cook pasta"
+    assert result.metadata["reasoning"] == "Directly about cooking."
+    assert result.metadata["classification_confidence_score"] == "high"
+
+
+def test_fails_with_rich_format_and_exposes_extra_metadata(validator):
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(_RICH_FAIL)
+        result = validator._validate("What is the latest cricket score?")
+
+    assert isinstance(result, FailResult)
+    assert result.metadata["scope_score"] == 1
+    assert result.metadata["interpreted_meaning"] == "Latest cricket score"
+    assert result.metadata["reasoning"] == "Unrelated to cooking."
+    assert result.metadata["classification_confidence_score"] == "high"
+
+
+def test_passes_when_rich_format_wrapped_in_markdown_fence(validator):
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(f"```json\n{_RICH_PASS}\n```")
+        result = validator._validate("How do I make pasta?")
+
+    assert isinstance(result, PassResult)
+    assert result.metadata["scope_score"] == 3
+
+
+def test_reasoning_with_curly_braces_is_parsed_correctly(validator):
+    response = (
+        '{"interpreted_meaning": "A cooking query",'
+        ' "reasoning": "Query {clearly} fits cooking scope.",'
+        ' "scope_violation": 3,'
+        ' "classification_confidence_score": "high"}'
+    )
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(response)
+        result = validator._validate("How do I make pasta?")
+
+    assert isinstance(result, PassResult)
+    assert result.metadata["scope_score"] == 3
 
 
 def test_fails_when_score_is_boolean(validator):
@@ -263,11 +339,14 @@ def test_response_format_passed_when_supported():
 
 
 def test_response_format_omitted_when_not_supported():
+    # Use an unknown model so the static allowlist doesn't short-circuit.
     with patch(
         "app.core.validators.llm_utils.get_supported_openai_params",
         return_value=[],
     ):
-        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(
+            system_prompt=TOPIC_CONFIG, llm_callable="unknown-model"
+        )
 
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
@@ -278,11 +357,14 @@ def test_response_format_omitted_when_not_supported():
 
 
 def test_response_format_omitted_when_litellm_check_fails():
+    # Use an unknown model so the static allowlist doesn't short-circuit.
     with patch(
         "app.core.validators.llm_utils.get_supported_openai_params",
         side_effect=Exception("litellm unavailable"),
     ):
-        validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
+        validator = TopicRelevanceLLM(
+            system_prompt=TOPIC_CONFIG, llm_callable="unknown-model"
+        )
 
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Optional
@@ -25,10 +24,26 @@ from app.core.validators.llm_utils import (
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
 
+
+def _extract_first_json_object(text: str) -> dict:
+    """Find and parse the first complete JSON object in *text*."""
+    start = text.find("{")
+    if start == -1:
+        raise ValueError("no JSON object found in response")
+    obj, _ = json.JSONDecoder().raw_decode(text, start)
+    return obj
+
+
 # Valid scope scores returned by the model; the highest means "clearly in scope".
 _VALID_SCORES = (1, 2, 3)
-# Cap the response: a single ``{"scope_violation": <score>}`` object is tiny.
-_MAX_TOKENS = 50
+# Extra fields the model may return alongside scope_violation.
+_OPTIONAL_FIELDS = (
+    "interpreted_meaning",
+    "reasoning",
+    "classification_confidence_score",
+)
+# Budget for the richer 4-field JSON response.
+_MAX_TOKENS = 300
 
 
 @lru_cache(maxsize=8)
@@ -122,11 +137,7 @@ class TopicRelevanceLLM(Validator):
             return FailResult(error_message=f"LLM call failed: {e}")
 
         try:
-            text = re.sub(r"```(?:json)?\s*|\s*```", "", content).strip()
-            match = re.search(r"\{[^{}]*\}", text)
-            if not match:
-                raise ValueError("no JSON object found in response")
-            data = json.loads(match.group())
+            data = _extract_first_json_object(content)
             score = data.get("scope_violation")
             # `type(score) is not int` (not isinstance) deliberately rejects bool,
             # which is an int subclass, so `true`/`false` are treated as invalid.
@@ -137,10 +148,15 @@ class TopicRelevanceLLM(Validator):
                 error_message=f"LLM returned an unparseable response: {e}. Raw: {content!r}"
             )
 
+        meta: dict = {"scope_score": score}
+        for field in _OPTIONAL_FIELDS:
+            if field in data:
+                meta[field] = data[field]
+
         if score >= self.threshold:
-            return PassResult(value=value, metadata={"scope_score": score})
+            return PassResult(value=value, metadata=meta)
 
         return FailResult(
             error_message=TOPIC_OUT_OF_SCOPE_ERROR,
-            metadata={"scope_score": score},
+            metadata=meta,
         )
