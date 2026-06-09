@@ -206,6 +206,15 @@ def test_passes_when_response_wrapped_in_markdown_fence(validator):
     assert result.metadata["scope_score"] == 3
 
 
+def test_passes_when_response_wrapped_in_plain_markdown_fence(validator):
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('```\n{"scope_violation": 3}\n```')
+        result = validator._validate("How do I make pasta?")
+
+    assert isinstance(result, PassResult)
+    assert result.metadata["scope_score"] == 3
+
+
 def test_passes_when_response_has_surrounding_prose(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response(

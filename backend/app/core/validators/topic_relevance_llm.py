@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Optional
@@ -27,23 +26,12 @@ _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
 
 
 def _extract_first_json_object(text: str) -> dict:
-    """Find and parse the first complete JSON object in *text*.
-
-    Uses brace-depth tracking so it handles values that themselves contain
-    curly braces (e.g. the ``reasoning`` field in the richer response format).
-    """
-    depth = 0
-    start = None
-    for i, ch in enumerate(text):
-        if ch == "{":
-            if depth == 0:
-                start = i
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0 and start is not None:
-                return json.loads(text[start : i + 1])
-    raise ValueError("no JSON object found in response")
+    """Find and parse the first complete JSON object in *text*."""
+    start = text.find("{")
+    if start == -1:
+        raise ValueError("no JSON object found in response")
+    obj, _ = json.JSONDecoder().raw_decode(text, start)
+    return obj
 
 
 # Valid scope scores returned by the model; the highest means "clearly in scope".
@@ -149,8 +137,7 @@ class TopicRelevanceLLM(Validator):
             return FailResult(error_message=f"LLM call failed: {e}")
 
         try:
-            text = re.sub(r"```(?:json)?\s*|\s*```", "", content).strip()
-            data = _extract_first_json_object(text)
+            data = _extract_first_json_object(content)
             score = data.get("scope_violation")
             # `type(score) is not int` (not isinstance) deliberately rejects bool,
             # which is an int subclass, so `true`/`false` are treated as invalid.
