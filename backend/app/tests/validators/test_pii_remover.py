@@ -66,6 +66,7 @@ def test_analyzer_called_with_correct_arguments(validator):
         text="hello",
         entities=validator.entity_types,
         language="en",
+        score_threshold=validator.threshold,
     )
 
 
@@ -97,4 +98,5 @@ def test_cached_analyzer_registers_only_requested_indian_recognizers():
         )
         mock_provider.return_value.create_engine.assert_called_once()
         mock_analyzer.assert_called_once()
-        assert analyzer_instance.registry.add_recognizer.call_count == 2
+        # 2 India recognizers (IN_AADHAAR, IN_PAN) + 1 TransformerNERRecognizer
+        assert analyzer_instance.registry.add_recognizer.call_count == 3
