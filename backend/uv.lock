@@ -186,7 +186,6 @@ dependencies = [
     { name = "httpx" },
     { name = "huggingface-hub" },
     { name = "jinja2" },
-    { name = "marimo" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -213,6 +212,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
+    { name = "marimo" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -235,7 +235,6 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.25.1,<1.0.0" },
     { name = "huggingface-hub", specifier = ">=1.5.0,<2.0" },
     { name = "jinja2", specifier = ">=3.1.4,<4.0.0" },
-    { name = "marimo", specifier = ">=0.23.13" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "pandas", specifier = ">=2.3.2" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4,<2.0.0" },
@@ -258,6 +257,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.4.3,<8.0.0" },
+    { name = "marimo", specifier = ">=0.23.13" },
     { name = "mypy", specifier = ">=1.8.0,<2.0.0" },
     { name = "pre-commit", specifier = ">=3.6.2,<4.0.0" },
     { name = "pytest", specifier = ">=7.4.3,<8.0.0" },
