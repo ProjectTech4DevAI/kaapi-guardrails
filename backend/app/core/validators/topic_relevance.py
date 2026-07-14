@@ -4,15 +4,22 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Optional
 
-from guardrails.hub import LLMCritic
 from guardrails import OnFailAction
+from guardrails.hub import LLMCritic
 from guardrails.validators import (
+    FailResult,
+    PassResult,
+    ValidationResult,
     Validator,
     register_validator,
-    ValidationResult,
 )
-from guardrails.validators import FailResult, PassResult
 
+from app.core.config import settings
+from app.core.constants import EMPTY_MESSAGE_ERROR, TOPIC_OUT_OF_SCOPE_ERROR
+from app.core.validators.llm_utils import (
+    JSON_OBJECT_RESPONSE_FORMAT,
+    supports_response_format,
+)
 
 # This should be present in all prompt templates to indicate where the topic configuration will be inserted
 _PROMPT_PLACEHOLDER = "{{TOPIC_CONFIGURATION}}"
@@ -62,7 +69,7 @@ class TopicRelevance(Validator):
         self,
         topic_config: str,
         prompt_schema_version: int = 1,
-        llm_callable: str = "gpt-4o-mini",
+        llm_callable: str = settings.DEFAULT_LLM_CALLABLE,
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
         """Build the LLMCritic with a scope_violation metric from the topic configuration."""
@@ -78,15 +85,6 @@ class TopicRelevance(Validator):
             self._critic = None
             return
 
-        try:
-            from litellm import get_supported_openai_params
-
-            supports_response_format = "response_format" in (
-                get_supported_openai_params(model=llm_callable) or []
-            )
-        except Exception:
-            supports_response_format = False
-
         self._critic = LLMCritic(
             metrics={
                 "scope_violation": {
@@ -101,19 +99,21 @@ class TopicRelevance(Validator):
             llm_callable=llm_callable,
             on_fail=on_fail,
             **(
-                {"llm_kwargs": {"response_format": {"type": "json_object"}}}
-                if supports_response_format
+                {"llm_kwargs": {"response_format": JSON_OBJECT_RESPONSE_FORMAT}}
+                if supports_response_format(llm_callable)
                 else {}
             ),
         )
 
-    def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+    def _validate(
+        self, value: str, metadata: Optional[dict] = None
+    ) -> ValidationResult:
         """Run the LLMCritic and return a PassResult or FailResult with the scope score."""
         if self._invalid_config_reason:
             return FailResult(error_message=self._invalid_config_reason)
 
         if not value or not value.strip():
-            return FailResult(error_message="Empty message.")
+            return FailResult(error_message=EMPTY_MESSAGE_ERROR)
 
         try:
             result = self._critic.validate(value, metadata)
@@ -127,7 +127,7 @@ class TopicRelevance(Validator):
 
             if isinstance(result, FailResult):
                 return FailResult(
-                    error_message="Input is outside the allowed topic scope.",
+                    error_message=TOPIC_OUT_OF_SCOPE_ERROR,
                     metadata={"scope_score": score},
                 )
 

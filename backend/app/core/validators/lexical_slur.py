@@ -39,7 +39,7 @@ class LexicalSlur(Validator):
         self._compile_slur_patterns()
         super().__init__(on_fail=on_fail, search_words=self.slur_list)
 
-    def _validate(self, value: str, metadata: dict = None) -> ValidationResult:
+    def _validate(self, value: str, metadata: dict | None = None) -> ValidationResult:
         original_text = value
         normalized_text = self.normalize_for_matching(value)
         detected_slurs = []

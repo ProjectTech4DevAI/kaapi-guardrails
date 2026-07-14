@@ -4,6 +4,11 @@ from uuid import UUID
 from pydantic import ConfigDict, model_validator
 from sqlmodel import Field, SQLModel
 
+from app.core.constants import VALIDATOR_CONFIG_SYSTEM_FIELDS
+from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
+    AnswerRelevanceCustomLLMSafetyValidatorConfig,
+)
+
 # todo this could be improved by having some auto-discovery mechanism inside
 # validators. We'll not have to list every new validator like this.
 from app.core.validators.config.ban_list_safety_validator_config import (
@@ -15,27 +20,31 @@ from app.core.validators.config.gender_assumption_bias_safety_validator_config i
 from app.core.validators.config.lexical_slur_safety_validator_config import (
     LexicalSlurSafetyValidatorConfig,
 )
-from app.core.validators.config.llm_critic_safety_validator_config import (
-    LLMCriticSafetyValidatorConfig,
-)
-from app.core.validators.config.pii_remover_safety_validator_config import (
-    PIIRemoverSafetyValidatorConfig,
-)
-from app.core.validators.config.topic_relevance_safety_validator_config import (
-    TopicRelevanceSafetyValidatorConfig,
-)
 from app.core.validators.config.llamaguard_7b_safety_validator_config import (
     LlamaGuard7BSafetyValidatorConfig,
+)
+from app.core.validators.config.llm_critic_safety_validator_config import (
+    LLMCriticSafetyValidatorConfig,
 )
 from app.core.validators.config.nsfw_text_safety_validator_config import (
     NSFWTextSafetyValidatorConfig,
 )
+from app.core.validators.config.pii_remover_safety_validator_config import (
+    PIIRemoverSafetyValidatorConfig,
+)
 from app.core.validators.config.profanity_free_safety_validator_config import (
     ProfanityFreeSafetyValidatorConfig,
+)
+from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
+    TopicRelevanceLLMSafetyValidatorConfig,
+)
+from app.core.validators.config.topic_relevance_safety_validator_config import (
+    TopicRelevanceSafetyValidatorConfig,
 )
 
 ValidatorConfigItem = Annotated[
     Union[
+        AnswerRelevanceCustomLLMSafetyValidatorConfig,
         BanListSafetyValidatorConfig,
         GenderAssumptionBiasSafetyValidatorConfig,
         LexicalSlurSafetyValidatorConfig,
@@ -45,6 +54,7 @@ ValidatorConfigItem = Annotated[
         NSFWTextSafetyValidatorConfig,
         ProfanityFreeSafetyValidatorConfig,
         TopicRelevanceSafetyValidatorConfig,
+        TopicRelevanceLLMSafetyValidatorConfig,
     ],
     Field(discriminator="type"),
 ]
@@ -56,6 +66,7 @@ class GuardrailRequest(SQLModel):
     organization_id: int
     project_id: int
     input: str
+    output: Optional[str] = None
     validators: List[ValidatorConfigItem]
 
     @model_validator(mode="before")
@@ -75,16 +86,14 @@ class GuardrailRequest(SQLModel):
         normalized_payload = dict(data)
         normalized_validators = []
 
-        drop_fields = {
+        # Strip persistence/system fields before handing a stored validator
+        # config to Guardrails. Reuse the shared system-field set, but keep
+        # `type` (the discriminator) and `on_fail_action` (remapped below),
+        # and add the DB-only columns.
+        drop_fields = (VALIDATOR_CONFIG_SYSTEM_FIELDS - {"type", "on_fail_action"}) | {
             "id",
-            "name",
-            "organization_id",
-            "project_id",
-            "stage",
-            "is_enabled",
             "created_at",
             "updated_at",
-            "name",
         }
 
         for validator in validators:

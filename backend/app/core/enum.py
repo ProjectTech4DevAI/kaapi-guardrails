@@ -1,6 +1,11 @@
 from enum import Enum
 
 
+class LLMValidatorName(str, Enum):
+    TopicRelevance = "topic_relevance"
+    AnswerRelevanceCustomLLM = "answer_relevance_custom_llm"
+
+
 class SlurSeverity(Enum):
     Low = "low"
     Medium = "medium"
@@ -32,7 +37,9 @@ class ValidatorType(Enum):
     GenderAssumptionBias = "gender_assumption_bias"
     BanList = "ban_list"
     TopicRelevance = "topic_relevance"
+    TopicRelevanceLLM = "topic_relevance_llm"
     LLMCritic = "llm_critic"
     LlamaGuard7B = "llamaguard_7b"
     ProfanityFree = "profanity_free"
     NSFWText = "nsfw_text"
+    AnswerRelevanceCustomLLM = "answer_relevance_custom_llm"

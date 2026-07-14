@@ -193,7 +193,7 @@ Set the resulting digest as `AUTH_TOKEN` in your `.env` / `.env.test`.
 
 ## Multi-tenant API Key Configuration
 
-Ban List and Topic Relevance Config APIs use `X-API-KEY` auth instead of bearer token auth.
+Ban List and LLM Prompt Config APIs use `X-API-KEY` auth instead of bearer token auth.
 
 Required environment variables:
 - `KAAPI_AUTH_URL`: Base URL of the Kaapi auth service used to verify API keys.
@@ -203,7 +203,7 @@ At runtime, the backend calls:
 - `GET {KAAPI_AUTH_URL}/apikeys/verify`
 - Header: `X-API-KEY: <token>`
 
-If verification succeeds, tenant's scope (`organization_id`, `project_id`) is resolved from the auth response and applied to tenant-scoped CRUD operations (for example Ban Lists and Topic Relevance Configs).
+If verification succeeds, tenant's scope (`organization_id`, `project_id`) is resolved from the auth response and applied to tenant-scoped CRUD operations (for example Ban Lists and LLM Prompt Configs).
 
 ## Guardrails AI Setup
 

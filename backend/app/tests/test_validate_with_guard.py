@@ -1,12 +1,15 @@
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
+import pytest
+from fastapi import HTTPException
 from guardrails.validators import FailResult as GRFailResult
 
 from app.api.routes.guardrails import (
     _resolve_validator_configs,
     _validate_with_guard,
 )
+from app.core.enum import LLMValidatorName
 from app.schemas.guardrail_config import GuardrailRequest
 from app.tests.guardrails_mocks import MockResult
 from app.tests.seed_data import (
@@ -35,12 +38,14 @@ def test_validate_with_guard_success():
         def validate(self, data):
             return MockResult(validated_output="clean text")
 
+    payload = _build_payload("hello")
     with patch(
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("hello"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -57,12 +62,14 @@ def test_validate_with_guard_validation_error():
         def validate(self, data):
             return MockResult(validated_output=None)
 
+    payload = _build_payload("bad text")
     with patch(
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("bad text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -75,12 +82,14 @@ def test_validate_with_guard_validation_error():
 
 
 def test_validate_with_guard_exception():
+    payload = _build_payload("text")
     with patch(
         "app.api.routes.guardrails.build_guard",
         side_effect=Exception("Invalid config"),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -117,11 +126,13 @@ def test_validate_with_guard_uses_fail_result_error_message():
         def validate(self, data):
             return MockResult(validated_output=None)
 
+    payload = _build_payload("bad text")
     with patch(
         "app.api.routes.guardrails.build_guard", return_value=MockGuard()
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
-            payload=_build_payload("bad text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -143,12 +154,14 @@ def test_validate_with_guard_handles_empty_iterations():
         def validate(self, data):
             return MockResult(validated_output=None)
 
+    payload = _build_payload("bad text")
     with patch(
         "app.api.routes.guardrails.build_guard",
         return_value=MockGuard(),
     ):
         response = _validate_with_guard(
-            payload=_build_payload("bad text"),
+            payload=payload,
+            data=payload.input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -213,9 +226,10 @@ def test_resolve_validator_configs_topic_relevance_from_config_id():
     )
     mock_session = MagicMock()
 
-    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         mock_get.return_value = MagicMock(
-            configuration="Topic scope prompt text",
+            validator_name=LLMValidatorName.TopicRelevance,
+            llm_prompt="Topic scope prompt text",
             prompt_schema_version=2,
         )
         _resolve_validator_configs(payload, mock_session)
@@ -241,7 +255,7 @@ def test_resolve_validator_configs_skips_topic_relevance_lookup_when_no_config_i
     )
     mock_session = MagicMock()
 
-    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         _resolve_validator_configs(payload, mock_session)
 
     mock_get.assert_not_called()
@@ -262,11 +276,156 @@ def test_resolve_validator_configs_uses_inline_topic_relevance_without_lookup():
     )
     mock_session = MagicMock()
 
-    with patch("app.api.routes.guardrails.topic_relevance_crud.get") as mock_get:
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
         _resolve_validator_configs(payload, mock_session)
 
     validator = payload.validators[0]
     assert validator.configuration == "inline config"
+    mock_get.assert_not_called()
+
+
+def test_resolve_validator_configs_answer_relevance_from_custom_prompt_id():
+    custom_prompt_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[
+            {
+                "type": "answer_relevance_custom_llm",
+                "custom_prompt_id": custom_prompt_id,
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            validator_name=LLMValidatorName.AnswerRelevanceCustomLLM,
+            llm_prompt="Q: {query}\nA: {answer}\nYES or NO.",
+        )
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.prompt_template == "Q: {query}\nA: {answer}\nYES or NO."
+    mock_get.assert_called_once_with(
+        session=mock_session,
+        id=validator.custom_prompt_id,
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+    )
+
+
+def test_resolve_validator_configs_topic_relevance_llm_from_config_id():
+    topic_relevance_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {
+                "type": "topic_relevance_llm",
+                "topic_relevance_config_id": topic_relevance_id,
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            validator_name=LLMValidatorName.TopicRelevance,
+            llm_prompt="Healthcare topic scope text",
+        )
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.configuration == "Healthcare topic scope text"
+    mock_get.assert_called_once_with(
+        session=mock_session,
+        id=validator.topic_relevance_config_id,
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+    )
+
+
+def test_resolve_validator_configs_skips_answer_relevance_lookup_when_no_prompt_id():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[{"type": "answer_relevance_custom_llm"}],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    mock_get.assert_not_called()
+
+
+def test_resolve_validator_configs_skips_topic_relevance_llm_lookup_when_no_config_id():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[{"type": "topic_relevance_llm"}],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    mock_get.assert_not_called()
+
+
+def test_resolve_validator_configs_uses_inline_answer_relevance_prompt_without_lookup():
+    inline_template = "Query: {query}\nAnswer: {answer}\nYES or NO."
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[
+            {
+                "type": "answer_relevance_custom_llm",
+                "prompt_template": inline_template,
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.prompt_template == inline_template
+    mock_get.assert_not_called()
+
+
+def test_resolve_validator_configs_uses_inline_topic_relevance_llm_without_lookup():
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {
+                "type": "topic_relevance_llm",
+                "configuration": "inline llm config",
+            }
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        _resolve_validator_configs(payload, mock_session)
+
+    validator = payload.validators[0]
+    assert validator.configuration == "inline llm config"
     mock_get.assert_not_called()
 
 
@@ -308,6 +467,7 @@ def test_nsfw_error_message_redacts_input():
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -329,6 +489,7 @@ def test_all_validators_redact_input_from_error_message():
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
             payload=_build_payload(input_text),
+            data=input_text,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -351,6 +512,7 @@ def test_profanity_free_error_message_redacts_input():
     ), patch("app.api.routes.guardrails.add_validator_logs"):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -374,6 +536,7 @@ def test_nsfw_exception_redacts_input():
     ):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -397,6 +560,7 @@ def test_profanity_free_exception_redacts_input():
     ):
         response = _validate_with_guard(
             payload=_build_payload(unsafe_input),
+            data=unsafe_input,
             request_log_crud=mock_request_log_crud,
             request_log_id=mock_request_log_id,
             validator_log_crud=mock_validator_log_crud,
@@ -404,3 +568,60 @@ def test_profanity_free_exception_redacts_input():
 
     assert response.success is False
     assert unsafe_input not in response.error
+
+
+def test_resolve_validator_configs_rejects_topic_relevance_config_used_for_answer_relevance():
+    """Passing an answer_relevance_custom_llm config ID to the topic_relevance validator
+    must raise a 400 — validator_name mismatch."""
+    config_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="test",
+        validators=[
+            {"type": "topic_relevance", "topic_relevance_config_id": config_id}
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            id=config_id,
+            validator_name=LLMValidatorName.AnswerRelevanceCustomLLM,
+            llm_prompt="Q: {query}\nA: {answer}\nYES or NO.",
+            prompt_schema_version=1,
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            _resolve_validator_configs(payload, mock_session)
+
+    assert exc_info.value.status_code == 400
+    assert "topic_relevance" in exc_info.value.detail
+
+
+def test_resolve_validator_configs_rejects_topic_relevance_config_used_for_answer_relevance_prompt():
+    """Passing a topic_relevance config ID to the answer_relevance_custom_llm validator
+    must raise a 400 — validator_name mismatch."""
+    config_id = str(uuid4())
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        organization_id=VALIDATOR_TEST_ORGANIZATION_ID,
+        project_id=VALIDATOR_TEST_PROJECT_ID,
+        input="{}",
+        validators=[
+            {"type": "answer_relevance_custom_llm", "custom_prompt_id": config_id}
+        ],
+    )
+    mock_session = MagicMock()
+
+    with patch("app.api.routes.guardrails.llm_prompt_config_crud.get") as mock_get:
+        mock_get.return_value = MagicMock(
+            id=config_id,
+            validator_name=LLMValidatorName.TopicRelevance,
+            llm_prompt="A plain scope description.",
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            _resolve_validator_configs(payload, mock_session)
+
+    assert exc_info.value.status_code == 400
+    assert "answer_relevance_custom_llm" in exc_info.value.detail
