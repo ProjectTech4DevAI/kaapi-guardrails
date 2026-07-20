@@ -83,6 +83,8 @@ curl -X POST "http://localhost:8001/api/v1/guardrails/validators/configs/?organi
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
+    
+    "name":"PII Remover V1",
     "type": "pii_remover",
     "stage": "input",
     "on_fail_action": "fix",
