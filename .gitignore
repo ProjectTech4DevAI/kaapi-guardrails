@@ -13,3 +13,7 @@ backend/app/evaluation/datasets/**/*.csv
 backend/app/evaluation/datasets/**/*.txt
 backend/app/evaluation/outputs/**/*.csv
 backend/app/evaluation/outputs/**/*.json
+
+# marimo related artefacts
+backend/notebooks/*.csv
+**/__marimo__/
