@@ -11,10 +11,7 @@ def _():
     import io
     from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
     from app.core.validators.pii_remover import PIIRemover
-    from guardrails.validators import (
-        FailResult,
-        PassResult
-    )
+    from guardrails.validators import FailResult, PassResult
     from sklearn.metrics import classification_report, confusion_matrix
 
     return PIIRemover, classification_report, confusion_matrix, io, mo, pd
@@ -22,11 +19,13 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Expected Format of the data
     - query : The text message that you want to run against the validators
     - guardrail_triggered : name of the validators you expect to catch this query. In case of queries that should get caught by multiple validators, you can separate them with a "+" sign. for instance : PII + topic_relevance
-    """)
+    """
+    )
     return
 
 
@@ -50,9 +49,11 @@ def _(file_picker, io, mo, pd):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Calculate PII match
-    """)
+    """
+    )
     return
 
 
@@ -69,14 +70,17 @@ def _(PIIRemover):
             "IN_VOTER",
             "IN_PASSPORT",
             "IN_VEHICLE_REGISTRATION",
-            "URL"],
+            "URL",
+        ],
     )
     return (pii_validator,)
 
 
 @app.cell
 def _(pii_validator):
-    _result = pii_validator._validate("hey buddy budgeting kya hota haiii muje asan trike se smjao with examples")
+    _result = pii_validator._validate(
+        "hey buddy budgeting kya hota haiii muje asan trike se smjao with examples"
+    )
     _result.outcome == "fail"
     return
 
@@ -87,7 +91,7 @@ def _(user_df):
         return "PII" in input
 
     user_df["pii_true"] = user_df["guardrail_triggered"].apply(actual_label)
-    user_df[["query", "guardrail_triggered" ,"pii_true"]]
+    user_df[["query", "guardrail_triggered", "pii_true"]]
     return
 
 
@@ -98,15 +102,17 @@ def _(pii_validator, user_df):
         return result.outcome == "fail"
 
     user_df["pii_pred"] = user_df["query"].apply(is_pii)
-    user_df[["query","guardrail_triggered","pii_true","pii_pred"]]
+    user_df[["query", "guardrail_triggered", "pii_true", "pii_pred"]]
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Scores
-    """)
+    """
+    )
     return
 
 
@@ -118,9 +124,11 @@ def _(classification_report, user_df):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Confusion Matrix
-    """)
+    """
+    )
     return
 
 
@@ -134,9 +142,11 @@ def _(confusion_matrix, user_df):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## False Negatives
-    """)
+    """
+    )
     return
 
 
@@ -148,9 +158,11 @@ def _(user_df):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## True Positives
-    """)
+    """
+    )
     return
 
 
@@ -162,9 +174,11 @@ def _(user_df):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## False Positives
-    """)
+    """
+    )
     return
 
 
@@ -176,9 +190,11 @@ def _(user_df):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## True Negatives
-    """)
+    """
+    )
     return
 
 
