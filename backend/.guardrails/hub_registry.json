@@ -6,7 +6,7 @@
       "exports": [
         "BanList"
       ],
-      "installed_at": "2026-05-12T05:28:55.036165+00:00",
+      "installed_at": "2026-07-23T14:06:37.542360+00:00",
       "package_name": "guardrails-grhub-ban-list"
     },
     "guardrails/llm_critic": {
@@ -14,7 +14,7 @@
       "exports": [
         "LLMCritic"
       ],
-      "installed_at": "2026-05-12T05:29:05.596003+00:00",
+      "installed_at": "2026-07-23T14:06:45.369592+00:00",
       "package_name": "guardrails-grhub-llm-critic"
     },
     "guardrails/llamaguard_7b": {
@@ -22,7 +22,7 @@
       "exports": [
         "LlamaGuard7B"
       ],
-      "installed_at": "2026-05-12T05:29:16.995441+00:00",
+      "installed_at": "2026-07-23T14:06:51.618169+00:00",
       "package_name": "guardrails-grhub-llamaguard-7b"
     },
     "guardrails/profanity_free": {
@@ -30,7 +30,7 @@
       "exports": [
         "ProfanityFree"
       ],
-      "installed_at": "2026-05-12T05:29:28.079410+00:00",
+      "installed_at": "2026-07-23T14:07:02.770910+00:00",
       "package_name": "guardrails-grhub-profanity-free"
     },
     "guardrails/nsfw_text": {
