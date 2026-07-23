@@ -10,10 +10,18 @@ from app.tests.seed_data import (
 pytestmark = pytest.mark.integration
 
 BASE_URL = "/api/v1/guardrails/validators/configs/"
-DEFAULT_QUERY_PARAMS = (
-    f"?organization_id={VALIDATOR_INTEGRATION_ORGANIZATION_ID}"
-    f"&project_id={VALIDATOR_INTEGRATION_PROJECT_ID}"
+DEFAULT_TENANT = (
+    VALIDATOR_INTEGRATION_ORGANIZATION_ID,
+    VALIDATOR_INTEGRATION_PROJECT_ID,
 )
+
+
+def tenant_headers(tenant=DEFAULT_TENANT):
+    organization_id, project_id = tenant
+    return {
+        "X-ORGANIZATION-ID": str(organization_id),
+        "X-PROJECT-ID": str(project_id),
+    }
 
 
 class BaseValidatorTest:
@@ -22,31 +30,25 @@ class BaseValidatorTest:
     def create_validator(self, client, payload_key="minimal", **kwargs):
         """Helper to create a validator."""
         payload = {**VALIDATOR_PAYLOADS[payload_key], **kwargs}
-        return client.post(f"{BASE_URL}{DEFAULT_QUERY_PARAMS}", json=payload)
+        return client.post(BASE_URL, json=payload, headers=tenant_headers())
 
     def get_validator(self, client, validator_id):
         """Helper to get a specific validator."""
-        return client.get(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}")
+        return client.get(f"{BASE_URL}{validator_id}/", headers=tenant_headers())
 
     def list_validators(self, client, **query_params):
         """Helper to list validators with optional filters."""
-        params_str = (
-            f"?organization_id={VALIDATOR_INTEGRATION_ORGANIZATION_ID}"
-            f"&project_id={VALIDATOR_INTEGRATION_PROJECT_ID}"
-        )
-        if query_params:
-            params_str += "&" + "&".join(f"{k}={v}" for k, v in query_params.items())
-        return client.get(f"{BASE_URL}{params_str}")
+        return client.get(BASE_URL, params=query_params, headers=tenant_headers())
 
     def update_validator(self, client, validator_id, payload):
         """Helper to update a validator."""
         return client.patch(
-            f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}", json=payload
+            f"{BASE_URL}{validator_id}/", json=payload, headers=tenant_headers()
         )
 
     def delete_validator(self, client, validator_id):
         """Helper to delete a validator."""
-        return client.delete(f"{BASE_URL}{validator_id}/{DEFAULT_QUERY_PARAMS}")
+        return client.delete(f"{BASE_URL}{validator_id}/", headers=tenant_headers())
 
 
 class TestCreateValidator(BaseValidatorTest):
@@ -81,8 +83,9 @@ class TestCreateValidator(BaseValidatorTest):
     ):
         """Test that missing required fields returns validation error."""
         response = integration_client.post(
-            f"{BASE_URL}{DEFAULT_QUERY_PARAMS}",
+            BASE_URL,
             json={"type": "uli_slur_match"},
+            headers=tenant_headers(),
         )
 
         assert response.status_code == 422
@@ -238,7 +241,7 @@ class TestListValidators(BaseValidatorTest):
         second_id = second.json()["data"]["id"]
 
         response = integration_client.get(
-            f"{BASE_URL}{DEFAULT_QUERY_PARAMS}&ids={first_id}",
+            f"{BASE_URL}?ids={first_id}", headers=tenant_headers(),
         )
 
         assert response.status_code == 200
@@ -257,7 +260,7 @@ class TestListValidators(BaseValidatorTest):
         second_id = second.json()["data"]["id"]
 
         response = integration_client.get(
-            f"{BASE_URL}{DEFAULT_QUERY_PARAMS}&ids={first_id}&ids={second_id}",
+            f"{BASE_URL}?ids={first_id}&ids={second_id}", headers=tenant_headers(),
         )
 
         assert response.status_code == 200
@@ -271,7 +274,7 @@ class TestListValidators(BaseValidatorTest):
     ):
         """Test invalid UUID in ids query returns validation error."""
         response = integration_client.get(
-            f"{BASE_URL}{DEFAULT_QUERY_PARAMS}&ids=not-a-uuid",
+            f"{BASE_URL}?ids=not-a-uuid", headers=tenant_headers()
         )
 
         assert response.status_code == 422
@@ -279,7 +282,7 @@ class TestListValidators(BaseValidatorTest):
     def test_list_validators_empty(self, integration_client, clear_database):
         """Test listing validators when none exist."""
         response = integration_client.get(
-            f"{BASE_URL}?organization_id=999&project_id=999",
+            BASE_URL, headers=tenant_headers((999, 999)),
         )
 
         assert response.status_code == 200
@@ -315,7 +318,7 @@ class TestGetValidator(BaseValidatorTest):
     ):
         """Test invalid UUID path param returns validation error."""
         response = integration_client.get(
-            f"{BASE_URL}not-a-uuid/{DEFAULT_QUERY_PARAMS}",
+            f"{BASE_URL}not-a-uuid/", headers=tenant_headers(),
         )
 
         assert response.status_code == 422
@@ -327,7 +330,7 @@ class TestGetValidator(BaseValidatorTest):
 
         # Try to access it as different org
         response = integration_client.get(
-            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
+            f"{BASE_URL}{validator_id}/", headers=tenant_headers((2, 1)),
         )
 
         assert response.status_code == 404
@@ -410,7 +413,7 @@ class TestDeleteValidator(BaseValidatorTest):
 
         # Try to delete it as different org
         response = integration_client.delete(
-            f"{BASE_URL}{validator_id}/?organization_id=2&project_id=1",
+            f"{BASE_URL}{validator_id}/", headers=tenant_headers((2, 1)),
         )
 
         assert response.status_code == 404

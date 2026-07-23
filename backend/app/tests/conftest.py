@@ -12,8 +12,7 @@ from app.main import app
 from app.api.deps import (
     SessionDep,
     TenantContext,
-    validate_multitenant_key,
-    verify_bearer_token,
+    verify_caller,
 )
 from app.core.config import settings
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
@@ -84,31 +83,27 @@ def clean_db():
 
 @pytest.fixture(scope="function", autouse=True)
 def override_dependencies():
-    app.dependency_overrides[verify_bearer_token] = lambda: True
-    default_scope = TenantContext(
-        organization_id=BAN_LIST_INTEGRATION_ORGANIZATION_ID,
-        project_id=BAN_LIST_INTEGRATION_PROJECT_ID,
-    )
+    """
+    Stands in for token + IP verification, but keeps tenant resolution honest:
+    the scope still comes from the X-ORGANIZATION-ID / X-PROJECT-ID headers, so
+    multi-tenant isolation tests exercise the real header contract. Tests that
+    don't care about tenancy send no headers and get the default scope.
+    """
 
-    def override_multitenant_key(
-        x_api_key: str | None = Header(default=None, alias="X-API-KEY"),
+    def override_verify_caller(
+        organization_id: int | None = Header(default=None, alias="X-ORGANIZATION-ID"),
+        project_id: int | None = Header(default=None, alias="X-PROJECT-ID"),
     ):
-        if not x_api_key:
-            return default_scope
+        if organization_id is None or project_id is None:
+            return TenantContext(
+                organization_id=BAN_LIST_INTEGRATION_ORGANIZATION_ID,
+                project_id=BAN_LIST_INTEGRATION_PROJECT_ID,
+            )
+        return TenantContext(
+            organization_id=organization_id, project_id=project_id
+        )
 
-        token = x_api_key.strip()
-        if token.lower().startswith("apikey "):
-            token = token.split(" ", 1)[1].strip()
-
-        if token == "org999_project999":
-            return TenantContext(organization_id=999, project_id=999)
-
-        if token == "org2_project2":
-            return TenantContext(organization_id=2, project_id=2)
-
-        return default_scope
-
-    app.dependency_overrides[validate_multitenant_key] = override_multitenant_key
+    app.dependency_overrides[verify_caller] = override_verify_caller
 
     app.dependency_overrides[SessionDep] = override_session
 

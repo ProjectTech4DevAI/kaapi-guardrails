@@ -17,7 +17,7 @@ Caller
   │  { request_id, organization_id, project_id, input, validators: [...] }
   ▼
 FastAPI route  ──────────────────────────────────────────────
-  │  1. Auth check (static bearer token or multitenant X-API-KEY)
+  │  1. Auth check (source IP + static bearer token -> tenant)
   │  2. Write RequestLog (status=PROCESSING)
   │  3. Resolve config-backed validators
   │     ├── BanList  → fetch banned_words from DB
@@ -191,16 +191,15 @@ Error messages are sanitised before persistence: the input string is redacted fr
 
 ## Authentication
 
-Kaapi Guardrails is a **standalone microservice that does not authorize requests on its own** — it delegates tenant authorization to the Kaapi backend. A caller therefore presents **two keys**:
+Kaapi Guardrails is an **internal microservice with a single caller: the Kaapi backend**. The Kaapi backend authenticates the end user and resolves the tenant before calling; guardrails does not handle end-user API keys and does not call back to the auth service.
 
-1. **Guardrail key** — the service's own static bearer token, proving the caller is allowed to reach the guardrails microservice.
-2. **Kaapi backend `X-API-KEY`** — forwarded to the Kaapi backend, which performs the actual authorization and identifies the tenant.
+A single dependency in `app/api/deps.py` (`verify_caller`, exposed as `AuthDep`) enforces all of it and returns the tenant:
 
-These map to the two auth modes that coexist in `app/api/deps.py`:
+1. **Source IP** — must appear in `ALLOWED_IPS`. Read from the real connection peer, ignoring `X-Forwarded-For`. Checked first, so an unexpected origin gets `403` without learning whether the token was valid.
+2. **Static bearer token** — a SHA-256 hex digest configured in `AUTH_TOKEN`, compared with `secrets.compare_digest` to prevent timing attacks.
+3. **Tenant headers** — `X-ORGANIZATION-ID` and `X-PROJECT-ID`, trusted because only a caller passing the first two controls can set them.
 
-**Static bearer token** (`AuthDep`): the guardrail key — a SHA-256 hex digest configured in `AUTH_TOKEN`. Used by the core guardrails route and config management routes. Compared with `secrets.compare_digest` to prevent timing attacks.
-
-**Multitenant X-API-KEY** (`MultitenantAuthDep`): the Kaapi backend key, resolved against the external Kaapi auth service (`KAAPI_AUTH_URL`) by calling `GET /apikeys/verify`. The microservice does not validate this key itself — the Kaapi backend authorizes it and returns `organization_id` + `project_id`, enabling per-tenant data isolation. Accepts the key as the `X-API-KEY` header, `Authorization: Bearer`, or `access_token` cookie.
+Tenant scope is never read from the query string or request body, so the dependency that authenticates a route is also the one that supplies its tenant — a route cannot be written without one. Only `GET /utils/health-check/` is exempt.
 
 ---
 

@@ -191,19 +191,32 @@ echo -n "your-plain-text-token" | shasum -a 256
 
 Set the resulting digest as `AUTH_TOKEN` in your `.env` / `.env.test`.
 
-## Multi-tenant API Key Configuration
+## Caller Authentication
 
-Ban List and LLM Prompt Config APIs use `X-API-KEY` auth instead of bearer token auth.
+kaapi-guardrails is an internal service. Its only caller is kaapi-backend, which authenticates the
+end user and resolves the tenant before calling.
 
-Required environment variables:
-- `KAAPI_AUTH_URL`: Base URL of the Kaapi auth service used to verify API keys.
-- `KAAPI_AUTH_TIMEOUT`: Timeout in seconds for auth verification calls.
+Every request (except the health check) must carry:
 
-At runtime, the backend calls:
-- `GET {KAAPI_AUTH_URL}/apikeys/verify`
-- Header: `X-API-KEY: <token>`
+- `Authorization: Bearer <plain-text-token>`
+- `X-ORGANIZATION-ID: <int>` and `X-PROJECT-ID: <int>` — the tenant, resolved by kaapi-backend
+- and originate from an IP listed in `ALLOWED_IPS`
 
-If verification succeeds, tenant's scope (`organization_id`, `project_id`) is resolved from the auth response and applied to tenant-scoped CRUD operations (for example Ban Lists and LLM Prompt Configs).
+`ALLOWED_IPS` is a comma-separated list of source IPs allowed to reach this service:
+
+```bash
+ALLOWED_IPS="10.0.3.14"
+```
+
+Leave it empty to disable the check for local development. It is required when
+`ENVIRONMENT=production` — the service will not start without it.
+
+Rejections:
+- Source IP not whitelisted → `403` (checked before the token)
+- Missing or invalid token → `401`
+- Missing or non-integer tenant headers → `422`
+
+Tenant scope is never read from the query string or request body.
 
 ## Guardrails AI Setup
 

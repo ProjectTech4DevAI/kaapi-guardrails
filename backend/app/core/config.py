@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 import re
-from typing import Any, ClassVar, Literal
+from typing import Annotated, Any, ClassVar, Literal
 import warnings
 
 from pydantic import (
+    BeforeValidator,
     HttpUrl,
     PostgresDsn,
     computed_field,
@@ -14,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
 
-def parse_cors(v: Any) -> list[str] | str:
+def parse_csv_list(v: Any) -> list[str] | str:
     if isinstance(v, str) and not v.startswith("["):
         return [i.strip() for i in v.split(",") if i.strip()]
     elif isinstance(v, list | str):
@@ -41,8 +42,10 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
     GUARDRAILS_HUB_API_KEY: str | None = None
-    KAAPI_AUTH_URL: str = ""
-    KAAPI_AUTH_TIMEOUT: int
+    # Source IPs allowed to reach this service (kaapi-backend). Empty = check disabled.
+    # `| str` keeps pydantic-settings from JSON-parsing the dotenv value before
+    # parse_csv_list gets to split it.
+    ALLOWED_IPS: Annotated[list[str] | str, BeforeValidator(parse_csv_list)] = []
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
     OPENAI_API_KEY: str | None = None
     ANSWER_RELEVANCE_LLM_MODEL: str = "gpt-4o-mini"
@@ -92,6 +95,10 @@ class Settings(BaseSettings):
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
         self._validate_auth_token_hash()
+        if self.ENVIRONMENT == "production" and not self.ALLOWED_IPS:
+            raise ValueError(
+                "ALLOWED_IPS must list the kaapi-backend source IP(s) in production."
+            )
         return self
 
 

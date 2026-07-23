@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.api.deps import MultitenantAuthDep, SessionDep
+from app.api.deps import AuthDep, SessionDep
 from app.core.enum import LLMValidatorName
 from app.crud.llm_prompt_config import llm_prompt_config_crud
 from app.schemas.llm_prompt_config import (
@@ -27,7 +27,7 @@ router = APIRouter(
 def create_llm_prompt_config(
     payload: LLMPromptConfigCreate,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ) -> APIResponse[LLMPromptConfigResponse]:
     obj = llm_prompt_config_crud.create(
         session,
@@ -45,7 +45,7 @@ def create_llm_prompt_config(
 )
 def list_llm_prompt_configs(
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
     validator_name: Annotated[LLMValidatorName | None, Query()] = None,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
@@ -69,7 +69,7 @@ def list_llm_prompt_configs(
 def get_llm_prompt_config(
     id: UUID,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ) -> APIResponse[LLMPromptConfigResponse]:
     obj = llm_prompt_config_crud.get(
         session,
@@ -89,7 +89,7 @@ def update_llm_prompt_config(
     id: UUID,
     payload: LLMPromptConfigUpdate,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ) -> APIResponse[LLMPromptConfigResponse]:
     obj = llm_prompt_config_crud.update(
         session,
@@ -109,7 +109,7 @@ def update_llm_prompt_config(
 def delete_llm_prompt_config(
     id: UUID,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ) -> APIResponse[dict]:
     obj = llm_prompt_config_crud.get(
         session,
