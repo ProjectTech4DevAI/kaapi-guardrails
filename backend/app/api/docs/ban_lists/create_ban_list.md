@@ -1,4 +1,4 @@
-Creates a ban list for the tenant resolved from `X-API-KEY`.
+Creates a ban list for the tenant resolved from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Behavior notes:
 - Stores a domain-scoped list of banned words used by the `ban_list` validator.

@@ -1,4 +1,4 @@
-Deletes an LLM prompt config by id for the tenant resolved from `X-API-KEY`.
+Deletes an LLM prompt config by id for the tenant resolved from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Behavior notes:
 - Tenant scope is enforced from the API key context.

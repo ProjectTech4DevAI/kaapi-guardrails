@@ -27,12 +27,10 @@ router = APIRouter(
 def create_validator(
     payload: ValidatorCreate,
     session: SessionDep,
-    organization_id: int,
-    project_id: int,
-    _: AuthDep,
+    auth: AuthDep,
 ):
     response_model = validator_config_crud.create(
-        session, organization_id, project_id, payload
+        session, auth.organization_id, auth.project_id, payload
     )
     return APIResponse.success_response(data=response_model)
 
@@ -43,16 +41,14 @@ def create_validator(
     response_model=APIResponse[list[ValidatorResponse]],
 )
 def list_validators(
-    organization_id: int,
-    project_id: int,
     session: SessionDep,
-    _: AuthDep,
+    auth: AuthDep,
     ids: Optional[list[UUID]] = Query(None),
     stage: Optional[Stage] = None,
     type: Optional[ValidatorType] = None,
 ):
     response_model = validator_config_crud.list(
-        session, organization_id, project_id, ids, stage, type
+        session, auth.organization_id, auth.project_id, ids, stage, type
     )
     return APIResponse.success_response(data=response_model)
 
@@ -64,12 +60,12 @@ def list_validators(
 )
 def get_validator(
     id: UUID,
-    organization_id: int,
-    project_id: int,
     session: SessionDep,
-    _: AuthDep,
+    auth: AuthDep,
 ):
-    obj = validator_config_crud.get(session, id, organization_id, project_id)
+    obj = validator_config_crud.get(
+        session, id, auth.organization_id, auth.project_id
+    )
     return APIResponse.success_response(data=validator_config_crud.flatten(obj))
 
 
@@ -80,13 +76,13 @@ def get_validator(
 )
 def update_validator(
     id: UUID,
-    organization_id: int,
-    project_id: int,
     payload: ValidatorUpdate,
     session: SessionDep,
-    _: AuthDep,
+    auth: AuthDep,
 ):
-    obj = validator_config_crud.get(session, id, organization_id, project_id)
+    obj = validator_config_crud.get(
+        session, id, auth.organization_id, auth.project_id
+    )
     response_model = validator_config_crud.update(
         session, obj, payload.model_dump(exclude_unset=True)
     )
@@ -100,12 +96,12 @@ def update_validator(
 )
 def delete_validator(
     id: UUID,
-    organization_id: int,
-    project_id: int,
     session: SessionDep,
-    _: AuthDep,
+    auth: AuthDep,
 ):
-    obj = validator_config_crud.get(session, id, organization_id, project_id)
+    obj = validator_config_crud.get(
+        session, id, auth.organization_id, auth.project_id
+    )
     validator_config_crud.delete(session, obj)
     return APIResponse.success_response(
         data={"message": "Validator deleted successfully"}

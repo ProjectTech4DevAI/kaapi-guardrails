@@ -4,9 +4,8 @@ from typing import Annotated
 
 import hashlib
 import secrets
-import httpx
 
-from fastapi import Cookie, Depends, Header, HTTPException, Security, status
+from fastapi import Depends, Header, HTTPException, Request, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session
 
@@ -22,7 +21,6 @@ def get_db() -> Generator[Session, None, None]:
 SessionDep = Annotated[Session, Depends(get_db)]
 
 
-# Static bearer token auth for internal routes.
 security = HTTPBearer(auto_error=False)
 
 
@@ -37,12 +35,37 @@ def _unauthorized(detail: str) -> HTTPException:
     )
 
 
-def verify_bearer_token(
+@dataclass
+class TenantContext:
+    organization_id: int
+    project_id: int
+
+
+def verify_caller(
+    request: Request,
     credentials: Annotated[
         HTTPAuthorizationCredentials | None,
         Security(security),
     ],
-) -> bool:
+    organization_id: Annotated[int, Header(alias="X-ORGANIZATION-ID")],
+    project_id: Annotated[int, Header(alias="X-PROJECT-ID")],
+) -> TenantContext:
+    """
+    Authenticates the single trusted caller (kaapi-backend) by static bearer token
+    and source IP, and returns the tenant it resolved from the end user's API key.
+
+    Tenant scope is never read from the query string or request body, so a route
+    cannot be tenant-unscoped: the dependency that authenticates it also supplies
+    the tenant.
+    """
+    if settings.ALLOWED_IPS:
+        client_ip = request.client.host if request.client else None
+        if client_ip not in settings.ALLOWED_IPS:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden",
+            )
+
     if credentials is None:
         raise _unauthorized("Missing Authorization header")
 
@@ -52,85 +75,7 @@ def verify_bearer_token(
     ):
         raise _unauthorized("Invalid authorization token")
 
-    return True
+    return TenantContext(organization_id=organization_id, project_id=project_id)
 
 
-AuthDep = Annotated[bool, Depends(verify_bearer_token)]
-
-
-# Multitenant auth context resolved from X-API-KEY.
-@dataclass
-class TenantContext:
-    organization_id: int
-    project_id: int
-
-
-def _fetch_tenant_from_backend(headers: dict) -> TenantContext:
-    if not settings.KAAPI_AUTH_URL:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="KAAPI_AUTH_URL is not configured",
-        )
-
-    try:
-        response = httpx.get(
-            f"{settings.KAAPI_AUTH_URL}/apikeys/verify",
-            headers=headers,
-            timeout=settings.KAAPI_AUTH_TIMEOUT,
-        )
-    except httpx.RequestError:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Auth service unavailable",
-        )
-
-    if response.status_code != 200:
-        raise _unauthorized("Invalid credentials")
-
-    data = response.json()
-    if not isinstance(data, dict) or data.get("success") is not True:
-        raise _unauthorized("Invalid credentials")
-
-    record = data.get("data")
-    if not isinstance(record, dict):
-        raise _unauthorized("Invalid credentials")
-
-    organization_id = record.get("organization_id")
-    project_id = record.get("project_id")
-    if not isinstance(organization_id, int) or not isinstance(project_id, int):
-        raise _unauthorized("Invalid credentials")
-
-    return TenantContext(
-        organization_id=organization_id,
-        project_id=project_id,
-    )
-
-
-def validate_multitenant_key(
-    x_api_key: Annotated[str | None, Header(alias="X-API-KEY")] = None,
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None,
-        Security(security),
-    ] = None,
-    access_token: Annotated[str | None, Cookie(alias="access_token")] = None,
-) -> TenantContext:
-    if x_api_key and x_api_key.strip():
-        return _fetch_tenant_from_backend({"X-API-KEY": x_api_key.strip()})
-
-    if credentials is not None and credentials.credentials.strip():
-        return _fetch_tenant_from_backend(
-            {"Authorization": f"Bearer {credentials.credentials}"}
-        )
-
-    if access_token:
-        return _fetch_tenant_from_backend({"Authorization": f"Bearer {access_token}"})
-
-    raise _unauthorized(
-        "Missing credentials: provide X-API-KEY header, Bearer token, or access_token cookie"
-    )
-
-
-MultitenantAuthDep = Annotated[
-    TenantContext,
-    Depends(validate_multitenant_key),
-]
+AuthDep = Annotated[TenantContext, Depends(verify_caller)]

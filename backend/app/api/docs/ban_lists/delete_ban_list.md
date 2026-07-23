@@ -1,4 +1,4 @@
-Deletes a ban list by id for the tenant resolved from `X-API-KEY`.
+Deletes a ban list by id for the tenant resolved from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Behavior notes:
 - Deletion is restricted to owner scope.

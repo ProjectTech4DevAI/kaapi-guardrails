@@ -44,7 +44,9 @@ Topic relevance requires a stored configuration that defines the scope of your a
 
 ```bash
 POST /api/v1/guardrails/topic_relevance_configs/
-Authorization: X-API-KEY your-api-key
+Authorization: Bearer <token>
+X-ORGANIZATION-ID: 1
+X-PROJECT-ID: 101
 
 {
   "name": "Healthcare Assistant Scope",

@@ -6,7 +6,7 @@ from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
 from sqlmodel import Session
 
-from app.api.deps import AuthDep, SessionDep
+from app.api.deps import AuthDep, SessionDep, TenantContext
 from app.core.constants import (
     BAN_LIST,
     LLM_CRITIC_ERROR_MESSAGE,
@@ -49,7 +49,7 @@ router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
-    _: AuthDep,
+    auth: AuthDep,
     suppress_pass_logs: bool = True,
 ):
     """
@@ -60,11 +60,13 @@ def run_guardrails(
     validator_log_crud = ValidatorLogCrud(session=session)
 
     try:
-        request_log = request_log_crud.create(payload)
+        request_log = request_log_crud.create(
+            payload, auth.organization_id, auth.project_id
+        )
     except ValueError:
         return APIResponse.failure_response(error="Invalid request_id")
 
-    _resolve_validator_configs(payload, session)
+    _resolve_validator_configs(payload, session, auth)
     has_output_validator = any(
         isinstance(v, AnswerRelevanceCustomLLMSafetyValidatorConfig)
         for v in payload.validators
@@ -76,12 +78,13 @@ def run_guardrails(
         request_log_crud,
         request_log.id,
         validator_log_crud,
+        auth,
         suppress_pass_logs,
     )
 
 
 @router.get("/", description=load_description("guardrails/list_validators.md"))
-def list_validators(_: AuthDep):
+def list_validators(auth: AuthDep):
     """
     Lists all validators and their parameters directly.
     """
@@ -110,7 +113,9 @@ def list_validators(_: AuthDep):
     return {"validators": validators}
 
 
-def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> None:
+def _resolve_validator_configs(
+    payload: GuardrailRequest, session: Session, auth: TenantContext
+) -> None:
     """
     Resolves config-backed references for all validators in-place before guard execution:
     - BanList: fetches banned_words from the stored BanList when not provided inline.
@@ -126,8 +131,8 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 ban_list = ban_list_crud.get(
                     session,
                     id=validator.ban_list_id,
-                    organization_id=payload.organization_id,
-                    project_id=payload.project_id,
+                    organization_id=auth.organization_id,
+                    project_id=auth.project_id,
                 )
                 validator.banned_words = ban_list.banned_words
 
@@ -142,8 +147,8 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 config = llm_prompt_config_crud.get(
                     session=session,
                     id=validator.topic_relevance_config_id,
-                    organization_id=payload.organization_id,
-                    project_id=payload.project_id,
+                    organization_id=auth.organization_id,
+                    project_id=auth.project_id,
                 )
                 if config.validator_name != LLMValidatorName.TopicRelevance:
                     raise HTTPException(
@@ -163,8 +168,8 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 prompt_config = llm_prompt_config_crud.get(
                     session=session,
                     id=validator.custom_prompt_id,
-                    organization_id=payload.organization_id,
-                    project_id=payload.project_id,
+                    organization_id=auth.organization_id,
+                    project_id=auth.project_id,
                 )
                 if (
                     prompt_config.validator_name
@@ -184,6 +189,7 @@ def _validate_with_guard(
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
+    auth: TenantContext,
     suppress_pass_logs: bool = False,
 ) -> APIResponse:
     """
@@ -226,7 +232,7 @@ def _validate_with_guard(
 
         if guard is not None:
             add_validator_logs(
-                guard, request_log_id, validator_log_crud, payload, suppress_pass_logs
+                guard, request_log_id, validator_log_crud, auth, suppress_pass_logs
             )
 
         rephrase_needed = validated_output is not None and (
@@ -320,7 +326,7 @@ def add_validator_logs(
     guard: Guard,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
-    payload: GuardrailRequest,
+    auth: TenantContext,
     suppress_pass_logs: bool = False,
 ) -> None:
     """
@@ -355,8 +361,8 @@ def add_validator_logs(
 
         validator_log = ValidatorLog(
             request_id=request_log_id,
-            organization_id=payload.organization_id,
-            project_id=payload.project_id,
+            organization_id=auth.organization_id,
+            project_id=auth.project_id,
             name=log.validator_name,
             input=str(log.value_before_validation),
             output=log.value_after_validation,
