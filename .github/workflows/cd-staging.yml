@@ -81,7 +81,7 @@ jobs:
               exit 1
             fi
 
-            sleep 15
+            sleep 25
           done
 
           echo "Deployment timed out after waiting too long."
