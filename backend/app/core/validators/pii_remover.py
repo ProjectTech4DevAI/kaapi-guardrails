@@ -14,21 +14,11 @@ from guardrails.validators import (
 from presidio_analyzer import AnalyzerEngine, EntityRecognizer, RecognizerResult
 from presidio_analyzer.nlp_engine import NlpEngineProvider, SpacyNlpEngine
 from presidio_anonymizer import AnonymizerEngine
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_aadhaar_recognizer import (
-    InAadhaarRecognizer,
-)
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_pan_recognizer import (
-    InPanRecognizer,
-)
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_passport_recognizer import (
-    InPassportRecognizer,
-)
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_vehicle_registration_recognizer import (
-    InVehicleRegistrationRecognizer,
-)
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_recognizer import (
-    InVoterRecognizer,
-)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_aadhaar_recognizer import InAadhaarRecognizer
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_pan_recognizer import InPanRecognizer
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_passport_recognizer import InPassportRecognizer
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_vehicle_registration_recognizer import InVehicleRegistrationRecognizer
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_recognizer import InVoterRecognizer
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 

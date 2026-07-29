@@ -176,7 +176,9 @@ Recommendation:
 Parameters / customization:
 
 - `entity_types: list[str] | None` (default: all supported types)
-- `threshold: float` (default: `0.5`)
+- `threshold: float` (default: `0.5` for spaCy, `0.7` for transformers)
+- `nlp_engine_type: str` (default: `"spacy"`) — NLP backend to use. `"spacy"` uses a spaCy model for both tokenization and NER; `"transformers"` uses a spaCy model for tokenization only and a HuggingFace token-classification model for NER.
+- `model_name: str | None` (default: `None`) — Override the NLP model. For `"spacy"`, a spaCy model name (resolved to `en_core_web_lg`); for `"transformers"`, a HuggingFace model ID (resolved to `Davlan/bert-base-multilingual-cased-ner-hrl`).
 - `on_fail`
 
 Threshold guidance:
@@ -184,7 +186,8 @@ Threshold guidance:
 - `threshold` is the minimum confidence score required for a detected entity to be treated as PII.
 - Lower threshold -> more detections (higher recall, more false positives/over-masking).
 - Higher threshold -> fewer detections (higher precision, more false negatives/missed PII).
-- Start around `0.5`, then tune using real conversation samples by reviewing both missed PII and unnecessary masking.
+- For spaCy mode, start around `0.5`. For transformers mode, start around `0.7` as transformer model scores tend to be higher overall.
+- Tune using real conversation samples by reviewing both missed PII and unnecessary masking.
 - If the product is privacy-critical, prefer a slightly lower threshold and tighter `entity_types`; if readability is primary, prefer a slightly higher threshold.
 
 Supported default entity types:
@@ -195,8 +198,10 @@ Notes / limitations:
 
 - Rule/ML recognizers can under-detect free-text references.
 - Threshold and entity selection should be tuned per deployment context.
-- Runtime requirement: this validator is configured to use spaCy model `en_core_web_lg`.
-  The model is pre-installed at build time in the Docker image to ensure fast startup and no runtime internet dependency.
+- Runtime requirements:
+  - `"spacy"` mode (default): requires `en_core_web_lg`. Pre-installed in the Docker image at build time for fast startup with no runtime internet dependency.
+  - `"transformers"` mode: requires `en_core_web_sm` for tokenization (lightweight) and the specified HuggingFace model, which is also pre-installed in the Docker image.
+- The `"transformers"` mode uses CoNLL-style label mapping (`PER` → `PERSON`, `LOC` → `LOCATION`). Models that use different label schemes will silently produce no detections — verify label compatibility before switching models.
   Evidence and evaluation:
 - Compared approaches:
   - Custom PII validator (this codebase)
@@ -534,7 +539,7 @@ Notes / limitations:
 
 ## Example Config Payloads
 
-Example: create validator config (stored shape)
+Example: create validator config (stored shape) — spaCy mode (default)
 
 ```json
 {
@@ -547,6 +552,21 @@ Example: create validator config (stored shape)
 }
 ```
 
+Example: create validator config — transformers mode with a custom HuggingFace model
+
+```json
+{
+  "type": "pii_remover",
+  "stage": "input",
+  "on_fail_action": "fix",
+  "is_enabled": true,
+  "entity_types": ["PERSON", "PHONE_NUMBER", "LOCATION"],
+  "nlp_engine_type": "transformers",
+  "model_name": "Davlan/bert-base-multilingual-cased-ner-hrl",
+  "threshold": 0.7
+}
+```
+
 Example: runtime guardrail validator object (execution shape)
 
 ```json
@@ -554,6 +574,7 @@ Example: runtime guardrail validator object (execution shape)
   "type": "pii_remover",
   "on_fail": "fix",
   "entity_types": ["PERSON", "PHONE_NUMBER", "IN_AADHAAR"],
+  "nlp_engine_type": "spacy",
   "threshold": 0.6
 }
 ```

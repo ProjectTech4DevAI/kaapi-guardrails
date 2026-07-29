@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.core.validators import pii_remover
-from app.core.validators.pii_remover import ALL_ENTITY_TYPES, PIIRemover
+from app.core.validators.pii_remover import ALL_ENTITY_TYPES, DEFAULT_TRANSFORMERS_MODEL, DEFAULT_TRANSFORMERS_THRESHOLD, PIIRemover
+from app.core.validators.config.pii_remover_safety_validator_config import PIIRemoverSafetyValidatorConfig
 
 # -------------------------------
 # Fixtures
@@ -79,22 +80,54 @@ def test_custom_entity_types_override(mock_presidio):
     assert v.entity_types == ["EMAIL_ADDRESS"]
 
 
+def test_transformers_engine_uses_correct_defaults(mock_presidio):
+    v = PIIRemover(nlp_engine_type="transformers")
+    assert v.model_name == DEFAULT_TRANSFORMERS_MODEL
+    assert v.threshold == DEFAULT_TRANSFORMERS_THRESHOLD
+
+
+def test_spacy_engine_uses_correct_defaults(mock_presidio):
+    v = PIIRemover(nlp_engine_type="spacy")
+    assert v.model_name == "en_core_web_lg"
+    assert v.threshold == 0.5
+
+
+def test_transformers_engine_accepts_custom_model(mock_presidio):
+    v = PIIRemover(nlp_engine_type="transformers", model_name="dslim/bert-base-NER-uncased")
+    assert v.model_name == "dslim/bert-base-NER-uncased"
+
+
+def test_config_builds_validator_with_nlp_engine_params(mock_presidio):
+    config = PIIRemoverSafetyValidatorConfig(
+        type="pii_remover",
+        nlp_engine_type="transformers",
+        model_name="dslim/bert-base-NER-uncased",
+    )
+    v = config.build()
+    assert v.nlp_engine_type == "transformers"
+    assert v.model_name == "dslim/bert-base-NER-uncased"
+
+
+def test_config_defaults_to_spacy_engine(mock_presidio):
+    config = PIIRemoverSafetyValidatorConfig(type="pii_remover")
+    v = config.build()
+    assert v.nlp_engine_type == "spacy"
+    assert v.model_name == "en_core_web_lg"
+
+
 def test_cached_analyzer_registers_only_requested_indian_recognizers():
     with patch(
-        "app.core.validators.pii_remover.NlpEngineProvider"
-    ) as mock_provider, patch(
+        "app.core.validators.pii_remover._build_spacy_engine"
+    ) as mock_build_engine, patch(
         "app.core.validators.pii_remover.AnalyzerEngine"
     ) as mock_analyzer:
         pii_remover._ANALYZER_CACHE.clear()
-        pii_remover._GLOBAL_NLP_ENGINE = None
+        pii_remover._NLP_ENGINE_CACHE.clear()
         analyzer_instance = mock_analyzer.return_value
 
-        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"])
-        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"])
+        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"], "spacy", "en_core_web_lg", 0.5)
+        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"], "spacy", "en_core_web_lg", 0.5)
 
-        mock_provider.assert_called_once_with(
-            nlp_configuration=pii_remover.CONFIGURATION
-        )
-        mock_provider.return_value.create_engine.assert_called_once()
+        mock_build_engine.assert_called_once_with(pii_remover.SPACY_CONFIGURATION)
         mock_analyzer.assert_called_once()
         assert analyzer_instance.registry.add_recognizer.call_count == 2
