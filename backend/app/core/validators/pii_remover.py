@@ -60,7 +60,7 @@ CONLL_NER_LABEL_MAPPING = {
     "MISC": "MISC",
 }
 
-DEFAULT_TRANSFORMERS_MODEL = "Davlan/bert-base-multilingual-cased-ner-hrl"
+DEFAULT_TRANSFORMERS_MODEL = "dslim/bert-base-NER-uncased"
 DEFAULT_TRANSFORMERS_THRESHOLD = 0.7
 
 _NLP_ENGINE_CACHE: dict = {}

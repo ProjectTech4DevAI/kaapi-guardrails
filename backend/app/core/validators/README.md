@@ -178,7 +178,7 @@ Parameters / customization:
 - `entity_types: list[str] | None` (default: all supported types)
 - `threshold: float` (default: `0.5` for spaCy, `0.7` for transformers)
 - `nlp_engine_type: str` (default: `"spacy"`) — NLP backend to use. `"spacy"` uses a spaCy model for both tokenization and NER; `"transformers"` uses a spaCy model for tokenization only and a HuggingFace token-classification model for NER.
-- `model_name: str | None` (default: `None`) — Override the NLP model. For `"spacy"`, a spaCy model name (resolved to `en_core_web_lg`); for `"transformers"`, a HuggingFace model ID (resolved to `Davlan/bert-base-multilingual-cased-ner-hrl`).
+- `model_name: str | None` (default: `None`) — Override the NLP model. For `"spacy"`, a spaCy model name (resolved to `en_core_web_lg`); for `"transformers"`, a HuggingFace model ID (resolved to `dslim/bert-base-NER-uncased`).
 - `on_fail`
 
 Threshold guidance:
@@ -562,7 +562,7 @@ Example: create validator config — transformers mode with a custom HuggingFace
   "is_enabled": true,
   "entity_types": ["PERSON", "PHONE_NUMBER", "LOCATION"],
   "nlp_engine_type": "transformers",
-  "model_name": "Davlan/bert-base-multilingual-cased-ner-hrl",
+  "model_name": "dslim/bert-base-NER-uncased",
   "threshold": 0.7
 }
 ```
