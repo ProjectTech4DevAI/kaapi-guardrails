@@ -77,7 +77,7 @@ jobs:
               --query '{Status:Status,Stdout:StandardOutputContent,Stderr:StandardErrorContent}' \
               --output json
           }
-          
+
           for i in {1..20}; do
             STATUS=$(aws ssm get-command-invocation \
               --command-id "$CMD_ID" \
