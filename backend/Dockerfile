@@ -47,8 +47,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Install pinned spaCy model in the final environment used at runtime.
 RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
 
-ENV NLTK_DISABLE_IMPORT_SECURITY=1
-
 # Set HuggingFace cache directory
 ENV HF_HOME=/app/hf_cache
 

@@ -9,8 +9,6 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    env:
-      NLTK_DISABLE_IMPORT_SECURITY: "1"
     services:
       postgres:
         image: postgres:16
