@@ -99,9 +99,7 @@ def override_dependencies():
                 organization_id=BAN_LIST_INTEGRATION_ORGANIZATION_ID,
                 project_id=BAN_LIST_INTEGRATION_PROJECT_ID,
             )
-        return TenantContext(
-            organization_id=organization_id, project_id=project_id
-        )
+        return TenantContext(organization_id=organization_id, project_id=project_id)
 
     app.dependency_overrides[verify_caller] = override_verify_caller
 

@@ -1,4 +1,3 @@
-
 from pydantic import ConfigDict, model_validator
 from sqlmodel import Field, SQLModel
 
@@ -27,8 +26,7 @@ class ValidatorCreate(ValidatorBase):
             if reserved:
                 raise ValueError(
                     "Tenant must be provided via the X-ORGANIZATION-ID and "
-                    "X-PROJECT-ID headers, not the request body: "
-                    + ", ".join(reserved)
+                    "X-PROJECT-ID headers, not the request body: " + ", ".join(reserved)
                 )
         return data
 
