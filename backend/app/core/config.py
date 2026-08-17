@@ -1,8 +1,9 @@
+import json
 import os
-from pathlib import Path
 import re
-from typing import Annotated, Any, ClassVar, Literal
 import warnings
+from pathlib import Path
+from typing import Annotated, Any, ClassVar, Literal
 
 from pydantic import (
     BeforeValidator,
@@ -16,7 +17,19 @@ from typing_extensions import Self
 
 
 def parse_csv_list(v: Any) -> list[str] | str:
-    if isinstance(v, str) and not v.startswith("["):
+    if isinstance(v, str):
+        if v.lstrip().startswith("["):
+            # A JSON-array value (e.g. an env var that was JSON-encoded):
+            # parse it so ALLOWED_IPS is always a real list. A raw string
+            # here would make the IP check do substring matching instead of
+            # exact matching.
+            try:
+                parsed = json.loads(v)
+            except json.JSONDecodeError:
+                return v
+            if isinstance(parsed, list):
+                return [str(item).strip() for item in parsed]
+            return v
         return [i.strip() for i in v.split(",") if i.strip()]
     elif isinstance(v, list | str):
         return v

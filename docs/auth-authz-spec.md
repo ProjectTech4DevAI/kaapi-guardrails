@@ -45,6 +45,67 @@ Docker healthcheck.
 - Missing or wrong token → 401
 - Missing or non-integer tenant headers → 422
 
+## Request flow
+
+A guardrail run end to end. The tenant is resolved once, upstream, and everything downstream is
+scoped by it.
+
+```mermaid
+sequenceDiagram
+    actor User as End user
+    participant KB as kaapi-backend
+    participant Dep as verify_caller
+    participant Route as run_guardrails
+    participant CRUD as tenant-scoped CRUD
+    participant DB as Postgres
+
+    User->>KB: request + X-API-KEY
+    KB->>KB: verify key, resolve org + project
+
+    KB->>Dep: POST /api/v1/guardrails/<br/>Bearer token<br/>X-ORGANIZATION-ID, X-PROJECT-ID
+    Note over Dep: from an IP in ALLOWED_IPS
+
+    Dep->>Dep: 1. source IP in ALLOWED_IPS?
+    Dep->>Dep: 2. token digest matches AUTH_TOKEN?
+    Dep-->>Route: TenantContext(org, project)
+
+    Route->>CRUD: create request log (tenant)
+    CRUD->>DB: insert
+
+    Route->>CRUD: resolve ban list / prompt config by id (tenant)
+    CRUD->>DB: select scoped to tenant
+    DB-->>CRUD: config or 404
+
+    Route->>Route: build guard, validate input
+    Route->>CRUD: write validator logs (tenant)
+    CRUD->>DB: insert
+
+    Route-->>KB: GuardrailResponse
+    KB-->>User: response
+```
+
+The lookups in the middle are the part the current design gets wrong: `ban_list_id` and
+`topic_relevance_config_id` are resolved against the tenant, and today that tenant comes from the
+request body — so a caller can point them at another tenant's records.
+
+Rejections, in order:
+
+```mermaid
+flowchart TD
+    A[Request arrives] --> B{Source IP in ALLOWED_IPS?}
+    B -- no --> B1[403 Forbidden]
+    B -- yes --> C{Bearer token present and valid?}
+    C -- no --> C1[401 Unauthorized]
+    C -- yes --> D{Tenant headers present and integers?}
+    D -- no --> D1[422 Unprocessable Entity]
+    D -- yes --> E[TenantContext, handler runs]
+```
+
+The IP check comes first on purpose: a caller from an unexpected origin gets `403` whether or not
+its token was valid, so the response never confirms a working token to the wrong network.
+
+`GET /utils/health-check/` has no dependency and skips all three.
+
 ## Changes required
 
 - `config.py` — add `ALLOWED_IPS` (comma-separated; required in production, empty disables the check

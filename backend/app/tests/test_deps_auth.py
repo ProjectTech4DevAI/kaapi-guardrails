@@ -26,8 +26,9 @@ def client(monkeypatch):
         assert isinstance(auth, TenantContext)
         return {"organization_id": auth.organization_id, "project_id": auth.project_id}
 
-    # TestClient reports 127.0.0.1 as request.client.host
-    return TestClient(app)
+    # Pin the client address: TestClient's default is ("testclient", 50000),
+    # which would fail the ALLOWED_IPS=["127.0.0.1"] tests with a 403.
+    return TestClient(app, client=("127.0.0.1", 50000))
 
 
 def test_valid_request_returns_tenant_from_headers(client, monkeypatch):
@@ -64,6 +65,27 @@ def test_ip_is_checked_before_the_token(client, monkeypatch):
     )
 
     assert response.status_code == 403
+
+
+def test_ip_is_checked_before_tenant_header_validation(client, monkeypatch):
+    """Even a request with missing tenant headers gets 403 from a bad IP,
+    because the IP check must run before any header validation."""
+    monkeypatch.setattr(settings, "ALLOWED_IPS", ["10.0.0.1"])
+
+    response = client.get(
+        "/tenant", headers={"Authorization": f"Bearer {TOKEN}"}
+    )
+
+    assert response.status_code == 403
+
+
+def test_token_is_checked_before_tenant_header_validation(client, monkeypatch):
+    """A wrong token gets 401 before the tenant headers are even looked at."""
+    monkeypatch.setattr(settings, "ALLOWED_IPS", ["127.0.0.1"])
+
+    response = client.get("/tenant", headers={"Authorization": "Bearer nope"})
+
+    assert response.status_code == 401
 
 
 def test_missing_token_is_unauthorized(client, monkeypatch):

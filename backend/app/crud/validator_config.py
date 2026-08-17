@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -24,6 +23,10 @@ class ValidatorConfigCrud:
     ) -> dict:
         data = payload.model_dump()
         model_fields, config_fields = split_validator_payload(data)
+        # The tenant always comes from the auth context (the explicit
+        # organization_id/project_id args), never from the request body.
+        model_fields.pop("organization_id", None)
+        model_fields.pop("project_id", None)
 
         obj = ValidatorConfig(
             organization_id=organization_id,
@@ -51,10 +54,10 @@ class ValidatorConfigCrud:
         session: Session,
         organization_id: int,
         project_id: int,
-        ids: Optional[list[UUID]] = None,
-        stage: Optional[Stage] = None,
-        type: Optional[ValidatorType] = None,
-    ) -> List[dict]:
+        ids: list[UUID] | None = None,
+        stage: Stage | None = None,
+        type: ValidatorType | None = None,
+    ) -> list[dict]:
         query = select(ValidatorConfig).where(
             ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,

@@ -1,12 +1,11 @@
+import hashlib
+import secrets
 from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Annotated
 
-import hashlib
-import secrets
-
 from fastapi import Depends, Header, HTTPException, Request, Security, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session
 
 from app.core.config import settings
@@ -41,12 +40,48 @@ class TenantContext:
     project_id: int
 
 
-def verify_caller(
-    request: Request,
+def check_source_ip(request: Request) -> None:
+    """
+    403 for callers whose source IP is not in ALLOWED_IPS.
+
+    Runs before the token and tenant checks so a caller from an unexpected
+    origin never learns whether its bearer token is valid.
+    """
+    if settings.ALLOWED_IPS:
+        allowed = settings.ALLOWED_IPS
+        if isinstance(allowed, str):
+            # Defense in depth: never substring-match a raw string.
+            allowed = [allowed]
+        client_ip = request.client.host if request.client else None
+        if client_ip not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden",
+            )
+
+
+def check_bearer_token(
+    _ip_ok: Annotated[None, Depends(check_source_ip)],
     credentials: Annotated[
         HTTPAuthorizationCredentials | None,
         Security(security),
     ],
+) -> None:
+    """
+    401 for a missing or invalid bearer token. Only reached from a whitelisted IP.
+    """
+    if credentials is None:
+        raise _unauthorized("Missing Authorization header")
+
+    if not secrets.compare_digest(
+        _hash_token(credentials.credentials),
+        settings.AUTH_TOKEN,
+    ):
+        raise _unauthorized("Invalid authorization token")
+
+
+def verify_caller(
+    _token_ok: Annotated[None, Depends(check_bearer_token)],
     organization_id: Annotated[int, Header(alias="X-ORGANIZATION-ID")],
     project_id: Annotated[int, Header(alias="X-PROJECT-ID")],
 ) -> TenantContext:
@@ -57,24 +92,11 @@ def verify_caller(
     Tenant scope is never read from the query string or request body, so a route
     cannot be tenant-unscoped: the dependency that authenticates it also supplies
     the tenant.
+
+    Check order (403 -> 401 -> 422): source IP, then bearer token, then tenant
+    headers. The IP check comes first on purpose so a caller from an unexpected
+    origin gets 403 whether or not its token was valid.
     """
-    if settings.ALLOWED_IPS:
-        client_ip = request.client.host if request.client else None
-        if client_ip not in settings.ALLOWED_IPS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Forbidden",
-            )
-
-    if credentials is None:
-        raise _unauthorized("Missing Authorization header")
-
-    if not secrets.compare_digest(
-        _hash_token(credentials.credentials),
-        settings.AUTH_TOKEN,
-    ):
-        raise _unauthorized("Invalid authorization token")
-
     return TenantContext(organization_id=organization_id, project_id=project_id)
 
 
