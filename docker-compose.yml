@@ -9,7 +9,7 @@ secrets:
 services:
 
   prestart:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: '${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG:-latest}'
     container_name: kaapi-guardrails-prestart
     entrypoint: []
     build:
@@ -25,7 +25,7 @@ services:
     profiles: ["prestart"]
 
   backend:
-    image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
+    image: '${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG:-latest}'
     container_name: kaapi-guardrails-backend
     restart: always
     build:
