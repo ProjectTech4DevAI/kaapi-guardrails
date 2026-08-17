@@ -72,9 +72,7 @@ def test_ip_is_checked_before_tenant_header_validation(client, monkeypatch):
     because the IP check must run before any header validation."""
     monkeypatch.setattr(settings, "ALLOWED_IPS", ["10.0.0.1"])
 
-    response = client.get(
-        "/tenant", headers={"Authorization": f"Bearer {TOKEN}"}
-    )
+    response = client.get("/tenant", headers={"Authorization": f"Bearer {TOKEN}"})
 
     assert response.status_code == 403
 

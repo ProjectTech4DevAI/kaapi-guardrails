@@ -35,7 +35,6 @@ DUPLICATE_LLM_PROMPT_CONFIG_ERROR = (
 )
 
 
-
 VALIDATOR_CONFIG_SYSTEM_FIELDS = {
     "organization_id",
     "project_id",

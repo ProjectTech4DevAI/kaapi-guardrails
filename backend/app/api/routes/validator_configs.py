@@ -63,9 +63,7 @@ def get_validator(
     session: SessionDep,
     auth: AuthDep,
 ):
-    obj = validator_config_crud.get(
-        session, id, auth.organization_id, auth.project_id
-    )
+    obj = validator_config_crud.get(session, id, auth.organization_id, auth.project_id)
     return APIResponse.success_response(data=validator_config_crud.flatten(obj))
 
 
@@ -80,9 +78,7 @@ def update_validator(
     session: SessionDep,
     auth: AuthDep,
 ):
-    obj = validator_config_crud.get(
-        session, id, auth.organization_id, auth.project_id
-    )
+    obj = validator_config_crud.get(session, id, auth.organization_id, auth.project_id)
     response_model = validator_config_crud.update(
         session, obj, payload.model_dump(exclude_unset=True)
     )
@@ -99,9 +95,7 @@ def delete_validator(
     session: SessionDep,
     auth: AuthDep,
 ):
-    obj = validator_config_crud.get(
-        session, id, auth.organization_id, auth.project_id
-    )
+    obj = validator_config_crud.get(session, id, auth.organization_id, auth.project_id)
     validator_config_crud.delete(session, obj)
     return APIResponse.success_response(
         data={"message": "Validator deleted successfully"}

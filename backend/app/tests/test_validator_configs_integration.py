@@ -241,7 +241,8 @@ class TestListValidators(BaseValidatorTest):
         second_id = second.json()["data"]["id"]
 
         response = integration_client.get(
-            f"{BASE_URL}?ids={first_id}", headers=tenant_headers(),
+            f"{BASE_URL}?ids={first_id}",
+            headers=tenant_headers(),
         )
 
         assert response.status_code == 200
@@ -260,7 +261,8 @@ class TestListValidators(BaseValidatorTest):
         second_id = second.json()["data"]["id"]
 
         response = integration_client.get(
-            f"{BASE_URL}?ids={first_id}&ids={second_id}", headers=tenant_headers(),
+            f"{BASE_URL}?ids={first_id}&ids={second_id}",
+            headers=tenant_headers(),
         )
 
         assert response.status_code == 200
@@ -282,7 +284,8 @@ class TestListValidators(BaseValidatorTest):
     def test_list_validators_empty(self, integration_client, clear_database):
         """Test listing validators when none exist."""
         response = integration_client.get(
-            BASE_URL, headers=tenant_headers((999, 999)),
+            BASE_URL,
+            headers=tenant_headers((999, 999)),
         )
 
         assert response.status_code == 200
@@ -318,7 +321,8 @@ class TestGetValidator(BaseValidatorTest):
     ):
         """Test invalid UUID path param returns validation error."""
         response = integration_client.get(
-            f"{BASE_URL}not-a-uuid/", headers=tenant_headers(),
+            f"{BASE_URL}not-a-uuid/",
+            headers=tenant_headers(),
         )
 
         assert response.status_code == 422
@@ -330,7 +334,8 @@ class TestGetValidator(BaseValidatorTest):
 
         # Try to access it as different org
         response = integration_client.get(
-            f"{BASE_URL}{validator_id}/", headers=tenant_headers((2, 1)),
+            f"{BASE_URL}{validator_id}/",
+            headers=tenant_headers((2, 1)),
         )
 
         assert response.status_code == 404
@@ -413,7 +418,8 @@ class TestDeleteValidator(BaseValidatorTest):
 
         # Try to delete it as different org
         response = integration_client.delete(
-            f"{BASE_URL}{validator_id}/", headers=tenant_headers((2, 1)),
+            f"{BASE_URL}{validator_id}/",
+            headers=tenant_headers((2, 1)),
         )
 
         assert response.status_code == 404
