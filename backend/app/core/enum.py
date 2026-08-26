@@ -43,3 +43,26 @@ class ValidatorType(Enum):
     ProfanityFree = "profanity_free"
     NSFWText = "nsfw_text"
     AnswerRelevanceCustomLLM = "answer_relevance_custom_llm"
+
+
+class ValidatorFamily(str, Enum):
+    Lexical = "lexical"
+    Classifier = "classifier"
+    Semantic = "semantic"
+
+
+# Family of each validator type: lexical = word/pattern matching,
+# classifier = local ML model, semantic = makes a real LLM call.
+VALIDATOR_FAMILY: dict[str, ValidatorFamily] = {
+    ValidatorType.LexicalSlur.value: ValidatorFamily.Lexical,
+    ValidatorType.BanList.value: ValidatorFamily.Lexical,
+    ValidatorType.ProfanityFree.value: ValidatorFamily.Lexical,
+    ValidatorType.PIIRemover.value: ValidatorFamily.Classifier,
+    ValidatorType.GenderAssumptionBias.value: ValidatorFamily.Classifier,
+    ValidatorType.LlamaGuard7B.value: ValidatorFamily.Classifier,
+    ValidatorType.NSFWText.value: ValidatorFamily.Classifier,
+    ValidatorType.TopicRelevance.value: ValidatorFamily.Semantic,
+    ValidatorType.TopicRelevanceLLM.value: ValidatorFamily.Semantic,
+    ValidatorType.LLMCritic.value: ValidatorFamily.Semantic,
+    ValidatorType.AnswerRelevanceCustomLLM.value: ValidatorFamily.Semantic,
+}
