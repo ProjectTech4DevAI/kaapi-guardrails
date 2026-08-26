@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
+from opentelemetry import trace
 from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep, TenantContext
@@ -44,6 +45,7 @@ from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
 from app.utils import APIResponse, load_description
 
 logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
@@ -328,7 +330,17 @@ def _validate_with_guard(
 
     try:
         guard = build_guard(validators)
-        result = guard.validate(data)
+        # The only manual span in business code; per-validator detail lives
+        # in validator_log, joinable via kaapi.request_log_id.
+        with tracer.start_as_current_span(
+            "guardrails.validate",
+            attributes={
+                "kaapi.request_log_id": str(request_log_id),
+                "kaapi.validator_types": [v.type for v in validators],
+            },
+        ) as span:
+            result = guard.validate(data)
+            span.set_attribute("guardrails.passed", result.validated_output is not None)
 
         # Case 1: validation passed OR failed-with-fix (on_fail=FIX)
         if result.validated_output is not None:
