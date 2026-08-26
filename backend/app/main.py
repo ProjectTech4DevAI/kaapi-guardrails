@@ -1,5 +1,4 @@
 from asgi_correlation_id.middleware import CorrelationIdMiddleware
-import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
@@ -7,6 +6,7 @@ from app.api.main import api_router
 from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.middleware import http_request_logger
+from app.core.telemetry import setup_telemetry
 from app.load_env import load_environment
 
 # Load environment variables
@@ -17,9 +17,6 @@ def custom_generate_unique_id(route: APIRoute) -> str:
     tag = route.tags[0] if route.tags else "default"
     return f"{tag}-{route.name}"
 
-
-if settings.SENTRY_DSN and settings.ENVIRONMENT != "local":
-    sentry_sdk.init(dsn=str(settings.SENTRY_DSN), enable_tracing=True)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -33,3 +30,5 @@ app.add_middleware(CorrelationIdMiddleware)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 register_exception_handlers(app)
+
+setup_telemetry(app)

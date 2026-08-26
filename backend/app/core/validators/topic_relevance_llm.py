@@ -13,13 +13,12 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
-from litellm import completion
-
 from app.core.config import settings
 from app.core.constants import EMPTY_MESSAGE_ERROR, TOPIC_OUT_OF_SCOPE_ERROR
 from app.core.validators.llm_utils import (
     JSON_OBJECT_RESPONSE_FORMAT,
     supports_response_format,
+    traced_completion as completion,
 )
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
