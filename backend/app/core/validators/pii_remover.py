@@ -14,11 +14,21 @@ from guardrails.validators import (
 from presidio_analyzer import AnalyzerEngine, EntityRecognizer, RecognizerResult
 from presidio_analyzer.nlp_engine import NlpEngineProvider, SpacyNlpEngine
 from presidio_anonymizer import AnonymizerEngine
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_aadhaar_recognizer import InAadhaarRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_pan_recognizer import InPanRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_passport_recognizer import InPassportRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_vehicle_registration_recognizer import InVehicleRegistrationRecognizer
-from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_recognizer import InVoterRecognizer
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_aadhaar_recognizer import (
+    InAadhaarRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_pan_recognizer import (
+    InPanRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_passport_recognizer import (
+    InPassportRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_vehicle_registration_recognizer import (
+    InVehicleRegistrationRecognizer,
+)
+from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_recognizer import (
+    InVoterRecognizer,
+)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -79,9 +89,13 @@ INDIA_RECOGNIZERS = {
 class HuggingFaceNERRecognizer(EntityRecognizer):
     """Presidio EntityRecognizer backed by a HuggingFace token-classification pipeline."""
 
-    def __init__(self, model_name: str, label_mapping: dict[str, str], threshold: float = 0.5):
+    def __init__(
+        self, model_name: str, label_mapping: dict[str, str], threshold: float = 0.5
+    ):
         supported_entities = list(set(label_mapping.values()))
-        super().__init__(supported_entities=supported_entities, name="HuggingFaceNERRecognizer")
+        super().__init__(
+            supported_entities=supported_entities, name="HuggingFaceNERRecognizer"
+        )
         from transformers import pipeline as hf_pipeline
 
         self.ner_pipeline = hf_pipeline(
@@ -95,7 +109,9 @@ class HuggingFaceNERRecognizer(EntityRecognizer):
     def load(self) -> None:
         pass
 
-    def analyze(self, text: str, entities: list[str], nlp_artifacts=None) -> list[RecognizerResult]:
+    def analyze(
+        self, text: str, entities: list[str], nlp_artifacts=None
+    ) -> list[RecognizerResult]:
         results: list[RecognizerResult] = []
         for ent in self.ner_pipeline(text):
             presidio_label = self.label_mapping.get(ent["entity_group"])
@@ -125,7 +141,9 @@ def _build_analyzer(
     if nlp_engine_type == "transformers":
         # Use en_core_web_sm only for tokenization; BERT handles NER
         if "spacy_tokenizer_engine" not in _NLP_ENGINE_CACHE:
-            _NLP_ENGINE_CACHE["spacy_tokenizer_engine"] = _build_spacy_engine(SPACY_TOKENIZER_CONFIGURATION)
+            _NLP_ENGINE_CACHE["spacy_tokenizer_engine"] = _build_spacy_engine(
+                SPACY_TOKENIZER_CONFIGURATION
+            )
         nlp_engine = _NLP_ENGINE_CACHE["spacy_tokenizer_engine"]
     else:
         if "spacy_engine" not in _NLP_ENGINE_CACHE:
@@ -192,7 +210,9 @@ class PIIRemover(Validator):
         self.nlp_engine_type = nlp_engine_type
         if nlp_engine_type == "transformers":
             self.model_name = model_name or DEFAULT_TRANSFORMERS_MODEL
-            self.threshold = threshold if threshold is not None else DEFAULT_TRANSFORMERS_THRESHOLD
+            self.threshold = (
+                threshold if threshold is not None else DEFAULT_TRANSFORMERS_THRESHOLD
+            )
         else:
             self.model_name = model_name or "en_core_web_lg"
             self.threshold = threshold if threshold is not None else 0.5
@@ -215,4 +235,3 @@ class PIIRemover(Validator):
                 error_message="PII detected in the text.", fix_value=anonymized_text
             )
         return PassResult(value=text)
-

@@ -3,8 +3,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.core.validators import pii_remover
-from app.core.validators.pii_remover import ALL_ENTITY_TYPES, DEFAULT_TRANSFORMERS_MODEL, DEFAULT_TRANSFORMERS_THRESHOLD, PIIRemover
-from app.core.validators.config.pii_remover_safety_validator_config import PIIRemoverSafetyValidatorConfig
+from app.core.validators.pii_remover import (
+    ALL_ENTITY_TYPES,
+    DEFAULT_TRANSFORMERS_MODEL,
+    DEFAULT_TRANSFORMERS_THRESHOLD,
+    PIIRemover,
+)
+from app.core.validators.config.pii_remover_safety_validator_config import (
+    PIIRemoverSafetyValidatorConfig,
+)
 
 # -------------------------------
 # Fixtures
@@ -93,7 +100,9 @@ def test_spacy_engine_uses_correct_defaults(mock_presidio):
 
 
 def test_transformers_engine_accepts_custom_model(mock_presidio):
-    v = PIIRemover(nlp_engine_type="transformers", model_name="dslim/bert-base-NER-uncased")
+    v = PIIRemover(
+        nlp_engine_type="transformers", model_name="dslim/bert-base-NER-uncased"
+    )
     assert v.model_name == "dslim/bert-base-NER-uncased"
 
 
@@ -125,8 +134,12 @@ def test_cached_analyzer_registers_only_requested_indian_recognizers():
         pii_remover._NLP_ENGINE_CACHE.clear()
         analyzer_instance = mock_analyzer.return_value
 
-        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"], "spacy", "en_core_web_lg", 0.5)
-        pii_remover._get_cached_analyzer(["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"], "spacy", "en_core_web_lg", 0.5)
+        pii_remover._get_cached_analyzer(
+            ["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"], "spacy", "en_core_web_lg", 0.5
+        )
+        pii_remover._get_cached_analyzer(
+            ["EMAIL_ADDRESS", "IN_AADHAAR", "IN_PAN"], "spacy", "en_core_web_lg", 0.5
+        )
 
         mock_build_engine.assert_called_once_with(pii_remover.SPACY_CONFIGURATION)
         mock_analyzer.assert_called_once()
