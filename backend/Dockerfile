@@ -49,6 +49,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
 RUN python -m pip install --no-deps "${SPACY_TOKENIZER_MODEL_WHEEL_URL}"
 
+ENV NLTK_DISABLE_IMPORT_SECURITY=1
+
 # Set HuggingFace cache directory
 ENV HF_HOME=/app/hf_cache
 
