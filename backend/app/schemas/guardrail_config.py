@@ -86,9 +86,11 @@ class GuardrailRequest(SQLModel):
 
         # Strip persistence/system fields before handing a stored validator
         # config to Guardrails. Reuse the shared system-field set, but keep
-        # `type` (the discriminator) and `on_fail_action` (remapped below),
-        # and add the DB-only columns.
-        drop_fields = (VALIDATOR_CONFIG_SYSTEM_FIELDS - {"type", "on_fail_action"}) | {
+        # `type` (the discriminator), `stage` (recorded in validator logs),
+        # and `on_fail_action` (remapped below), and add the DB-only columns.
+        drop_fields = (
+            VALIDATOR_CONFIG_SYSTEM_FIELDS - {"type", "on_fail_action", "stage"}
+        ) | {
             "id",
             "created_at",
             "updated_at",

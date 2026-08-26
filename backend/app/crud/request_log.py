@@ -24,6 +24,7 @@ class RequestLogCrud:
             output_text=payload.output,
             organization_id=organization_id,
             project_id=project_id,
+            meta=payload.model_dump(mode="json"),
         )
         self.session.add(create_request_log)
         self.session.commit()
