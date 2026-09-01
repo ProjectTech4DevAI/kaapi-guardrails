@@ -28,6 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project
 
 ARG SPACY_MODEL_WHEEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl"
+ARG SPACY_TOKENIZER_MODEL_WHEEL_URL="https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl"
 
 ENV PYTHONPATH=/app
 RUN apt-get update && apt-get install -y jq && rm -rf /var/lib/apt/lists/*
@@ -44,20 +45,27 @@ COPY ./app /app/app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 
-# Install pinned spaCy model in the final environment used at runtime.
+# Install pinned spaCy models in the final environment used at runtime.
 RUN python -m pip install --no-deps "${SPACY_MODEL_WHEEL_URL}"
+RUN python -m pip install --no-deps "${SPACY_TOKENIZER_MODEL_WHEEL_URL}"
 
 ENV NLTK_DISABLE_IMPORT_SECURITY=1
 
 # Set HuggingFace cache directory
 ENV HF_HOME=/app/hf_cache
 
-# Pre-download HuggingFace model
+# Pre-download HuggingFace models
 RUN --mount=type=secret,id=HF_TOKEN \
     HF_TOKEN="$(cat /run/secrets/HF_TOKEN 2>/dev/null || true)" \
     /app/.venv/bin/python -c "from transformers import AutoTokenizer, AutoModelForSequenceClassification; \
 AutoTokenizer.from_pretrained('textdetox/xlmr-large-toxicity-classifier', cache_dir='/app/hf_cache'); \
 AutoModelForSequenceClassification.from_pretrained('textdetox/xlmr-large-toxicity-classifier', cache_dir='/app/hf_cache')"
+
+RUN --mount=type=secret,id=HF_TOKEN \
+    HF_TOKEN="$(cat /run/secrets/HF_TOKEN 2>/dev/null || true)" \
+    /app/.venv/bin/python -c "from transformers import AutoTokenizer, AutoModelForTokenClassification; \
+AutoTokenizer.from_pretrained('dslim/bert-base-NER-uncased', cache_dir='/app/hf_cache'); \
+AutoModelForTokenClassification.from_pretrained('dslim/bert-base-NER-uncased', cache_dir='/app/hf_cache')"
 
 # Pre-install Guardrails hub validators so container startup is not blocked by downloads
 RUN --mount=type=secret,id=GUARDRAILS_HUB_API_KEY \
