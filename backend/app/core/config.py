@@ -15,14 +15,14 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
+#1. A comma-separated string like "1.2.3.4,5.6.7.8" → splits on , and strips whitespace.
+#2. A JSON-encoded array string like '["1.2.3.4","5.6.7.8"]' 
+# (some env/deploy tooling JSON-encodes list-valued env vars) → parses it with json.loads.
 
 def parse_csv_list(v: Any) -> list[str] | str:
     if isinstance(v, str):
         if v.lstrip().startswith("["):
-            # A JSON-array value (e.g. an env var that was JSON-encoded):
-            # parse it so ALLOWED_IPS is always a real list. A raw string
-            # here would make the IP check do substring matching instead of
-            # exact matching.
+           
             try:
                 parsed = json.loads(v)
             except json.JSONDecodeError:
