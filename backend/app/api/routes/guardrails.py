@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 from uuid import UUID
@@ -14,12 +15,7 @@ from app.core.constants import (
     LLM_CRITIC_REPHRASE_MESSAGE,
     REPHRASE_ON_FAIL_PREFIX,
 )
-from app.core.enum import (
-    VALIDATOR_FAMILY,
-    LLMValidatorName,
-    Stage,
-    ValidatorType,
-)
+from app.core.enum import LLMValidatorName, Stage, ValidatorType
 from app.core.exception_handlers import _normalize_error_detail, _safe_error_message
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
@@ -28,7 +24,6 @@ from app.core.validators.config.answer_relevance_custom_llm_safety_validator_con
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
-from app.core.validators.config.base_validator_config import BaseValidatorConfig
 from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
     TopicRelevanceLLMSafetyValidatorConfig,
 )
@@ -41,7 +36,11 @@ from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
-from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
+from app.schemas.guardrail_config import (
+    GuardrailRequest,
+    GuardrailResponse,
+    ValidatorConfigItem,
+)
 from app.utils import APIResponse, load_description
 
 logger = logging.getLogger(__name__)
@@ -70,7 +69,7 @@ def run_guardrails(
 
     try:
         request_log = request_log_crud.create(
-            payload, auth.organization_id, auth.project_id
+            payload, auth.organization_id, auth.project_id, suppress_pass_logs
         )
     except ValueError:
         logger.warning(
@@ -409,8 +408,8 @@ def _redact_input(error_message: str, input_text: str) -> str:
 
 
 def _map_validator_configs(
-    guard: Guard, validator_configs: list[BaseValidatorConfig] | None
-) -> dict[str, BaseValidatorConfig]:
+    guard: Guard, validator_configs: list[ValidatorConfigItem] | None
+) -> dict[str, ValidatorConfigItem]:
     """
     Maps guard-history validator names (rail_alias) back to the request's
     validator configs, using the built validators the guard actually ran.
@@ -420,7 +419,7 @@ def _map_validator_configs(
         return {}
     # ponytail: first config wins per alias; two same-type validators in one
     # request share trace fields. Split by position if that ever matters.
-    mapping: dict[str, BaseValidatorConfig] = {}
+    mapping: dict[str, ValidatorConfigItem] = {}
     for validator, config in zip(built, validator_configs):
         alias = getattr(validator, "rail_alias", None)
         if alias:
@@ -434,7 +433,7 @@ def add_validator_logs(
     validator_log_crud: ValidatorLogCrud,
     auth: TenantContext,
     suppress_pass_logs: bool = False,
-    validator_configs: list[BaseValidatorConfig] | None = None,
+    validator_configs: list[ValidatorConfigItem] | None = None,
 ) -> None:
     """
     Writes a ValidatorLog entry for each validator outcome in the guard's last iteration.
@@ -474,14 +473,30 @@ def add_validator_logs(
         config = config_by_alias.get(
             getattr(log, "registered_name", None) or log.validator_name
         )
-        stage = type_ = family = meta = None
+        stage = type_ = meta = None
         if config is not None:
             type_ = config.type
-            family = VALIDATOR_FAMILY.get(config.type)
             # Per-config stage defaults live on the config classes
             # (answer_relevance defaults to output).
             stage = config.stage.value if config.stage else Stage.Input.value
             meta = config.model_dump(mode="json")
+
+        # Verdict detail the validator attached to its result (e.g. topic
+        # relevance scope_score/reasoning); stored beside the config dump.
+        result_metadata = getattr(result, "metadata", None)
+        if result_metadata:
+            meta = meta or {}
+            # Round-trip through json so a non-serializable value degrades to
+            # its str() instead of failing the row insert.
+            meta["result_metadata"] = json.loads(
+                json.dumps(result_metadata, default=str)
+            )
+
+        duration_ms = None
+        start_time = getattr(log, "start_time", None)
+        end_time = getattr(log, "end_time", None)
+        if start_time and end_time:
+            duration_ms = int((end_time - start_time).total_seconds() * 1000)
 
         validator_log = ValidatorLog(
             request_id=request_log_id,
@@ -489,9 +504,9 @@ def add_validator_logs(
             project_id=auth.project_id,
             name=log.validator_name,
             order=order,
+            duration_ms=duration_ms,
             stage=stage,
             type=type_,
-            family=family,
             meta=meta,
             input=str(log.value_before_validation),
             output=log.value_after_validation,
