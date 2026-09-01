@@ -1,8 +1,10 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import SQLModel, Field
 
 from app.utils import now
@@ -59,6 +61,16 @@ class RequestLog(SQLModel, table=True):
         default=None,
         nullable=True,
         sa_column_kwargs={"comment": "LLM output text passed for output guardrails"},
+    )
+
+    meta: Optional[dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(
+            "metadata",
+            JSONB,
+            nullable=True,
+            comment="Full run_guardrails request payload",
+        ),
     )
 
     response_text: Optional[str] = Field(
