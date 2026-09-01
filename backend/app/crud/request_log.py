@@ -16,15 +16,20 @@ class RequestLogCrud:
         payload: GuardrailRequest,
         organization_id: int,
         project_id: int,
+        suppress_pass_logs: bool = False,
     ) -> RequestLog:
         request_id = UUID(payload.request_id)
+        # suppress_pass_logs is a query param (not part of the payload), but a
+        # trace reader needs it to tell "passes suppressed" from "nothing ran".
+        meta = payload.model_dump(mode="json")
+        meta["suppress_pass_logs"] = suppress_pass_logs
         create_request_log = RequestLog(
             request_id=request_id,
             request_text=payload.input,
             output_text=payload.output,
             organization_id=organization_id,
             project_id=project_id,
-            meta=payload.model_dump(mode="json"),
+            meta=meta,
         )
         self.session.add(create_request_log)
         self.session.commit()

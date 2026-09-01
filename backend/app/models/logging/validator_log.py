@@ -53,6 +53,14 @@ class ValidatorLog(SQLModel, table=True):
         },
     )
 
+    duration_ms: int | None = Field(
+        default=None,
+        nullable=True,
+        sa_column_kwargs={
+            "comment": "Wall-clock execution time of the validator in milliseconds"
+        },
+    )
+
     stage: str | None = Field(
         default=None,
         nullable=True,
@@ -63,14 +71,6 @@ class ValidatorLog(SQLModel, table=True):
         default=None,
         nullable=True,
         sa_column_kwargs={"comment": "Validator type (ValidatorType enum value)"},
-    )
-
-    family: str | None = Field(
-        default=None,
-        nullable=True,
-        sa_column_kwargs={
-            "comment": "Validator family (lexical, classifier or semantic)"
-        },
     )
 
     meta: dict[str, Any] | None = Field(
