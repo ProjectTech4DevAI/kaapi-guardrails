@@ -14,6 +14,10 @@ crud_path = "app.api.routes.guardrails.RequestLogCrud"
 request_id = "123e4567-e89b-12d3-a456-426614174000"
 organization_id = VALIDATOR_TEST_ORGANIZATION_ID
 project_id = VALIDATOR_TEST_PROJECT_ID
+TENANT_HEADERS = {
+    "X-ORGANIZATION-ID": str(organization_id),
+    "X-PROJECT-ID": str(project_id),
+}
 
 
 def test_route_exists(client):
@@ -29,10 +33,9 @@ def test_validate_guardrails_success(client):
     with patch(build_guard_path, return_value=MockGuard()):
         response = client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json={
                 "request_id": request_id,
-                "organization_id": organization_id,
-                "project_id": project_id,
                 "input": "hello world",
                 "validators": [],
             },
@@ -54,10 +57,9 @@ def test_validate_guardrails_failure(client):
     with patch(build_guard_path, return_value=MockGuard()):
         response = client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json={
                 "request_id": request_id,
-                "organization_id": organization_id,
-                "project_id": project_id,
                 "input": "my phone is 999999",
                 "validators": [],
             },
@@ -83,10 +85,9 @@ def test_rephrase_needed_is_true_when_on_fail_is_rephrase(client):
     with patch(build_guard_path, return_value=MockGuard()):
         response = client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json={
                 "request_id": request_id,
-                "organization_id": organization_id,
-                "project_id": project_id,
                 "input": "tell me about buildings",
                 "validators": [],
             },
@@ -104,10 +105,9 @@ def test_guardrails_internal_error(client):
     with patch(build_guard_path, side_effect=Exception("Invalid validator config")):
         response = client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json={
                 "request_id": request_id,
-                "organization_id": organization_id,
-                "project_id": project_id,
                 "input": "text",
                 "validators": [],
             },

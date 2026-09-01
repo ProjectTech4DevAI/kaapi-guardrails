@@ -1,4 +1,4 @@
-Lists ban lists for the tenant resolved from `X-API-KEY`.
+Lists ban lists for the tenant resolved from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Behavior notes:
 - Supports filtering by `domain`.

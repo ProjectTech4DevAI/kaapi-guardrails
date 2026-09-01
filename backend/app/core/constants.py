@@ -34,6 +34,7 @@ DUPLICATE_LLM_PROMPT_CONFIG_ERROR = (
     "A prompt config with the same configuration already exists"
 )
 
+
 VALIDATOR_CONFIG_SYSTEM_FIELDS = {
     "organization_id",
     "project_id",

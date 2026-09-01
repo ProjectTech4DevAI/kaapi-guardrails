@@ -18,14 +18,16 @@ Example local base URL:
 
 ## Authentication
 
-This API currently uses two auth modes:
+This service is internal. Its only caller is kaapi-backend, which authenticates the end user and
+resolves the tenant before calling.
 
-1. Bearer token auth (`Authorization: Bearer <plain-text-token>`)
-   - Used by validator config and guardrails endpoints.
-   - The server validates your plaintext bearer token against a SHA-256 digest stored in `AUTH_TOKEN`.
-2. multi-tenant API key auth (`X-API-KEY: <token>`)
-   - Used by ban list and LLM prompt config endpoints.
-   - The API key is verified against `KAAPI_AUTH_URL` and resolves tenant's scope (`organization_id`, `project_id`).
+Every request must carry:
+
+- `Authorization: Bearer <plain-text-token>` — validated against the SHA-256 digest in `AUTH_TOKEN`
+- `X-ORGANIZATION-ID: <int>` and `X-PROJECT-ID: <int>` — the tenant, resolved by kaapi-backend
+- and must arrive from an IP listed in `ALLOWED_IPS`
+
+Tenant scope is never read from the query string or request body.
 
 Notes:
 - `GET /utils/health-check/` is public.
@@ -74,13 +76,15 @@ Base path:
 ## 2.1 Create validator config
 
 Endpoint:
-- `POST /api/v1/guardrails/validators/configs/?organization_id=1&project_id=101`
+- `POST /api/v1/guardrails/validators/configs/`
 
 Example (PII input validator):
 
 ```bash
-curl -X POST "http://localhost:8001/api/v1/guardrails/validators/configs/?organization_id=1&project_id=101" \
+curl -X POST "http://localhost:8001/api/v1/guardrails/validators/configs/" \
   -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "type": "pii_remover",
@@ -95,7 +99,7 @@ curl -X POST "http://localhost:8001/api/v1/guardrails/validators/configs/?organi
 ## 2.2 List validator configs
 
 Endpoint:
-- `GET /api/v1/guardrails/validators/configs/?organization_id=1&project_id=101`
+- `GET /api/v1/guardrails/validators/configs/`
 
 Optional filters:
 - `ids=<uuid>&ids=<uuid>`
@@ -106,32 +110,38 @@ Optional filters:
 Example:
 
 ```bash
-curl -X GET "http://localhost:8001/api/v1/guardrails/validators/configs/?organization_id=1&project_id=101&stage=input" \
-  -H "Authorization: Bearer <token>"
+curl -X GET "http://localhost:8001/api/v1/guardrails/validators/configs/?stage=input" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 2.3 Get validator config by id
 
 Endpoint:
-- `GET /api/v1/guardrails/validators/configs/{id}?organization_id=1&project_id=101`
+- `GET /api/v1/guardrails/validators/configs/{id}`
 
 Example:
 
 ```bash
-curl -X GET "http://localhost:8001/api/v1/guardrails/validators/configs/<validator_id>?organization_id=1&project_id=101" \
-  -H "Authorization: Bearer <token>"
+curl -X GET "http://localhost:8001/api/v1/guardrails/validators/configs/<validator_id>" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 2.4 Update validator config
 
 Endpoint:
-- `PATCH /api/v1/guardrails/validators/configs/{id}?organization_id=1&project_id=101`
+- `PATCH /api/v1/guardrails/validators/configs/{id}`
 
 Example:
 
 ```bash
-curl -X PATCH "http://localhost:8001/api/v1/guardrails/validators/configs/<validator_id>?organization_id=1&project_id=101" \
+curl -X PATCH "http://localhost:8001/api/v1/guardrails/validators/configs/<validator_id>" \
   -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "is_enabled": false,
@@ -142,13 +152,15 @@ curl -X PATCH "http://localhost:8001/api/v1/guardrails/validators/configs/<valid
 ## 2.5 Delete validator config
 
 Endpoint:
-- `DELETE /api/v1/guardrails/validators/configs/{id}?organization_id=1&project_id=101`
+- `DELETE /api/v1/guardrails/validators/configs/{id}`
 
 Example:
 
 ```bash
-curl -X DELETE "http://localhost:8001/api/v1/guardrails/validators/configs/<validator_id>?organization_id=1&project_id=101" \
-  -H "Authorization: Bearer <token>"
+curl -X DELETE "http://localhost:8001/api/v1/guardrails/validators/configs/<validator_id>" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 3) Runtime Validator Discovery
@@ -163,7 +175,9 @@ Example:
 
 ```bash
 curl -X GET "http://localhost:8001/api/v1/guardrails/" \
-  -H "Authorization: Bearer <token>"
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 4) Guardrail Execution
@@ -192,11 +206,11 @@ Example:
 ```bash
 curl -X POST "http://localhost:8001/api/v1/guardrails/?suppress_pass_logs=true" \
   -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "request_id": "2a6f6d5c-5b9f-4f6b-92e4-cf7d67f87932",
-    "organization_id": 1,
-    "project_id": 101,
     "input": "Amit Gupta phone number is 919611188278",
     "validators": [
       {
@@ -264,7 +278,7 @@ Possible failure response:
 
 ## 5) Ban List APIs (multi-tenant)
 
-These endpoints manage tenant-scoped ban lists and use `X-API-KEY` auth.
+These endpoints manage tenant-scoped ban lists. The tenant comes from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Base path:
 - `/api/v1/guardrails/ban_lists`
@@ -278,7 +292,9 @@ Example:
 
 ```bash
 curl -X POST "http://localhost:8001/api/v1/guardrails/ban_lists/" \
-  -H "X-API-KEY: <api-key>" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Safety Banned Terms",
@@ -298,7 +314,9 @@ Example:
 
 ```bash
 curl -X GET "http://localhost:8001/api/v1/guardrails/ban_lists/?offset=0&limit=20" \
-  -H "X-API-KEY: <api-key>"
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 5.3 Get ban list by id
@@ -310,7 +328,9 @@ Example:
 
 ```bash
 curl -X GET "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>" \
-  -H "X-API-KEY: <api-key>"
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 5.4 Update ban list
@@ -322,7 +342,9 @@ Example:
 
 ```bash
 curl -X PATCH "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>" \
-  -H "X-API-KEY: <api-key>" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "description": "Updated description",
@@ -339,12 +361,14 @@ Example:
 
 ```bash
 curl -X DELETE "http://localhost:8001/api/v1/guardrails/ban_lists/<ban_list_id>" \
-  -H "X-API-KEY: <api-key>"
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 6) LLM Prompt Config APIs (multi-tenant)
 
-These endpoints manage tenant-scoped LLM prompt configs for the `topic_relevance` and `answer_relevance_custom_llm` validators. They use `X-API-KEY` auth.
+These endpoints manage tenant-scoped LLM prompt configs for the `topic_relevance` and `answer_relevance_custom_llm` validators. The tenant comes from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Base path:
 - `/api/v1/guardrails/llm_prompt_configs`
@@ -362,7 +386,9 @@ Example (topic relevance):
 
 ```bash
 curl -X POST "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/" \
-  -H "X-API-KEY: <api-key>" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "validator_name": "topic_relevance",
@@ -377,7 +403,9 @@ Example (answer relevance):
 
 ```bash
 curl -X POST "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/" \
-  -H "X-API-KEY: <api-key>" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "validator_name": "answer_relevance_custom_llm",
@@ -399,7 +427,9 @@ Example:
 
 ```bash
 curl -X GET "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/?validator_name=topic_relevance&offset=0&limit=20" \
-  -H "X-API-KEY: <api-key>"
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 6.3 Get LLM prompt config by id
@@ -411,7 +441,9 @@ Example:
 
 ```bash
 curl -X GET "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/<config_id>" \
-  -H "X-API-KEY: <api-key>"
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 6.4 Update LLM prompt config
@@ -423,7 +455,9 @@ Example:
 
 ```bash
 curl -X PATCH "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/<config_id>" \
-  -H "X-API-KEY: <api-key>" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101" \
   -H "Content-Type: application/json" \
   -d '{
     "llm_prompt": "Pregnancy care: Updated scope definition"
@@ -439,7 +473,9 @@ Example:
 
 ```bash
 curl -X DELETE "http://localhost:8001/api/v1/guardrails/llm_prompt_configs/<config_id>" \
-  -H "X-API-KEY: <api-key>"
+  -H "Authorization: Bearer <token>" \
+  -H "X-ORGANIZATION-ID: 1" \
+  -H "X-PROJECT-ID: 101"
 ```
 
 ## 8) End-to-End Usage Pattern
@@ -460,10 +496,10 @@ Recommended request flow:
   - Add `Authorization: Bearer <token>`.
 - `401 Invalid authorization token`
   - Verify plaintext token matches server-side hash.
-- `401 Missing X-API-KEY header`
-  - Add `X-API-KEY: <api-key>` for ban list and LLM prompt config endpoints.
-- `401 Invalid API key`
-  - Verify the API key is valid in the upstream Kaapi auth service.
+- `403 Forbidden`
+  - Source IP is not in `ALLOWED_IPS`. Checked before the token.
+- `422` on tenant headers
+  - Add `X-ORGANIZATION-ID` and `X-PROJECT-ID`; both must be integers.
 - `Invalid request_id`
   - Ensure `request_id` is a valid UUID string.
 - `Validator already exists for this type and stage`

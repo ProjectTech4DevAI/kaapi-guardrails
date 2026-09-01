@@ -63,8 +63,6 @@ ValidatorConfigItem = Annotated[
 class GuardrailRequest(SQLModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str
-    organization_id: int
-    project_id: int
     input: str
     output: Optional[str] = None
     validators: List[ValidatorConfigItem]

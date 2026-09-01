@@ -38,6 +38,10 @@ def _mock_openai_key():
 
 organization_id = VALIDATOR_INTEGRATION_ORGANIZATION_ID
 project_id = VALIDATOR_INTEGRATION_PROJECT_ID
+TENANT_HEADERS = {
+    "X-ORGANIZATION-ID": str(organization_id),
+    "X-PROJECT-ID": str(project_id),
+}
 
 QUERY = "What are the common symptoms of diabetes?"
 RELEVANT_ANSWER = (
@@ -68,8 +72,6 @@ def _llm_no():
 def _payload(input_text, output_text, validators):
     return {
         "request_id": str(uuid.uuid4()),
-        "organization_id": organization_id,
-        "project_id": project_id,
         "input": input_text,
         "output": output_text,
         "validators": validators,
@@ -85,6 +87,7 @@ def test_answer_relevance_alone_passes_for_relevant_output(integration_client):
     with patch(_PATCH_TARGET, return_value=_llm_yes()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY, RELEVANT_ANSWER, [{"type": "answer_relevance_custom_llm"}]
             ),
@@ -100,6 +103,7 @@ def test_answer_relevance_alone_fails_for_irrelevant_output(integration_client):
     with patch(_PATCH_TARGET, return_value=_llm_no()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 IRRELEVANT_ANSWER,
@@ -117,10 +121,9 @@ def test_answer_relevance_alone_fails_when_output_is_missing(integration_client)
     """No output field → validator receives empty string → non-empty guard triggers."""
     response = integration_client.post(
         VALIDATE_API_PATH,
+        headers=TENANT_HEADERS,
         json={
             "request_id": str(uuid.uuid4()),
-            "organization_id": organization_id,
-            "project_id": project_id,
             "input": QUERY,
             "validators": [
                 {"type": "answer_relevance_custom_llm", "on_fail": "exception"}
@@ -143,6 +146,7 @@ def test_answer_relevance_alone_uses_custom_prompt_template(integration_client):
     with patch(_PATCH_TARGET, return_value=_llm_yes()) as mock_llm:
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 RELEVANT_ANSWER,
@@ -174,6 +178,7 @@ def test_answer_relevance_and_ban_list_fail_when_output_irrelevant(integration_c
     with patch(_PATCH_TARGET, return_value=_llm_no()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 IRRELEVANT_ANSWER,
@@ -198,6 +203,7 @@ def test_answer_relevance_and_ban_list_removes_banned_word_from_relevant_output(
     with patch(_PATCH_TARGET, return_value=_llm_yes()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 output_with_banned,
@@ -222,6 +228,7 @@ def test_answer_relevance_and_profanity_free_fixes_profanity_in_relevant_output(
     with patch(_PATCH_TARGET, return_value=_llm_yes()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 profane_relevant,
@@ -246,6 +253,7 @@ def test_answer_relevance_and_slur_match_redacts_slur_in_relevant_output(
     with patch(_PATCH_TARGET, return_value=_llm_yes()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 slurred_relevant,
@@ -272,6 +280,7 @@ def test_answer_relevance_and_profanity_free_fail_when_profanity_on_fail_excepti
     with patch(_PATCH_TARGET, return_value=_llm_yes()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 profane_relevant,
@@ -298,6 +307,7 @@ def test_five_validators_all_pass_on_clean_relevant_output(integration_client):
     with patch(_PATCH_TARGET, return_value=_llm_yes()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 RELEVANT_ANSWER,
@@ -326,6 +336,7 @@ def test_five_validators_fix_multiple_issues_in_relevant_output(integration_clie
     with patch(_PATCH_TARGET, return_value=_llm_yes()):
         response = integration_client.post(
             VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
             json=_payload(
                 QUERY,
                 noisy_relevant,

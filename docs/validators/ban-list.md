@@ -60,7 +60,9 @@ Stored ban lists are scoped per `organization_id` + `project_id`. Use the manage
 
 ```bash
 POST /api/v1/guardrails/ban_lists/
-Authorization: X-API-KEY your-api-key
+Authorization: Bearer <token>
+X-ORGANIZATION-ID: 1
+X-PROJECT-ID: 101
 
 {
   "name": "Competitor Terms",
