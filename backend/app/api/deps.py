@@ -41,16 +41,10 @@ class TenantContext:
 
 
 def check_source_ip(request: Request) -> None:
-    """
-    403 for callers whose source IP is not in ALLOWED_IPS.
-
-    Runs before the token and tenant checks so a caller from an unexpected
-    origin never learns whether its bearer token is valid.
-    """
+    """403 for callers whose source IP is not in ALLOWED_IPS."""
     if settings.ALLOWED_IPS:
         allowed = settings.ALLOWED_IPS
         if isinstance(allowed, str):
-            # Defense in depth: never substring-match a raw string.
             allowed = [allowed]
         client_ip = request.client.host if request.client else None
         if client_ip not in allowed:
@@ -67,9 +61,7 @@ def check_bearer_token(
         Security(security),
     ],
 ) -> None:
-    """
-    401 for a missing or invalid bearer token. Only reached from a whitelisted IP.
-    """
+    """401 for a missing or invalid bearer token."""
     if credentials is None:
         raise _unauthorized("Missing Authorization header")
 
@@ -85,18 +77,7 @@ def verify_caller(
     organization_id: Annotated[int, Header(alias="X-ORGANIZATION-ID")],
     project_id: Annotated[int, Header(alias="X-PROJECT-ID")],
 ) -> TenantContext:
-    """
-    Authenticates the single trusted caller (kaapi-backend) by static bearer token
-    and source IP, and returns the tenant it resolved from the end user's API key.
-
-    Tenant scope is never read from the query string or request body, so a route
-    cannot be tenant-unscoped: the dependency that authenticates it also supplies
-    the tenant.
-
-    Check order (403 -> 401 -> 422): source IP, then bearer token, then tenant
-    headers. The IP check comes first on purpose so a caller from an unexpected
-    origin gets 403 whether or not its token was valid.
-    """
+    """Authenticates the trusted caller and returns its tenant scope."""
     return TenantContext(organization_id=organization_id, project_id=project_id)
 
 
