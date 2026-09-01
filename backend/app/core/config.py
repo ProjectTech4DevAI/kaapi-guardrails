@@ -19,7 +19,7 @@ from typing_extensions import Self
 #2. A JSON-encoded array string like '["1.2.3.4","5.6.7.8"]' 
 # (some env/deploy tooling JSON-encodes list-valued env vars) → parses it with json.loads.
 
-def parse_csv_list(v: Any) -> list[str] | str:
+def parse_ip_list(v: Any) -> list[str] | str:
     if isinstance(v, str):
         if v.lstrip().startswith("["):
            
@@ -57,8 +57,8 @@ class Settings(BaseSettings):
     GUARDRAILS_HUB_API_KEY: str | None = None
     # Source IPs allowed to reach this service (kaapi-backend). Empty = check disabled.
     # `| str` keeps pydantic-settings from JSON-parsing the dotenv value before
-    # parse_csv_list gets to split it.
-    ALLOWED_IPS: Annotated[list[str] | str, BeforeValidator(parse_csv_list)] = []
+    # parse_ip_list gets to split it.
+    ALLOWED_IPS: Annotated[list[str] | str, BeforeValidator(parse_ip_list)] = []
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
     OPENAI_API_KEY: str | None = None
     ANSWER_RELEVANCE_LLM_MODEL: str = "gpt-4o-mini"

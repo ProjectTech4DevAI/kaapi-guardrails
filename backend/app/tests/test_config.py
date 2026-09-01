@@ -2,7 +2,7 @@ import hashlib
 
 import pytest
 
-from app.core.config import Settings, parse_csv_list
+from app.core.config import Settings, parse_ip_list
 
 TOKEN_HASH = hashlib.sha256(b"test-token").hexdigest()
 
@@ -22,36 +22,36 @@ def _settings(**overrides) -> Settings:
     return Settings(**base)
 
 
-class TestParseCsvList:
+class TestParseIpList:
     def test_single_value(self):
-        assert parse_csv_list("10.0.3.14") == ["10.0.3.14"]
+        assert parse_ip_list("10.0.3.14") == ["10.0.3.14"]
 
     def test_comma_separated_with_whitespace(self):
-        assert parse_csv_list("10.0.3.14, 10.0.3.15 ,10.0.3.16") == [
+        assert parse_ip_list("10.0.3.14, 10.0.3.15 ,10.0.3.16") == [
             "10.0.3.14",
             "10.0.3.15",
             "10.0.3.16",
         ]
 
     def test_empty_string(self):
-        assert parse_csv_list("") == []
+        assert parse_ip_list("") == []
 
     def test_blank_entries_are_dropped(self):
-        assert parse_csv_list("10.0.3.14,, ,10.0.3.15") == ["10.0.3.14", "10.0.3.15"]
+        assert parse_ip_list("10.0.3.14,, ,10.0.3.15") == ["10.0.3.14", "10.0.3.15"]
 
     def test_json_array_string_is_parsed(self):
         # A JSON-encoded env value must become a real list, never a raw string
         # that the IP check would substring-match against.
-        assert parse_csv_list('["10.0.3.14", "10.0.3.15"]') == [
+        assert parse_ip_list('["10.0.3.14", "10.0.3.15"]') == [
             "10.0.3.14",
             "10.0.3.15",
         ]
 
     def test_invalid_json_bracket_string_is_returned_as_is(self):
-        assert parse_csv_list("[not-json") == "[not-json"
+        assert parse_ip_list("[not-json") == "[not-json"
 
     def test_passthrough_list(self):
-        assert parse_csv_list(["10.0.3.14"]) == ["10.0.3.14"]
+        assert parse_ip_list(["10.0.3.14"]) == ["10.0.3.14"]
 
 
 class TestAllowedIpsSettings:
