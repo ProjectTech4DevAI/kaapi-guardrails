@@ -1,8 +1,13 @@
 from typing import List, Literal, Optional
 
-from guardrails.hub import LlamaGuard7B
-
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
+
+# guardrails.hub is unavailable: the Guardrails Hub CLI/registry and its hosted
+# inference servers were shut down 2026-08-25. The PyPI replacement
+# (guardrails-ai-llamaguard-7b) only supports remote inference via a
+# self-hosted validation_endpoint, which we don't have yet. Import is deferred
+# to build() so this module (and the schema/registry that imports it) stays
+# loadable; only actually building this validator fails until that's resolved.
 
 POLICY_NAME_MAP = {
     "no_violence_hate": "O1",
@@ -32,6 +37,8 @@ class LlamaGuard7BSafetyValidatorConfig(BaseValidatorConfig):
         return resolved
 
     def build(self):
+        from guardrails.hub import LlamaGuard7B
+
         return LlamaGuard7B(
             policies=self._resolve_policies(),
             on_fail=self.resolve_on_fail(),  # type: ignore[arg-type]

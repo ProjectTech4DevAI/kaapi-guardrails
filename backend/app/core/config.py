@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
     SENTRY_TRACES_SAMPLE_RATE: float = 0.1
+    OTEL_ENABLED: bool = False
     POSTGRES_SERVER: str
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str

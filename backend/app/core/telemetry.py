@@ -14,13 +14,11 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
 from sentry_sdk.integrations.opentelemetry import SentryPropagator, SentrySpanProcessor
 
 from app.core.config import settings
-from app.core.db import engine
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +38,10 @@ def _scrub_event(event: dict, hint: dict) -> dict:
 def setup_telemetry(app: FastAPI) -> None:
     """Initialize Sentry + OpenTelemetry. Call once from main.py.
 
-    No-op without a SENTRY_DSN or in the testing environment, so tests and
-    local runs stay instrumentation-free.
+    No-op unless OTEL_ENABLED is set, without a SENTRY_DSN, or in the
+    testing environment, so tests and local runs stay instrumentation-free.
     """
-    if not settings.SENTRY_DSN or settings.ENVIRONMENT == "testing":
+    if not settings.OTEL_ENABLED or not settings.SENTRY_DSN or settings.ENVIRONMENT == "testing":
         return
 
     sentry_sdk.init(
@@ -65,9 +63,11 @@ def setup_telemetry(app: FastAPI) -> None:
     FastAPIInstrumentor.instrument_app(app, excluded_urls=EXCLUDED_URLS)
     HTTPXClientInstrumentor().instrument()
     RequestsInstrumentor().instrument()
-    # ponytail: all DB spans kept (Kaapi regrets dropping them); add a
-    # duration filter only if span volume becomes a cost problem.
-    SQLAlchemyInstrumentor().instrument(engine=engine)
+    # DB transaction/connection spans (SQLAlchemyInstrumentor) are deliberately
+    # not instrumented: they added noise without helping debug guardrails
+    # execution. Keep instrumentation scoped to the request span, outbound
+    # HTTP (LLM calls), and the two manual spans in llm_utils/guardrails.py.
+
     # Injects trace_id/span_id into log records for trace<->log correlation.
     LoggingInstrumentor().instrument(set_logging_format=False)
 

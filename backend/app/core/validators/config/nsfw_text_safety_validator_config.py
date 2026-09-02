@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from guardrails.hub import NSFWText
+from guardrails_ai.nsfw_text import NSFWText
 
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
@@ -19,4 +19,5 @@ class NSFWTextSafetyValidatorConfig(BaseValidatorConfig):
             device=self.device,
             model_name=self.model_name,
             on_fail=self.resolve_on_fail(),
+            use_local=True,
         )
