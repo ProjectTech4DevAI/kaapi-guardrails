@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from guardrails import OnFailAction
-from guardrails.hub import LLMCritic
+from guardrails_ai.llm_critic import LLMCritic
 from guardrails.validators import (
     FailResult,
     PassResult,

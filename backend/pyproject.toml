@@ -24,7 +24,6 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi",
     "opentelemetry-instrumentation-httpx",
     "opentelemetry-instrumentation-requests",
-    "opentelemetry-instrumentation-sqlalchemy",
     "opentelemetry-instrumentation-logging",
     "pyjwt<3.0.0,>=2.8.0",
     "asgi-correlation-id>=4.3.4",
@@ -41,6 +40,9 @@ dependencies = [
     "transformers>=5.0.0",
     "torch>=2.0.0",
     "guardrails-ai-ban-list>=0.1.0",
+    "guardrails-ai-llm-critic>=0.1.0",
+    "guardrails-ai-profanity-free>=0.1.0",
+    "guardrails-ai-nsfw-text>=0.1.0",
 ]
 
 [dependency-groups]
