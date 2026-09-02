@@ -40,6 +40,15 @@ def upgrade() -> None:
     op.add_column(
         "validator_log",
         sa.Column(
+            "duration_ms",
+            sa.Integer(),
+            nullable=True,
+            comment="Wall-clock execution time of the validator in milliseconds",
+        ),
+    )
+    op.add_column(
+        "validator_log",
+        sa.Column(
             "stage",
             sa.String(),
             nullable=True,
@@ -58,15 +67,6 @@ def upgrade() -> None:
     op.add_column(
         "validator_log",
         sa.Column(
-            "family",
-            sa.String(),
-            nullable=True,
-            comment="Validator family (lexical, classifier or semantic)",
-        ),
-    )
-    op.add_column(
-        "validator_log",
-        sa.Column(
             "metadata",
             JSONB,
             nullable=True,
@@ -77,8 +77,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_column("validator_log", "metadata")
-    op.drop_column("validator_log", "family")
     op.drop_column("validator_log", "type")
     op.drop_column("validator_log", "stage")
+    op.drop_column("validator_log", "duration_ms")
     op.drop_column("validator_log", "order")
     op.drop_column("request_log", "metadata")

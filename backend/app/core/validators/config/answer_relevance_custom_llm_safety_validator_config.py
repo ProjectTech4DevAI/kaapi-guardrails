@@ -2,12 +2,15 @@ from typing import Literal
 from uuid import UUID
 
 from app.core.config import settings
+from app.core.enum import Stage
 from app.core.validators.answer_relevance_custom_llm import AnswerRelevanceCustomLLM
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 
 class AnswerRelevanceCustomLLMSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["answer_relevance_custom_llm"]
+    # This validator judges the LLM's answer, so it checks the output stage.
+    stage: Stage | None = Stage.Output
     llm_callable: str = settings.ANSWER_RELEVANCE_LLM_MODEL
     # Inline prompt template with {query} and {answer} placeholders.
     # If None, the validator uses its built-in default.

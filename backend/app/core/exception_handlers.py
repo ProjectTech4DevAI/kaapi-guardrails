@@ -107,7 +107,7 @@ def register_exception_handlers(app: FastAPI):
         request: Request, exc: ResponseValidationError
     ):
         logger.error(
-            "Response validation failed for %s %s",
+            "[response_validation_error_handler] response validation failed for %s %s",
             request.method,
             request.url.path,
             exc_info=exc,
@@ -120,7 +120,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(Exception)
     async def generic_error_handler(request: Request, exc: Exception):
         logger.error(
-            "Unhandled exception for %s %s",
+            "[generic_error_handler] unhandled exception for %s %s",
             request.method,
             request.url.path,
             exc_info=exc,

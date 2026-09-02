@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 from sqlmodel import Session, select
 
@@ -19,7 +21,7 @@ TENANT_HEADERS = {
 }
 
 
-def test_validator_logs_capture_order_stage_type_family_and_metadata(
+def test_validator_logs_capture_order_stage_type_and_metadata(
     integration_client,
 ):
     payload = {
@@ -42,6 +44,9 @@ def test_validator_logs_capture_order_stage_type_family_and_metadata(
         # Metadata is the parsed payload with validator defaults filled in.
         assert request_log.meta["request_id"] == request_id
         assert request_log.meta["input"] == payload["input"]
+        # Query params aren't in the payload; recorded so the trace shows
+        # whether pass logs were suppressed.
+        assert request_log.meta["suppress_pass_logs"] is False
         assert [v["type"] for v in request_log.meta["validators"]] == [
             "ban_list",
             "uli_slur_match",
@@ -50,8 +55,8 @@ def test_validator_logs_capture_order_stage_type_family_and_metadata(
         logs = session.exec(select(ValidatorLog).order_by(ValidatorLog.order)).all()
         # Passing validators are logged by default (suppress_pass_logs=False).
         assert [log.order for log in logs] == [1, 2]
+        assert all(log.duration_ms is not None and log.duration_ms >= 0 for log in logs)
         assert [log.type for log in logs] == ["ban_list", "uli_slur_match"]
-        assert [log.family for log in logs] == ["lexical", "lexical"]
         assert [log.stage for log in logs] == ["input", "input"]
         assert logs[0].meta["banned_words"] == ["badword"]
         assert logs[0].meta["stage"] == "input"
@@ -78,6 +83,32 @@ def test_config_resolution_failure_finalizes_request_log(integration_client):
     with Session(test_engine) as session:
         request_log = session.exec(select(RequestLog)).one()
         # The row must not be left at PROCESSING forever.
+        assert request_log.status == RequestStatus.ERROR
+        assert request_log.response_text
+
+
+def test_guard_execution_failure_finalizes_request_log(integration_client):
+    failing_guard = MagicMock()
+    failing_guard.validate.side_effect = RuntimeError("boom")
+    failing_guard.history = None  # no structured fail results to extract
+
+    with patch("app.api.routes.guardrails.build_guard", return_value=failing_guard):
+        response = integration_client.post(
+            VALIDATE_API_PATH,
+            headers=TENANT_HEADERS,
+            json={
+                "request_id": request_id,
+                "input": "hello",
+                "validators": [{"type": "ban_list", "banned_words": ["x"]}],
+            },
+        )
+
+    # The failure is a first-class outcome, not an exception to the caller.
+    assert response.status_code == 200
+    assert response.json()["success"] is False
+
+    with Session(test_engine) as session:
+        request_log = session.exec(select(RequestLog)).one()
         assert request_log.status == RequestStatus.ERROR
         assert request_log.response_text
 
