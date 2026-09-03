@@ -2,12 +2,16 @@ from asgi_correlation_id.middleware import CorrelationIdMiddleware
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 
-from app.api.main import api_router
-from app.core.config import settings
-from app.core.exception_handlers import register_exception_handlers
-from app.core.middleware import http_request_logger
-from app.core.telemetry import setup_telemetry
-from app.load_env import load_environment
+from app.core.logging_config import setup_logging
+
+setup_logging()
+
+from app.api.main import api_router  # noqa: E402
+from app.core.config import settings  # noqa: E402
+from app.core.exception_handlers import register_exception_handlers  # noqa: E402
+from app.core.middleware import http_request_logger  # noqa: E402
+from app.core.telemetry import setup_telemetry  # noqa: E402
+from app.load_env import load_environment  # noqa: E402
 
 # Load environment variables
 load_environment()

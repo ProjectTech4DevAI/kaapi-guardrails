@@ -51,6 +51,12 @@ class Settings(BaseSettings):
     SENTRY_DSN: HttpUrl | None = None
     SENTRY_TRACES_SAMPLE_RATE: float = 0.1
     OTEL_ENABLED: bool = False
+    OTEL_SERVICE_NAME: str = "kaapi-guardrails"
+    # Streams app logs to CloudWatch on top of terminal/file logging.
+    # No-op unless set (see app/core/logging_config.py).
+    CLOUDWATCH_LOG_GROUP: str | None = None
+    CLOUDWATCH_LOG_STREAM: str | None = None
+    AWS_REGION: str | None = None
     POSTGRES_SERVER: str
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str

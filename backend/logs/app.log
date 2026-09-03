@@ -1,0 +1,1140 @@
+2026-09-03 22:37:22,268 INFO presidio-analyzer Using device of type: cpu
+2026-09-03 22:37:23,075 INFO guardrails.execution request=432153d0-6072-490d-a4e8-8ddb615b1796 starting guardrails execution (validators=['answer_relevance_custom_llm']) input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,077 INFO guardrails.execution request=432153d0-6072-490d-a4e8-8ddb615b1796 guardrails execution finished (passed=True) output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,080 INFO guardrails.execution request=432153d0-6072-490d-a4e8-8ddb615b1796 step=1/1 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.076107 end=2026-09-03T22:37:23.076215 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,085 INFO http_request_logger POST /api/v1/guardrails/ - 200 [38.10ms]
+2026-09-03 22:37:23,103 INFO guardrails.execution request=355857d6-0162-4795-8379-57afafb95931 starting guardrails execution (validators=['answer_relevance_custom_llm']) input='The Eiffel Tower was built in 1889 and is located in Paris, France.'
+2026-09-03 22:37:23,104 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 355857d6-0162-4795-8379-57afafb95931: Validation failed for field with errors: The answer is not relevant to the query.
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: The answer is not relevant to the query.
+2026-09-03 22:37:23,108 INFO guardrails.execution request=355857d6-0162-4795-8379-57afafb95931 step=1/1 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.FAIL start=2026-09-03T22:37:23.103828 end=2026-09-03T22:37:23.103913 duration_ms=0 input='The Eiffel Tower was built in 1889 and is located in Paris, France.' output=None
+2026-09-03 22:37:23,110 INFO http_request_logger POST /api/v1/guardrails/ - 200 [17.61ms]
+2026-09-03 22:37:23,124 INFO guardrails.execution request=a97d6779-7ef1-4bdf-b5bd-01e3af924cbd starting guardrails execution (validators=['answer_relevance_custom_llm']) input=''
+2026-09-03 22:37:23,125 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log a97d6779-7ef1-4bdf-b5bd-01e3af924cbd: Validation failed for field with errors: Both 'query' and 'answer' fields must be non-empty.
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: Both 'query' and 'answer' fields must be non-empty.
+2026-09-03 22:37:23,127 INFO guardrails.execution request=a97d6779-7ef1-4bdf-b5bd-01e3af924cbd step=1/1 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.FAIL start=2026-09-03T22:37:23.124703 end=2026-09-03T22:37:23.124750 duration_ms=0 input='' output=None
+2026-09-03 22:37:23,128 INFO http_request_logger POST /api/v1/guardrails/ - 200 [14.97ms]
+2026-09-03 22:37:23,144 INFO guardrails.execution request=87064b37-f438-4bb8-8ec8-f2308579b2b4 starting guardrails execution (validators=['answer_relevance_custom_llm']) input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,146 INFO guardrails.execution request=87064b37-f438-4bb8-8ec8-f2308579b2b4 guardrails execution finished (passed=True) output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,147 INFO guardrails.execution request=87064b37-f438-4bb8-8ec8-f2308579b2b4 step=1/1 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.145325 end=2026-09-03T22:37:23.145400 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,150 INFO http_request_logger POST /api/v1/guardrails/ - 200 [16.05ms]
+2026-09-03 22:37:23,164 INFO guardrails.execution request=3c08cfd8-e471-4393-98c4-fa1206fbde9b starting guardrails execution (validators=['answer_relevance_custom_llm', 'ban_list']) input='The Eiffel Tower was built in 1889 and is located in Paris, France.'
+2026-09-03 22:37:23,165 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 3c08cfd8-e471-4393-98c4-fa1206fbde9b: Validation failed for field with errors: The answer is not relevant to the query.
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: The answer is not relevant to the query.
+2026-09-03 22:37:23,167 INFO guardrails.execution request=3c08cfd8-e471-4393-98c4-fa1206fbde9b step=1/1 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.FAIL start=2026-09-03T22:37:23.165106 end=2026-09-03T22:37:23.165176 duration_ms=0 input='The Eiffel Tower was built in 1889 and is located in Paris, France.' output=None
+2026-09-03 22:37:23,169 INFO http_request_logger POST /api/v1/guardrails/ - 200 [14.29ms]
+2026-09-03 22:37:23,184 INFO guardrails.execution request=7e24ef83-856e-42c8-ba7b-5348bb964935 starting guardrails execution (validators=['answer_relevance_custom_llm', 'ban_list']) input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue. Visit ba…'
+2026-09-03 22:37:23,186 INFO guardrails.execution request=7e24ef83-856e-42c8-ba7b-5348bb964935 guardrails execution finished (passed=True) output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue. Visit b …'
+2026-09-03 22:37:23,187 INFO guardrails.execution request=7e24ef83-856e-42c8-ba7b-5348bb964935 step=1/2 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.185201 end=2026-09-03T22:37:23.185260 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue. Visit ba…' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue. Visit ba…'
+2026-09-03 22:37:23,190 INFO guardrails.execution request=7e24ef83-856e-42c8-ba7b-5348bb964935 step=2/2 validator=BanList stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.185265 end=2026-09-03T22:37:23.185358 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue. Visit ba…' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue. Visit b …'
+2026-09-03 22:37:23,192 INFO http_request_logger POST /api/v1/guardrails/ - 200 [18.74ms]
+2026-09-03 22:37:23,205 INFO guardrails.execution request=3efe5abd-f946-41ef-b018-400aeba3aecc starting guardrails execution (validators=['answer_relevance_custom_llm', 'profanity_free']) input='Diabetes symptoms include fuck fatigue.'
+2026-09-03 22:37:23,208 INFO guardrails.execution request=3efe5abd-f946-41ef-b018-400aeba3aecc guardrails execution finished (passed=True) output=''
+2026-09-03 22:37:23,210 INFO guardrails.execution request=3efe5abd-f946-41ef-b018-400aeba3aecc step=1/2 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.205986 end=2026-09-03T22:37:23.206054 duration_ms=0 input='Diabetes symptoms include fuck fatigue.' output='Diabetes symptoms include fuck fatigue.'
+2026-09-03 22:37:23,212 INFO guardrails.execution request=3efe5abd-f946-41ef-b018-400aeba3aecc step=2/2 validator=ProfanityFree stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.206059 end=2026-09-03T22:37:23.208089 duration_ms=2 input='Diabetes symptoms include fuck fatigue.' output=''
+2026-09-03 22:37:23,216 INFO http_request_logger POST /api/v1/guardrails/ - 200 [19.59ms]
+2026-09-03 22:37:23,250 INFO guardrails.execution request=e57b4c2e-3d4a-4307-998e-6d4ac5b88023 starting guardrails execution (validators=['answer_relevance_custom_llm', 'uli_slur_match']) input='Diabetes symptoms include chakki fatigue and increased thirst.'
+2026-09-03 22:37:23,254 INFO guardrails.execution request=e57b4c2e-3d4a-4307-998e-6d4ac5b88023 guardrails execution finished (passed=True) output='diabetes symptoms include [REDACTED_SLUR] fatigue and increased thirst.'
+2026-09-03 22:37:23,256 INFO guardrails.execution request=e57b4c2e-3d4a-4307-998e-6d4ac5b88023 step=1/2 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.251534 end=2026-09-03T22:37:23.251610 duration_ms=0 input='Diabetes symptoms include chakki fatigue and increased thirst.' output='Diabetes symptoms include chakki fatigue and increased thirst.'
+2026-09-03 22:37:23,258 INFO guardrails.execution request=e57b4c2e-3d4a-4307-998e-6d4ac5b88023 step=2/2 validator=LexicalSlur stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.251615 end=2026-09-03T22:37:23.254007 duration_ms=2 input='Diabetes symptoms include chakki fatigue and increased thirst.' output='diabetes symptoms include [REDACTED_SLUR] fatigue and increased thirst.'
+2026-09-03 22:37:23,261 INFO http_request_logger POST /api/v1/guardrails/ - 200 [37.79ms]
+2026-09-03 22:37:23,277 INFO guardrails.execution request=99452b76-c46a-45e9-ad71-cce40f26a723 starting guardrails execution (validators=['answer_relevance_custom_llm', 'profanity_free']) input='Bloody hell, the symptoms include thirst and fatigue.'
+2026-09-03 22:37:23,278 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 99452b76-c46a-45e9-ad71-cce40f26a723: Validation failed for field with errors: Bloody hell, the symptoms include thirst and fatigue. contains profanity. Please return profanity-free output.
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: Bloody hell, the symptoms include thirst and fatigue. contains profanity. Please return profanity-free output.
+2026-09-03 22:37:23,281 INFO guardrails.execution request=99452b76-c46a-45e9-ad71-cce40f26a723 step=1/2 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.277656 end=2026-09-03T22:37:23.277729 duration_ms=0 input='Bloody hell, the symptoms include thirst and fatigue.' output='Bloody hell, the symptoms include thirst and fatigue.'
+2026-09-03 22:37:23,283 INFO guardrails.execution request=99452b76-c46a-45e9-ad71-cce40f26a723 step=2/2 validator=ProfanityFree stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.277734 end=2026-09-03T22:37:23.278741 duration_ms=1 input='Bloody hell, the symptoms include thirst and fatigue.' output=None
+2026-09-03 22:37:23,285 INFO http_request_logger POST /api/v1/guardrails/ - 200 [19.06ms]
+2026-09-03 22:37:23,303 INFO guardrails.execution request=4d59aa16-4e83-4fbe-9fbd-6ad1458fce4b starting guardrails execution (validators=['answer_relevance_custom_llm', 'ban_list', 'profanity_free', 'uli_slur_match', 'gender_assumption_bias']) input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,307 INFO guardrails.execution request=4d59aa16-4e83-4fbe-9fbd-6ad1458fce4b guardrails execution finished (passed=True) output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,309 INFO guardrails.execution request=4d59aa16-4e83-4fbe-9fbd-6ad1458fce4b step=1/5 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.304068 end=2026-09-03T22:37:23.304127 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,311 INFO guardrails.execution request=4d59aa16-4e83-4fbe-9fbd-6ad1458fce4b step=2/5 validator=BanList stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.304131 end=2026-09-03T22:37:23.304188 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,312 INFO guardrails.execution request=4d59aa16-4e83-4fbe-9fbd-6ad1458fce4b step=3/5 validator=ProfanityFree stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.304192 end=2026-09-03T22:37:23.304977 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,313 INFO guardrails.execution request=4d59aa16-4e83-4fbe-9fbd-6ad1458fce4b step=4/5 validator=LexicalSlur stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.304981 end=2026-09-03T22:37:23.305584 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,314 INFO guardrails.execution request=4d59aa16-4e83-4fbe-9fbd-6ad1458fce4b step=5/5 validator=GenderAssumptionBias stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.305588 end=2026-09-03T22:37:23.306222 duration_ms=0 input='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.' output='Common symptoms of diabetes include increased thirst, frequent urination, unexplained weight loss, and fatigue.'
+2026-09-03 22:37:23,317 INFO http_request_logger POST /api/v1/guardrails/ - 200 [27.49ms]
+2026-09-03 22:37:23,338 INFO guardrails.execution request=e5523c78-fc2d-44f9-9526-4806d04b0511 starting guardrails execution (validators=['answer_relevance_custom_llm', 'profanity_free', 'uli_slur_match', 'ban_list', 'gender_assumption_bias']) input='Diabetes symptoms include chakki fatigue and thirst. The policeman confirmed these symptoms.'
+2026-09-03 22:37:23,342 INFO guardrails.execution request=e5523c78-fc2d-44f9-9526-4806d04b0511 guardrails execution finished (passed=True) output='diabetes symptoms include [REDACTED_SLUR] fatigue and thirst. the police officer confirmed these symptoms.'
+2026-09-03 22:37:23,345 INFO guardrails.execution request=e5523c78-fc2d-44f9-9526-4806d04b0511 step=1/5 validator=AnswerRelevanceCustomLLM stage=output outcome=Outcome.PASS start=2026-09-03T22:37:23.338779 end=2026-09-03T22:37:23.338856 duration_ms=0 input='Diabetes symptoms include chakki fatigue and thirst. The policeman confirmed these symptoms.' output='Diabetes symptoms include chakki fatigue and thirst. The policeman confirmed these symptoms.'
+2026-09-03 22:37:23,348 INFO guardrails.execution request=e5523c78-fc2d-44f9-9526-4806d04b0511 step=2/5 validator=ProfanityFree stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.338861 end=2026-09-03T22:37:23.339826 duration_ms=0 input='Diabetes symptoms include chakki fatigue and thirst. The policeman confirmed these symptoms.' output='Diabetes symptoms include chakki fatigue and thirst. The policeman confirmed these symptoms.'
+2026-09-03 22:37:23,350 INFO guardrails.execution request=e5523c78-fc2d-44f9-9526-4806d04b0511 step=3/5 validator=LexicalSlur stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.339834 end=2026-09-03T22:37:23.340390 duration_ms=0 input='Diabetes symptoms include chakki fatigue and thirst. The policeman confirmed these symptoms.' output='diabetes symptoms include [REDACTED_SLUR] fatigue and thirst. the policeman confirmed these symptoms.'
+2026-09-03 22:37:23,352 INFO guardrails.execution request=e5523c78-fc2d-44f9-9526-4806d04b0511 step=4/5 validator=BanList stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.340397 end=2026-09-03T22:37:23.340465 duration_ms=0 input='diabetes symptoms include [REDACTED_SLUR] fatigue and thirst. the policeman confirmed these symptoms.' output='diabetes symptoms include [REDACTED_SLUR] fatigue and thirst. the policeman confirmed these symptoms.'
+2026-09-03 22:37:23,354 INFO guardrails.execution request=e5523c78-fc2d-44f9-9526-4806d04b0511 step=5/5 validator=GenderAssumptionBias stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.340469 end=2026-09-03T22:37:23.341136 duration_ms=0 input='diabetes symptoms include [REDACTED_SLUR] fatigue and thirst. the policeman confirmed these symptoms.' output='diabetes symptoms include [REDACTED_SLUR] fatigue and thirst. the police officer confirmed these symptoms.'
+2026-09-03 22:37:23,358 INFO http_request_logger POST /api/v1/guardrails/ - 200 [36.93ms]
+2026-09-03 22:37:23,382 INFO app.crud.ban_list created ban list id=b61af245-d4d8-43da-a67f-62c4c8933533 org=1 project=1
+2026-09-03 22:37:23,383 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 200 [5.59ms]
+2026-09-03 22:37:23,387 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 422 [1.00ms]
+2026-09-03 22:37:23,392 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 422 [0.77ms]
+2026-09-03 22:37:23,396 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 422 [0.85ms]
+2026-09-03 22:37:23,399 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 422 [0.74ms]
+2026-09-03 22:37:23,404 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 422 [0.84ms]
+2026-09-03 22:37:23,413 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [2.89ms]
+2026-09-03 22:37:23,420 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [2.36ms]
+2026-09-03 22:37:23,426 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [1.96ms]
+2026-09-03 22:37:23,433 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [2.20ms]
+2026-09-03 22:37:23,439 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [1.51ms]
+2026-09-03 22:37:23,442 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [2.34ms]
+2026-09-03 22:37:23,448 INFO app.crud.ban_list created ban list id=9c6154c9-dd8d-4c8c-81cb-97ba35779315 org=1 project=1
+2026-09-03 22:37:23,449 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 200 [2.59ms]
+2026-09-03 22:37:23,449 INFO http_request_logger GET /api/v1/guardrails/ban_lists/9c6154c9-dd8d-4c8c-81cb-97ba35779315/ - 307 [0.09ms]
+2026-09-03 22:37:23,451 INFO http_request_logger GET /api/v1/guardrails/ban_lists/9c6154c9-dd8d-4c8c-81cb-97ba35779315 - 200 [1.62ms]
+2026-09-03 22:37:23,457 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [1.60ms]
+2026-09-03 22:37:23,458 INFO http_request_logger GET /api/v1/guardrails/ban_lists/50513232-8c3e-4bed-9fcf-e18fa84a0e29/ - 307 [0.08ms]
+2026-09-03 22:37:23,460 INFO http_request_logger GET /api/v1/guardrails/ban_lists/50513232-8c3e-4bed-9fcf-e18fa84a0e29 - 200 [1.77ms]
+2026-09-03 22:37:23,464 INFO http_request_logger GET /api/v1/guardrails/ban_lists/117d8010-db6f-4e70-b3b6-d28e69ae73ad/ - 307 [0.08ms]
+2026-09-03 22:37:23,465 INFO http_request_logger GET /api/v1/guardrails/ban_lists/117d8010-db6f-4e70-b3b6-d28e69ae73ad - 404 [1.34ms]
+2026-09-03 22:37:23,471 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [1.54ms]
+2026-09-03 22:37:23,472 INFO http_request_logger GET /api/v1/guardrails/ban_lists/d0286b5d-fbc8-4047-831f-e02903fb0f95/ - 307 [0.08ms]
+2026-09-03 22:37:23,473 INFO http_request_logger GET /api/v1/guardrails/ban_lists/d0286b5d-fbc8-4047-831f-e02903fb0f95 - 403 [1.17ms]
+2026-09-03 22:37:23,480 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [2.19ms]
+2026-09-03 22:37:23,480 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/4e93abce-6aaa-4ec2-a237-55cb4ee0cbf8/ - 307 [0.08ms]
+2026-09-03 22:37:23,484 INFO app.crud.ban_list updated ban list id=4e93abce-6aaa-4ec2-a237-55cb4ee0cbf8
+2026-09-03 22:37:23,485 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/4e93abce-6aaa-4ec2-a237-55cb4ee0cbf8 - 200 [4.65ms]
+2026-09-03 22:37:23,491 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [1.51ms]
+2026-09-03 22:37:23,492 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/2957fb38-8e93-46ce-98e7-e3d0bdb60ac3/ - 307 [0.08ms]
+2026-09-03 22:37:23,494 INFO app.crud.ban_list updated ban list id=2957fb38-8e93-46ce-98e7-e3d0bdb60ac3
+2026-09-03 22:37:23,495 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/2957fb38-8e93-46ce-98e7-e3d0bdb60ac3 - 200 [2.76ms]
+2026-09-03 22:37:23,499 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/4607bed3-c3bf-4c4f-8f64-5279e87a466c/ - 307 [0.08ms]
+2026-09-03 22:37:23,501 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/4607bed3-c3bf-4c4f-8f64-5279e87a466c - 404 [1.50ms]
+2026-09-03 22:37:23,506 INFO app.crud.ban_list created ban list id=7135dbc2-0977-44d3-a9ab-c72378a26bb8 org=1 project=1
+2026-09-03 22:37:23,506 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 200 [2.66ms]
+2026-09-03 22:37:23,507 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/7135dbc2-0977-44d3-a9ab-c72378a26bb8/ - 307 [0.08ms]
+2026-09-03 22:37:23,508 INFO http_request_logger PATCH /api/v1/guardrails/ban_lists/7135dbc2-0977-44d3-a9ab-c72378a26bb8 - 403 [1.30ms]
+2026-09-03 22:37:23,517 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [2.12ms]
+2026-09-03 22:37:23,517 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/2636c96e-9a9a-4a56-ab89-c1fa78a3d63d/ - 307 [0.08ms]
+2026-09-03 22:37:23,520 INFO app.crud.ban_list deleted ban list id=2636c96e-9a9a-4a56-ab89-c1fa78a3d63d
+2026-09-03 22:37:23,520 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/2636c96e-9a9a-4a56-ab89-c1fa78a3d63d - 200 [2.80ms]
+2026-09-03 22:37:23,524 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/9ae5e0b9-4196-4310-916f-8b323f8b023b/ - 307 [0.08ms]
+2026-09-03 22:37:23,526 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/9ae5e0b9-4196-4310-916f-8b323f8b023b - 404 [1.40ms]
+2026-09-03 22:37:23,532 INFO http_request_logger GET /api/v1/guardrails/ban_lists/ - 200 [1.59ms]
+2026-09-03 22:37:23,533 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/b242161f-698a-46a2-b6b1-67d0b3aa4e6d/ - 307 [0.09ms]
+2026-09-03 22:37:23,535 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/b242161f-698a-46a2-b6b1-67d0b3aa4e6d - 403 [2.25ms]
+2026-09-03 22:37:23,540 INFO app.crud.ban_list created ban list id=f350f0a9-acc2-4173-a2c1-427f1fd2b25f org=1 project=1
+2026-09-03 22:37:23,540 INFO http_request_logger POST /api/v1/guardrails/ban_lists/ - 200 [2.35ms]
+2026-09-03 22:37:23,541 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/f350f0a9-acc2-4173-a2c1-427f1fd2b25f/ - 307 [0.08ms]
+2026-09-03 22:37:23,542 INFO http_request_logger DELETE /api/v1/guardrails/ban_lists/f350f0a9-acc2-4173-a2c1-427f1fd2b25f - 403 [1.09ms]
+2026-09-03 22:37:23,615 INFO guardrails.execution request=230aac41-a7d6-4861-8360-626d588b9614 starting guardrails execution (validators=[]) input='hello world'
+2026-09-03 22:37:23,615 INFO guardrails.execution request=230aac41-a7d6-4861-8360-626d588b9614 guardrails execution finished (passed=True) output='clean text'
+2026-09-03 22:37:23,617 INFO http_request_logger POST /api/v1/guardrails/ - 200 [4.22ms]
+2026-09-03 22:37:23,622 INFO guardrails.execution request=39dfd232-15ae-42fa-8018-9792a9718863 starting guardrails execution (validators=[]) input='my phone is 999999'
+2026-09-03 22:37:23,622 INFO guardrails.execution request=39dfd232-15ae-42fa-8018-9792a9718863 guardrails execution finished (passed=False) output=None
+2026-09-03 22:37:23,623 INFO http_request_logger POST /api/v1/guardrails/ - 200 [3.91ms]
+2026-09-03 22:37:23,628 INFO guardrails.execution request=d9c435a9-5650-4076-a016-f15363c11a5f starting guardrails execution (validators=[]) input='tell me about buildings'
+2026-09-03 22:37:23,628 INFO guardrails.execution request=d9c435a9-5650-4076-a016-f15363c11a5f guardrails execution finished (passed=True) output='Please rephrase the query without unsafe content. Input is outside the allowed topic scope.'
+2026-09-03 22:37:23,630 INFO http_request_logger POST /api/v1/guardrails/ - 200 [3.53ms]
+2026-09-03 22:37:23,635 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log ce6df19c-994c-4ba1-9c5a-1b7472b8ef5b: Invalid validator config
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 344, in _validate_with_guard
+    guard = build_guard(validators)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Invalid validator config
+2026-09-03 22:37:23,637 INFO http_request_logger POST /api/v1/guardrails/ - 200 [4.33ms]
+2026-09-03 22:37:23,651 INFO guardrails.execution request=4617ed60-0824-4207-ab6e-faa40bd65ecf starting guardrails execution (validators=['ban_list']) input='this contains badword'
+2026-09-03 22:37:23,652 INFO guardrails.execution request=4617ed60-0824-4207-ab6e-faa40bd65ecf guardrails execution finished (passed=True) output='this contains b'
+2026-09-03 22:37:23,655 INFO guardrails.execution request=4617ed60-0824-4207-ab6e-faa40bd65ecf step=1/1 validator=BanList stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.651855 end=2026-09-03T22:37:23.651959 duration_ms=0 input='this contains badword' output='this contains b'
+2026-09-03 22:37:23,657 INFO http_request_logger POST /api/v1/guardrails/ - 200 [15.62ms]
+2026-09-03 22:37:23,669 INFO guardrails.execution request=f104a043-1c35-4541-b117-e48bc151c5bf starting guardrails execution (validators=['ban_list']) input='this is clean'
+2026-09-03 22:37:23,670 INFO guardrails.execution request=f104a043-1c35-4541-b117-e48bc151c5bf guardrails execution finished (passed=True) output='this is clean'
+2026-09-03 22:37:23,672 INFO guardrails.execution request=f104a043-1c35-4541-b117-e48bc151c5bf step=1/1 validator=BanList stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.670017 end=2026-09-03T22:37:23.670075 duration_ms=0 input='this is clean' output='this is clean'
+2026-09-03 22:37:23,675 INFO http_request_logger POST /api/v1/guardrails/ - 200 [14.70ms]
+2026-09-03 22:37:23,693 INFO guardrails.execution request=b1056f61-cc93-4433-894b-01a7dfcdbab6 starting guardrails execution (validators=['uli_slur_match']) input='This sentence contains chakki.'
+2026-09-03 22:37:23,694 INFO guardrails.execution request=b1056f61-cc93-4433-894b-01a7dfcdbab6 guardrails execution finished (passed=True) output='this sentence contains [REDACTED_SLUR].'
+2026-09-03 22:37:23,697 INFO guardrails.execution request=b1056f61-cc93-4433-894b-01a7dfcdbab6 step=1/1 validator=LexicalSlur stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.693832 end=2026-09-03T22:37:23.694206 duration_ms=0 input='This sentence contains chakki.' output='this sentence contains [REDACTED_SLUR].'
+2026-09-03 22:37:23,701 INFO http_request_logger POST /api/v1/guardrails/ - 200 [22.01ms]
+2026-09-03 22:37:23,717 INFO guardrails.execution request=b11124ca-0083-4f48-9e05-45ed8e55232b starting guardrails execution (validators=['uli_slur_match']) input='This is a completely safe sentence'
+2026-09-03 22:37:23,719 INFO guardrails.execution request=b11124ca-0083-4f48-9e05-45ed8e55232b guardrails execution finished (passed=True) output='This is a completely safe sentence'
+2026-09-03 22:37:23,722 INFO guardrails.execution request=b11124ca-0083-4f48-9e05-45ed8e55232b step=1/1 validator=LexicalSlur stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.718578 end=2026-09-03T22:37:23.718866 duration_ms=0 input='This is a completely safe sentence' output='This is a completely safe sentence'
+2026-09-03 22:37:23,727 INFO http_request_logger POST /api/v1/guardrails/ - 200 [20.01ms]
+2026-09-03 22:37:23,745 INFO guardrails.execution request=00831769-ef50-481e-b19e-4ce3848d7730 starting guardrails execution (validators=['uli_slur_match', 'ban_list']) input='This sentence contains chakki cause I want a sonography done to kill the female foetus.'
+2026-09-03 22:37:23,747 INFO guardrails.execution request=00831769-ef50-481e-b19e-4ce3848d7730 guardrails execution finished (passed=True) output='this sentence contains [REDACTED_SLUR] cause i want a s done to kill the female foetus.'
+2026-09-03 22:37:23,751 INFO guardrails.execution request=00831769-ef50-481e-b19e-4ce3848d7730 step=1/2 validator=LexicalSlur stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.745751 end=2026-09-03T22:37:23.746308 duration_ms=0 input='This sentence contains chakki cause I want a sonography done to kill the female foetus.' output='this sentence contains [REDACTED_SLUR] cause i want a sonography done to kill the female foetus.'
+2026-09-03 22:37:23,753 INFO guardrails.execution request=00831769-ef50-481e-b19e-4ce3848d7730 step=2/2 validator=BanList stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.746315 end=2026-09-03T22:37:23.746403 duration_ms=0 input='this sentence contains [REDACTED_SLUR] cause i want a sonography done to kill the female foetus.' output='this sentence contains [REDACTED_SLUR] cause i want a s done to kill the female foetus.'
+2026-09-03 22:37:23,757 INFO http_request_logger POST /api/v1/guardrails/ - 200 [24.33ms]
+2026-09-03 22:37:23,762 INFO http_request_logger POST /api/v1/guardrails/ - 422 [0.95ms]
+2026-09-03 22:37:23,776 INFO guardrails.execution request=f5a9b806-52e4-423e-958b-9a47d11f23cf starting guardrails execution (validators=['uli_slur_match']) input='This sentence contains chakki.'
+2026-09-03 22:37:23,777 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log f5a9b806-52e4-423e-958b-9a47d11f23cf: Validation failed for field with errors: Mentioned toxic words: chakki, chakki
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: Mentioned toxic words: chakki, chakki
+2026-09-03 22:37:23,781 INFO guardrails.execution request=f5a9b806-52e4-423e-958b-9a47d11f23cf step=1/1 validator=LexicalSlur stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.777356 end=2026-09-03T22:37:23.777610 duration_ms=0 input='This sentence contains chakki.' output=None
+2026-09-03 22:37:23,783 INFO http_request_logger POST /api/v1/guardrails/ - 200 [16.93ms]
+2026-09-03 22:37:23,797 INFO guardrails.execution request=d6daf4d9-708d-4ecf-a2d4-1c984eb0df06 starting guardrails execution (validators=['uli_slur_match']) input='This sentence contains chakki.'
+2026-09-03 22:37:23,799 INFO guardrails.execution request=d6daf4d9-708d-4ecf-a2d4-1c984eb0df06 guardrails execution finished (passed=True) output='Please rephrase the query without unsafe content. Mentioned toxic words: chakki, chakki'
+2026-09-03 22:37:23,803 INFO guardrails.execution request=d6daf4d9-708d-4ecf-a2d4-1c984eb0df06 step=1/1 validator=LexicalSlur stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.798552 end=2026-09-03T22:37:23.798851 duration_ms=0 input='This sentence contains chakki.' output='Please rephrase the query without unsafe content. Mentioned toxic words: chakki, chakki'
+2026-09-03 22:37:23,806 INFO http_request_logger POST /api/v1/guardrails/ - 200 [19.27ms]
+2026-09-03 22:37:23,818 INFO guardrails.execution request=4aa09416-37f9-42aa-b324-2263171a3442 starting guardrails execution (validators=['profanity_free']) input='This is a damn fucking mess.'
+2026-09-03 22:37:23,820 INFO guardrails.execution request=4aa09416-37f9-42aa-b324-2263171a3442 guardrails execution finished (passed=True) output=''
+2026-09-03 22:37:23,822 INFO guardrails.execution request=4aa09416-37f9-42aa-b324-2263171a3442 step=1/1 validator=ProfanityFree stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.819228 end=2026-09-03T22:37:23.820242 duration_ms=1 input='This is a damn fucking mess.' output=''
+2026-09-03 22:37:23,825 INFO http_request_logger POST /api/v1/guardrails/ - 200 [15.80ms]
+2026-09-03 22:37:23,839 INFO guardrails.execution request=11f22c9d-b618-4b0a-bd75-c22f844fb017 starting guardrails execution (validators=['profanity_free']) input='This is a completely clean sentence.'
+2026-09-03 22:37:23,841 INFO guardrails.execution request=11f22c9d-b618-4b0a-bd75-c22f844fb017 guardrails execution finished (passed=True) output='This is a completely clean sentence.'
+2026-09-03 22:37:23,844 INFO guardrails.execution request=11f22c9d-b618-4b0a-bd75-c22f844fb017 step=1/1 validator=ProfanityFree stage=input outcome=Outcome.PASS start=2026-09-03T22:37:23.839485 end=2026-09-03T22:37:23.840379 duration_ms=0 input='This is a completely clean sentence.' output='This is a completely clean sentence.'
+2026-09-03 22:37:23,848 INFO http_request_logger POST /api/v1/guardrails/ - 200 [19.85ms]
+2026-09-03 22:37:23,863 INFO guardrails.execution request=2cf639fd-eb55-4f74-8b6e-b501ff875cc7 starting guardrails execution (validators=['profanity_free']) input='What the fuck is going on?'
+2026-09-03 22:37:23,864 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 2cf639fd-eb55-4f74-8b6e-b501ff875cc7: Validation failed for field with errors: What the fuck is going on? contains profanity. Please return profanity-free output.
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: What the fuck is going on? contains profanity. Please return profanity-free output.
+2026-09-03 22:37:23,867 INFO guardrails.execution request=2cf639fd-eb55-4f74-8b6e-b501ff875cc7 step=1/1 validator=ProfanityFree stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.863499 end=2026-09-03T22:37:23.864435 duration_ms=0 input='What the fuck is going on?' output=None
+2026-09-03 22:37:23,869 INFO http_request_logger POST /api/v1/guardrails/ - 200 [16.91ms]
+2026-09-03 22:37:23,883 INFO guardrails.execution request=25c94b61-162f-49e8-acf1-778c84e98c08 starting guardrails execution (validators=['profanity_free']) input='This is absolute bullshit.'
+2026-09-03 22:37:23,885 INFO guardrails.execution request=25c94b61-162f-49e8-acf1-778c84e98c08 guardrails execution finished (passed=True) output='Please rephrase the query without unsafe content. [REDACTED] contains profanity. Please return profanity-free output.'
+2026-09-03 22:37:23,886 INFO guardrails.execution request=25c94b61-162f-49e8-acf1-778c84e98c08 step=1/1 validator=ProfanityFree stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:23.883627 end=2026-09-03T22:37:23.884540 duration_ms=0 input='This is absolute bullshit.' output='Please rephrase the query without unsafe content. [REDACTED] contains profanity. Please return profanity-free output.'
+2026-09-03 22:37:23,889 INFO http_request_logger POST /api/v1/guardrails/ - 200 [16.74ms]
+2026-09-03 22:37:23,895 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 8b31f103-4ae2-4035-b0eb-07682408776a: Cannot import 'LlamaGuard7B' from hub registry. Module 'guardrails_grhub_llamaguard_7b' not found. Try reinstalling: guardrails hub install hub://<org>/<validator>
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub/__init__.py", line 43, in __getattr__
+    module = importlib.import_module(import_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'guardrails_grhub_llamaguard_7b'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 344, in _validate_with_guard
+    guard = build_guard(validators)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/core/guardrail_controller.py", line 9, in build_guard
+    validators = [v_item.build() for v_item in validator_items]
+                  ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/core/validators/config/llamaguard_7b_safety_validator_config.py", line 40, in build
+    from guardrails.hub import LlamaGuard7B
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub/__init__.py", line 48, in __getattr__
+    raise ImportError(
+ImportError: Cannot import 'LlamaGuard7B' from hub registry. Module 'guardrails_grhub_llamaguard_7b' not found. Try reinstalling: guardrails hub install hub://<org>/<validator>
+2026-09-03 22:37:23,897 INFO http_request_logger POST /api/v1/guardrails/ - 200 [4.85ms]
+2026-09-03 22:37:24,261 WARNING huggingface_hub.utils._http Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-09-03 22:37:27,031 INFO guardrails.execution request=755fd466-1a1b-4d65-b86b-440fdef7e0ac starting guardrails execution (validators=['nsfw_text']) input='She slowly undressed and they had explicit sex.'
+2026-09-03 22:37:27,330 INFO guardrails.execution request=755fd466-1a1b-4d65-b86b-440fdef7e0ac guardrails execution finished (passed=True) output='She slowly undressed and they had explicit sex.'
+2026-09-03 22:37:27,343 INFO guardrails.execution request=755fd466-1a1b-4d65-b86b-440fdef7e0ac step=1/1 validator=NSFWText stage=input outcome=Outcome.PASS start=2026-09-03T22:37:27.032832 end=2026-09-03T22:37:27.328513 duration_ms=295 input='She slowly undressed and they had explicit sex.' output='She slowly undressed and they had explicit sex.'
+2026-09-03 22:37:27,503 INFO http_request_logger POST /api/v1/guardrails/ - 200 [3603.51ms]
+2026-09-03 22:37:29,737 INFO guardrails.execution request=125d1344-0873-4016-9d23-fccbc8baff03 starting guardrails execution (validators=['nsfw_text']) input='She slowly undressed and they had explicit sex.'
+2026-09-03 22:37:29,761 INFO guardrails.execution request=125d1344-0873-4016-9d23-fccbc8baff03 guardrails execution finished (passed=True) output='She slowly undressed and they had explicit sex.'
+2026-09-03 22:37:29,766 INFO guardrails.execution request=125d1344-0873-4016-9d23-fccbc8baff03 step=1/1 validator=NSFWText stage=input outcome=Outcome.PASS start=2026-09-03T22:37:29.738089 end=2026-09-03T22:37:29.760723 duration_ms=22 input='She slowly undressed and they had explicit sex.' output='She slowly undressed and they had explicit sex.'
+2026-09-03 22:37:29,954 INFO http_request_logger POST /api/v1/guardrails/ - 200 [2402.95ms]
+2026-09-03 22:37:32,157 INFO guardrails.execution request=b950ba4e-4b2f-4080-ae0e-5cfc40ab9e8f starting guardrails execution (validators=['nsfw_text']) input='Explicit sexual content goes here.'
+2026-09-03 22:37:32,217 INFO guardrails.execution request=b950ba4e-4b2f-4080-ae0e-5cfc40ab9e8f guardrails execution finished (passed=True) output='Explicit sexual content goes here.'
+2026-09-03 22:37:32,221 INFO guardrails.execution request=b950ba4e-4b2f-4080-ae0e-5cfc40ab9e8f step=1/1 validator=NSFWText stage=input outcome=Outcome.PASS start=2026-09-03T22:37:32.157802 end=2026-09-03T22:37:32.216057 duration_ms=58 input='Explicit sexual content goes here.' output='Explicit sexual content goes here.'
+2026-09-03 22:37:32,372 INFO http_request_logger POST /api/v1/guardrails/ - 200 [2409.84ms]
+2026-09-03 22:37:32,398 INFO guardrails.execution request=4344017c-da68-4243-a0c5-16261d34a7d0 starting guardrails execution (validators=['profanity_free', 'uli_slur_match']) input='This fucking chakki should leave.'
+2026-09-03 22:37:32,401 INFO guardrails.execution request=4344017c-da68-4243-a0c5-16261d34a7d0 guardrails execution finished (passed=True) output=''
+2026-09-03 22:37:32,405 INFO guardrails.execution request=4344017c-da68-4243-a0c5-16261d34a7d0 step=1/2 validator=ProfanityFree stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:32.399333 end=2026-09-03T22:37:32.400589 duration_ms=1 input='This fucking chakki should leave.' output=''
+2026-09-03 22:37:32,408 INFO guardrails.execution request=4344017c-da68-4243-a0c5-16261d34a7d0 step=2/2 validator=LexicalSlur stage=input outcome=Outcome.PASS start=2026-09-03T22:37:32.400600 end=2026-09-03T22:37:32.400748 duration_ms=0 input='' output=''
+2026-09-03 22:37:32,413 INFO http_request_logger POST /api/v1/guardrails/ - 200 [30.78ms]
+2026-09-03 22:37:32,422 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 72276e92-fa1a-44ca-b8f4-0d95bf287f2a: Cannot import 'LlamaGuard7B' from hub registry. Module 'guardrails_grhub_llamaguard_7b' not found. Try reinstalling: guardrails hub install hub://<org>/<validator>
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub/__init__.py", line 43, in __getattr__
+    module = importlib.import_module(import_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/importlib/__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1324, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'guardrails_grhub_llamaguard_7b'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 344, in _validate_with_guard
+    guard = build_guard(validators)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/core/guardrail_controller.py", line 9, in build_guard
+    validators = [v_item.build() for v_item in validator_items]
+                  ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/core/validators/config/llamaguard_7b_safety_validator_config.py", line 40, in build
+    from guardrails.hub import LlamaGuard7B
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub/__init__.py", line 48, in __getattr__
+    raise ImportError(
+ImportError: Cannot import 'LlamaGuard7B' from hub registry. Module 'guardrails_grhub_llamaguard_7b' not found. Try reinstalling: guardrails hub install hub://<org>/<validator>
+2026-09-03 22:37:32,424 INFO http_request_logger POST /api/v1/guardrails/ - 200 [5.83ms]
+2026-09-03 22:37:34,632 INFO guardrails.execution request=577fc4ba-8eb8-4641-ae7e-a80f3774ed21 starting guardrails execution (validators=['profanity_free', 'nsfw_text']) input='What the fuck, this is explicit adult sexual content.'
+2026-09-03 22:37:34,635 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 577fc4ba-8eb8-4641-ae7e-a80f3774ed21: Validation failed for field with errors: What the fuck, this is explicit adult sexual content. contains profanity. Please return profanity-free output.
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: What the fuck, this is explicit adult sexual content. contains profanity. Please return profanity-free output.
+2026-09-03 22:37:34,645 INFO guardrails.execution request=577fc4ba-8eb8-4641-ae7e-a80f3774ed21 step=1/1 validator=ProfanityFree stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:34.633755 end=2026-09-03T22:37:34.635130 duration_ms=1 input='What the fuck, this is explicit adult sexual content.' output=None
+2026-09-03 22:37:34,650 INFO http_request_logger POST /api/v1/guardrails/ - 200 [2222.18ms]
+2026-09-03 22:37:37,212 INFO guardrails.execution request=b25dcb48-9b17-489b-837b-dd344f8add70 starting guardrails execution (validators=['uli_slur_match', 'nsfw_text']) input='This chakki has explicit sexual content.'
+2026-09-03 22:37:37,214 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log b25dcb48-9b17-489b-837b-dd344f8add70: Validation failed for field with errors: Mentioned toxic words: chakki, chakki
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 873, in validate
+    return self.parse(llm_output=llm_output, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 771, in parse
+    return trace_guard_execution(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 204, in trace_guard_execution
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/guard_tracing.py", line 193, in trace_guard_execution
+    result = _execute_fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 594, in _execute
+    return guard_context.run(
+           ^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/common.py", line 92, in wrapped_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 573, in __exec
+    return self._exec(
+           ^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/guard.py", line 676, in _exec
+    call = runner(call_log=call_log, prompt_params=prompt_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 200, in __call__
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 170, in __call__
+    iteration = self.step(
+                ^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 102, in trace_step_wrapper
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/telemetry/runner_tracing.py", line 94, in trace_step_wrapper
+    response = fn(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 284, in step
+    raise e
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 269, in step
+    validated_output = self.validate(
+                       ^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/hub_telemetry/hub_tracing.py", line 148, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/run/runner.py", line 465, in validate
+    validated_output, metadata = validator_service.validate(
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/__init__.py", line 79, in validate
+    return validator_service.validate(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 460, in validate
+    value, metadata = self.run_validators(
+                      ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/sequential_validator_service.py", line 380, in run_validators
+    value = self.perform_correction(
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/.venv/lib/python3.12/site-packages/guardrails/validator_service/validator_service_base.py", line 106, in perform_correction
+    raise ValidationError(
+guardrails.errors.ValidationError: Validation failed for field with errors: Mentioned toxic words: chakki, chakki
+2026-09-03 22:37:37,222 INFO guardrails.execution request=b25dcb48-9b17-489b-837b-dd344f8add70 step=1/1 validator=LexicalSlur stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:37.213479 end=2026-09-03T22:37:37.213996 duration_ms=0 input='This chakki has explicit sexual content.' output=None
+2026-09-03 22:37:37,228 INFO http_request_logger POST /api/v1/guardrails/ - 200 [2569.72ms]
+2026-09-03 22:37:37,257 INFO guardrails.execution request=594bbbe0-808a-4a4d-a84c-b17881bdf231 starting guardrails execution (validators=['profanity_free', 'ban_list']) input='Tell me about renewable energy sources.'
+2026-09-03 22:37:37,264 INFO guardrails.execution request=594bbbe0-808a-4a4d-a84c-b17881bdf231 guardrails execution finished (passed=True) output='Tell me about renewable energy sources.'
+2026-09-03 22:37:37,269 INFO guardrails.execution request=594bbbe0-808a-4a4d-a84c-b17881bdf231 step=1/2 validator=ProfanityFree stage=input outcome=Outcome.PASS start=2026-09-03T22:37:37.258311 end=2026-09-03T22:37:37.262452 duration_ms=4 input='Tell me about renewable energy sources.' output='Tell me about renewable energy sources.'
+2026-09-03 22:37:37,273 INFO guardrails.execution request=594bbbe0-808a-4a4d-a84c-b17881bdf231 step=2/2 validator=BanList stage=input outcome=Outcome.PASS start=2026-09-03T22:37:37.262480 end=2026-09-03T22:37:37.262706 duration_ms=0 input='Tell me about renewable energy sources.' output='Tell me about renewable energy sources.'
+2026-09-03 22:37:37,277 INFO http_request_logger POST /api/v1/guardrails/ - 200 [38.04ms]
+2026-09-03 22:37:37,304 INFO guardrails.execution request=cc39e629-bc15-4eab-af8c-383fab3c1177 starting guardrails execution (validators=['uli_slur_match', 'profanity_free', 'ban_list']) input='What are some healthy breakfast options?'
+2026-09-03 22:37:37,308 INFO guardrails.execution request=cc39e629-bc15-4eab-af8c-383fab3c1177 guardrails execution finished (passed=True) output='What are some healthy breakfast options?'
+2026-09-03 22:37:37,312 INFO guardrails.execution request=cc39e629-bc15-4eab-af8c-383fab3c1177 step=1/3 validator=LexicalSlur stage=input outcome=Outcome.PASS start=2026-09-03T22:37:37.305462 end=2026-09-03T22:37:37.305887 duration_ms=0 input='What are some healthy breakfast options?' output='What are some healthy breakfast options?'
+2026-09-03 22:37:37,316 INFO guardrails.execution request=cc39e629-bc15-4eab-af8c-383fab3c1177 step=2/3 validator=ProfanityFree stage=input outcome=Outcome.PASS start=2026-09-03T22:37:37.305893 end=2026-09-03T22:37:37.307344 duration_ms=1 input='What are some healthy breakfast options?' output='What are some healthy breakfast options?'
+2026-09-03 22:37:37,318 INFO guardrails.execution request=cc39e629-bc15-4eab-af8c-383fab3c1177 step=3/3 validator=BanList stage=input outcome=Outcome.PASS start=2026-09-03T22:37:37.307353 end=2026-09-03T22:37:37.307420 duration_ms=0 input='What are some healthy breakfast options?' output='What are some healthy breakfast options?'
+2026-09-03 22:37:37,323 INFO http_request_logger POST /api/v1/guardrails/ - 200 [39.36ms]
+2026-09-03 22:37:37,344 INFO guardrails.execution request=b207730a-36db-40f3-89bd-a76840ab9ecf starting guardrails execution (validators=['ban_list', 'uli_slur_match']) input='this contains badword'
+2026-09-03 22:37:37,345 INFO guardrails.execution request=b207730a-36db-40f3-89bd-a76840ab9ecf guardrails execution finished (passed=True) output='this contains b'
+2026-09-03 22:37:37,351 INFO guardrails.execution request=b207730a-36db-40f3-89bd-a76840ab9ecf step=1/2 validator=BanList stage=input outcome=Outcome.FAIL start=2026-09-03T22:37:37.344814 end=2026-09-03T22:37:37.344930 duration_ms=0 input='this contains badword' output='this contains b'
+2026-09-03 22:37:37,354 INFO guardrails.execution request=b207730a-36db-40f3-89bd-a76840ab9ecf step=2/2 validator=LexicalSlur stage=input outcome=Outcome.PASS start=2026-09-03T22:37:37.344936 end=2026-09-03T22:37:37.345129 duration_ms=0 input='this contains b' output='this contains b'
+2026-09-03 22:37:37,359 INFO http_request_logger POST /api/v1/guardrails/ - 200 [29.46ms]
+2026-09-03 22:37:37,374 ERROR app.api.routes.guardrails [run_guardrails] config resolution failed for request_log c52ea73c-16e7-42dd-a224-c85fc60a5629: 404: Ban list not found
+2026-09-03 22:37:37,377 INFO http_request_logger POST /api/v1/guardrails/ - 404 [7.08ms]
+2026-09-03 22:37:37,384 INFO guardrails.execution request=6a0e27b9-19f6-4af8-8ba7-446dbc4ac7b6 starting guardrails execution (validators=['ban_list']) input='hello'
+2026-09-03 22:37:37,384 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log 6a0e27b9-19f6-4af8-8ba7-446dbc4ac7b6: boom
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 360, in _validate_with_guard
+    result = guard.validate(data)
+             ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+RuntimeError: boom
+2026-09-03 22:37:37,386 INFO http_request_logger POST /api/v1/guardrails/ - 200 [4.47ms]
+2026-09-03 22:37:37,392 WARNING app.api.routes.guardrails [run_guardrails] invalid request_id 'not-a-uuid' (org=1 project=1), no request log written
+2026-09-03 22:37:37,392 INFO http_request_logger POST /api/v1/guardrails/ - 200 [1.63ms]
+2026-09-03 22:37:37,400 INFO app.crud.llm_prompt_config created llm prompt config id=8f06e837-cbbc-4cd8-8224-bb732a9eee41 org=1 project=1
+2026-09-03 22:37:37,402 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [6.51ms]
+2026-09-03 22:37:37,408 INFO app.crud.llm_prompt_config created llm prompt config id=cdec3beb-60ff-4162-b2bc-8225519f4a09 org=1 project=1
+2026-09-03 22:37:37,408 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.96ms]
+2026-09-03 22:37:37,414 INFO app.crud.llm_prompt_config created llm prompt config id=144dc392-5249-4bf6-bcaf-61f855e63497 org=1 project=1
+2026-09-03 22:37:37,414 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.94ms]
+2026-09-03 22:37:37,419 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 422 [1.02ms]
+2026-09-03 22:37:37,426 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 422 [0.97ms]
+2026-09-03 22:37:37,430 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 422 [0.94ms]
+2026-09-03 22:37:37,434 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 422 [0.78ms]
+2026-09-03 22:37:37,440 INFO app.crud.llm_prompt_config created llm prompt config id=88c45bb9-e959-477c-a530-f3e707dc7234 org=1 project=1
+2026-09-03 22:37:37,441 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.75ms]
+2026-09-03 22:37:37,445 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 422 [0.80ms]
+2026-09-03 22:37:37,454 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 422 [2.58ms]
+2026-09-03 22:37:37,470 INFO app.crud.llm_prompt_config created llm prompt config id=d44ca22f-9981-4446-b393-a56f8b3f101e org=1 project=1
+2026-09-03 22:37:37,472 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [8.45ms]
+2026-09-03 22:37:37,475 INFO app.crud.llm_prompt_config created llm prompt config id=dae4ac57-7034-480c-9216-1402038a30f7 org=1 project=1
+2026-09-03 22:37:37,475 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.85ms]
+2026-09-03 22:37:37,477 INFO app.crud.llm_prompt_config created llm prompt config id=28b9dcd6-3075-4615-a063-e267ad818cca org=1 project=1
+2026-09-03 22:37:37,478 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.12ms]
+2026-09-03 22:37:37,480 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/ - 200 [1.81ms]
+2026-09-03 22:37:37,486 INFO app.crud.llm_prompt_config created llm prompt config id=9520a510-4000-4d75-ba1c-7044759f2252 org=1 project=1
+2026-09-03 22:37:37,486 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [3.03ms]
+2026-09-03 22:37:37,488 INFO app.crud.llm_prompt_config created llm prompt config id=f7db44b3-f5ed-4f74-a06d-4941c1060339 org=1 project=1
+2026-09-03 22:37:37,489 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.13ms]
+2026-09-03 22:37:37,491 INFO app.crud.llm_prompt_config created llm prompt config id=0b048f54-5780-44c0-8b17-35a3d536a686 org=1 project=1
+2026-09-03 22:37:37,491 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.07ms]
+2026-09-03 22:37:37,494 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/ - 200 [2.34ms]
+2026-09-03 22:37:37,501 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/ - 200 [2.83ms]
+2026-09-03 22:37:37,509 INFO app.crud.llm_prompt_config created llm prompt config id=08513dea-a7c7-4b5a-9139-622f3fc2a14d org=1 project=1
+2026-09-03 22:37:37,510 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [4.32ms]
+2026-09-03 22:37:37,512 INFO app.crud.llm_prompt_config created llm prompt config id=62c26dff-001b-4890-a724-51a586c51e04 org=1 project=1
+2026-09-03 22:37:37,513 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.40ms]
+2026-09-03 22:37:37,514 INFO app.crud.llm_prompt_config created llm prompt config id=dbe8859d-a517-4dab-a85a-82cdbc897e13 org=1 project=1
+2026-09-03 22:37:37,515 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [1.89ms]
+2026-09-03 22:37:37,517 INFO app.crud.llm_prompt_config created llm prompt config id=aed42615-04bc-4c1c-b132-e92a791eadfc org=1 project=1
+2026-09-03 22:37:37,517 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [1.84ms]
+2026-09-03 22:37:37,520 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/ - 200 [2.59ms]
+2026-09-03 22:37:37,527 INFO app.crud.llm_prompt_config created llm prompt config id=aede2a09-920f-4dc1-8866-4c85a4baac44 org=1 project=1
+2026-09-03 22:37:37,527 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [3.05ms]
+2026-09-03 22:37:37,529 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/ - 200 [1.22ms]
+2026-09-03 22:37:37,533 INFO app.crud.llm_prompt_config created llm prompt config id=ea8d4b2a-b295-4309-8c46-7ea6d33540b5 org=1 project=1
+2026-09-03 22:37:37,534 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.15ms]
+2026-09-03 22:37:37,536 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/ea8d4b2a-b295-4309-8c46-7ea6d33540b5 - 200 [2.23ms]
+2026-09-03 22:37:37,542 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/6eac3750-1089-40a0-a94c-d139e7f69850 - 404 [1.43ms]
+2026-09-03 22:37:37,546 INFO app.crud.llm_prompt_config created llm prompt config id=06b58c97-1b4e-4121-b672-4370d825b665 org=1 project=1
+2026-09-03 22:37:37,547 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.38ms]
+2026-09-03 22:37:37,548 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/06b58c97-1b4e-4121-b672-4370d825b665 - 404 [1.19ms]
+2026-09-03 22:37:37,555 INFO app.crud.llm_prompt_config created llm prompt config id=9831e0c4-32c3-4c34-983b-4ff241a97a07 org=1 project=1
+2026-09-03 22:37:37,555 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [4.26ms]
+2026-09-03 22:37:37,558 INFO app.crud.llm_prompt_config updated llm prompt config id=9831e0c4-32c3-4c34-983b-4ff241a97a07
+2026-09-03 22:37:37,559 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/9831e0c4-32c3-4c34-983b-4ff241a97a07 - 200 [3.07ms]
+2026-09-03 22:37:37,564 INFO app.crud.llm_prompt_config created llm prompt config id=bf03d477-df6b-4fdb-8eae-c14aba917a79 org=1 project=1
+2026-09-03 22:37:37,564 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.64ms]
+2026-09-03 22:37:37,567 INFO app.crud.llm_prompt_config updated llm prompt config id=bf03d477-df6b-4fdb-8eae-c14aba917a79
+2026-09-03 22:37:37,567 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/bf03d477-df6b-4fdb-8eae-c14aba917a79 - 200 [2.37ms]
+2026-09-03 22:37:37,572 INFO app.crud.llm_prompt_config created llm prompt config id=b2d04264-455a-4cf8-95d1-18a88a62e221 org=1 project=1
+2026-09-03 22:37:37,572 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.22ms]
+2026-09-03 22:37:37,574 INFO app.crud.llm_prompt_config updated llm prompt config id=b2d04264-455a-4cf8-95d1-18a88a62e221
+2026-09-03 22:37:37,575 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/b2d04264-455a-4cf8-95d1-18a88a62e221 - 200 [2.44ms]
+2026-09-03 22:37:37,577 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/b2d04264-455a-4cf8-95d1-18a88a62e221 - 200 [1.29ms]
+2026-09-03 22:37:37,584 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/30711fea-6116-4419-8a41-dc5bcd73748b - 404 [2.20ms]
+2026-09-03 22:37:37,589 INFO app.crud.llm_prompt_config created llm prompt config id=550cd44d-4646-49d9-a88a-14076a61a298 org=1 project=1
+2026-09-03 22:37:37,589 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.62ms]
+2026-09-03 22:37:37,591 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/550cd44d-4646-49d9-a88a-14076a61a298 - 404 [1.28ms]
+2026-09-03 22:37:37,597 INFO app.crud.llm_prompt_config created llm prompt config id=fef6102f-0dd6-485c-b002-d6e3c74a763c org=1 project=1
+2026-09-03 22:37:37,598 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.55ms]
+2026-09-03 22:37:37,599 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/fef6102f-0dd6-485c-b002-d6e3c74a763c - 422 [1.33ms]
+2026-09-03 22:37:37,604 INFO app.crud.llm_prompt_config created llm prompt config id=73561ab4-4acd-4bbe-94b3-d796facc2451 org=1 project=1
+2026-09-03 22:37:37,605 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [2.40ms]
+2026-09-03 22:37:37,606 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/73561ab4-4acd-4bbe-94b3-d796facc2451 - 422 [1.37ms]
+2026-09-03 22:37:37,613 INFO app.crud.llm_prompt_config created llm prompt config id=ed5828f7-323b-4e06-9113-3d1f2fccabf1 org=1 project=1
+2026-09-03 22:37:37,614 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [3.33ms]
+2026-09-03 22:37:37,617 INFO app.crud.llm_prompt_config updated llm prompt config id=ed5828f7-323b-4e06-9113-3d1f2fccabf1
+2026-09-03 22:37:37,618 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/ed5828f7-323b-4e06-9113-3d1f2fccabf1 - 200 [3.76ms]
+2026-09-03 22:37:37,624 INFO app.crud.llm_prompt_config created llm prompt config id=f6725d78-9811-4a45-8a77-cdc4e7b3a87a org=1 project=1
+2026-09-03 22:37:37,625 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [3.19ms]
+2026-09-03 22:37:37,628 INFO app.crud.llm_prompt_config updated llm prompt config id=f6725d78-9811-4a45-8a77-cdc4e7b3a87a
+2026-09-03 22:37:37,629 INFO http_request_logger PATCH /api/v1/guardrails/llm_prompt_configs/f6725d78-9811-4a45-8a77-cdc4e7b3a87a - 200 [3.54ms]
+2026-09-03 22:37:37,636 INFO app.crud.llm_prompt_config created llm prompt config id=facb570d-ff81-4e35-9c89-993345bda123 org=1 project=1
+2026-09-03 22:37:37,636 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [3.21ms]
+2026-09-03 22:37:37,639 INFO app.crud.llm_prompt_config deleted llm prompt config id=facb570d-ff81-4e35-9c89-993345bda123
+2026-09-03 22:37:37,639 INFO http_request_logger DELETE /api/v1/guardrails/llm_prompt_configs/facb570d-ff81-4e35-9c89-993345bda123 - 200 [2.36ms]
+2026-09-03 22:37:37,646 INFO app.crud.llm_prompt_config created llm prompt config id=bd647c44-4e74-4b0e-9a8d-43a11d7a6144 org=1 project=1
+2026-09-03 22:37:37,647 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [4.01ms]
+2026-09-03 22:37:37,649 INFO app.crud.llm_prompt_config deleted llm prompt config id=bd647c44-4e74-4b0e-9a8d-43a11d7a6144
+2026-09-03 22:37:37,650 INFO http_request_logger DELETE /api/v1/guardrails/llm_prompt_configs/bd647c44-4e74-4b0e-9a8d-43a11d7a6144 - 200 [2.56ms]
+2026-09-03 22:37:37,652 INFO http_request_logger GET /api/v1/guardrails/llm_prompt_configs/ - 200 [1.91ms]
+2026-09-03 22:37:37,660 INFO http_request_logger DELETE /api/v1/guardrails/llm_prompt_configs/07c9f688-adb2-4ac4-8a74-ba64713ed84b - 404 [2.79ms]
+2026-09-03 22:37:37,669 INFO app.crud.llm_prompt_config created llm prompt config id=1cbd3fb7-31e3-45b7-add8-6357690f2c5e org=1 project=1
+2026-09-03 22:37:37,670 INFO http_request_logger POST /api/v1/guardrails/llm_prompt_configs/ - 200 [4.82ms]
+2026-09-03 22:37:37,673 INFO http_request_logger DELETE /api/v1/guardrails/llm_prompt_configs/1cbd3fb7-31e3-45b7-add8-6357690f2c5e - 404 [2.21ms]
+2026-09-03 22:37:37,770 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 starting guardrails execution (validators=[]) input='hello'
+2026-09-03 22:37:37,771 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 guardrails execution finished (passed=True) output='clean text'
+2026-09-03 22:37:37,772 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 starting guardrails execution (validators=[]) input='bad text'
+2026-09-03 22:37:37,772 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 guardrails execution finished (passed=False) output=None
+2026-09-03 22:37:37,774 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log c710a040-b6b3-4c95-bd38-532d21a5b0b8: Invalid config
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 344, in _validate_with_guard
+    guard = build_guard(validators)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Invalid config
+2026-09-03 22:37:37,777 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 starting guardrails execution (validators=[]) input='bad text'
+2026-09-03 22:37:37,777 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 guardrails execution finished (passed=False) output=None
+2026-09-03 22:37:37,779 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 starting guardrails execution (validators=[]) input='bad text'
+2026-09-03 22:37:37,779 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 guardrails execution finished (passed=False) output=None
+2026-09-03 22:37:37,802 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 starting guardrails execution (validators=[]) input='this is some unsafe content'
+2026-09-03 22:37:37,802 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 guardrails execution finished (passed=False) output=None
+2026-09-03 22:37:37,804 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 starting guardrails execution (validators=[]) input='some input text'
+2026-09-03 22:37:37,804 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 guardrails execution finished (passed=False) output=None
+2026-09-03 22:37:37,807 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 starting guardrails execution (validators=[]) input='this contains profane words'
+2026-09-03 22:37:37,807 INFO guardrails.execution request=c710a040-b6b3-4c95-bd38-532d21a5b0b8 guardrails execution finished (passed=False) output=None
+2026-09-03 22:37:37,809 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log c710a040-b6b3-4c95-bd38-532d21a5b0b8: Validation failed for field with errors: The following sentences in your response were found to be NSFW:
+
+- this is some unsafe content
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 344, in _validate_with_guard
+    guard = build_guard(validators)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Validation failed for field with errors: The following sentences in your response were found to be NSFW:
+
+- this is some unsafe content
+2026-09-03 22:37:37,811 ERROR app.api.routes.guardrails [_validate_with_guard] guardrails execution failed for request log c710a040-b6b3-4c95-bd38-532d21a5b0b8: Validation failed for field with errors: Profanity detected in: this contains profane words
+Traceback (most recent call last):
+  File "/Users/prajna/Desktop/t4d/kaapi-guardrails/backend/app/api/routes/guardrails.py", line 344, in _validate_with_guard
+    guard = build_guard(validators)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/prajna/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/unittest/mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: Validation failed for field with errors: Profanity detected in: this contains profane words
+2026-09-03 22:37:37,826 INFO app.crud.validator_config updated validator config id=22222222-2222-2222-2222-222222222222
+2026-09-03 22:37:37,829 INFO app.crud.validator_config updated validator config id=22222222-2222-2222-2222-222222222222
+2026-09-03 22:37:37,831 INFO app.crud.validator_config updated validator config id=22222222-2222-2222-2222-222222222222
+2026-09-03 22:37:37,842 INFO app.crud.validator_config created validator config id=c8fff2f6-5150-458a-a08f-78a33710ea0d org=1 project=1 type=ValidatorType.LexicalSlur
+2026-09-03 22:37:37,843 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [4.88ms]
+2026-09-03 22:37:37,850 INFO app.crud.validator_config created validator config id=5a0afc63-d79b-498e-b585-27aa8f6ee3db org=1 project=1 type=ValidatorType.GenderAssumptionBias
+2026-09-03 22:37:37,851 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.71ms]
+2026-09-03 22:37:37,853 WARNING app.crud.validator_config create validator config failed: duplicate name (org=1 project=1)
+2026-09-03 22:37:37,853 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 400 [2.23ms]
+2026-09-03 22:37:37,859 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 422 [1.07ms]
+2026-09-03 22:37:37,865 INFO app.crud.validator_config created validator config id=55913d8b-8dd1-4883-a353-31862e23efc9 org=1 project=1 type=ValidatorType.LexicalSlur
+2026-09-03 22:37:37,865 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.78ms]
+2026-09-03 22:37:37,867 INFO app.crud.validator_config created validator config id=5433909c-66ff-41a7-b3b4-bdaa6f0882f5 org=1 project=1 type=ValidatorType.PIIRemover
+2026-09-03 22:37:37,868 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.29ms]
+2026-09-03 22:37:37,870 INFO app.crud.validator_config created validator config id=dd5967ec-ea92-4a84-b449-0746df5efc32 org=1 project=1 type=ValidatorType.PIIRemover
+2026-09-03 22:37:37,870 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.06ms]
+2026-09-03 22:37:37,873 INFO app.crud.validator_config created validator config id=49d5287b-6b37-4adf-9fdc-f65926b01d1c org=1 project=1 type=ValidatorType.GenderAssumptionBias
+2026-09-03 22:37:37,873 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.33ms]
+2026-09-03 22:37:37,875 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [1.85ms]
+2026-09-03 22:37:37,876 INFO http_request_logger GET /api/v1/guardrails/validators/configs/55913d8b-8dd1-4883-a353-31862e23efc9/ - 307 [0.09ms]
+2026-09-03 22:37:37,878 INFO http_request_logger GET /api/v1/guardrails/validators/configs/55913d8b-8dd1-4883-a353-31862e23efc9 - 200 [1.56ms]
+2026-09-03 22:37:37,878 INFO http_request_logger GET /api/v1/guardrails/validators/configs/5433909c-66ff-41a7-b3b4-bdaa6f0882f5/ - 307 [0.08ms]
+2026-09-03 22:37:37,880 INFO http_request_logger GET /api/v1/guardrails/validators/configs/5433909c-66ff-41a7-b3b4-bdaa6f0882f5 - 200 [1.47ms]
+2026-09-03 22:37:37,880 INFO http_request_logger GET /api/v1/guardrails/validators/configs/dd5967ec-ea92-4a84-b449-0746df5efc32/ - 307 [0.09ms]
+2026-09-03 22:37:37,882 INFO http_request_logger GET /api/v1/guardrails/validators/configs/dd5967ec-ea92-4a84-b449-0746df5efc32 - 200 [1.44ms]
+2026-09-03 22:37:37,882 INFO http_request_logger GET /api/v1/guardrails/validators/configs/49d5287b-6b37-4adf-9fdc-f65926b01d1c/ - 307 [0.08ms]
+2026-09-03 22:37:37,885 INFO http_request_logger GET /api/v1/guardrails/validators/configs/49d5287b-6b37-4adf-9fdc-f65926b01d1c - 200 [2.11ms]
+2026-09-03 22:37:37,891 INFO app.crud.validator_config created validator config id=826d73fa-bfaf-43d8-81b5-2f78283f19a0 org=1 project=1 type=ValidatorType.LexicalSlur
+2026-09-03 22:37:37,891 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.49ms]
+2026-09-03 22:37:37,894 INFO app.crud.validator_config created validator config id=e685c147-a6e3-4290-a83c-e5fe37de1056 org=1 project=1 type=ValidatorType.PIIRemover
+2026-09-03 22:37:37,894 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.65ms]
+2026-09-03 22:37:37,896 INFO app.crud.validator_config created validator config id=eed72a1c-47a3-40ec-a488-17c30067fd6c org=1 project=1 type=ValidatorType.GenderAssumptionBias
+2026-09-03 22:37:37,897 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.16ms]
+2026-09-03 22:37:37,897 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/826d73fa-bfaf-43d8-81b5-2f78283f19a0/ - 307 [0.08ms]
+2026-09-03 22:37:37,901 INFO app.crud.validator_config updated validator config id=826d73fa-bfaf-43d8-81b5-2f78283f19a0
+2026-09-03 22:37:37,902 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/826d73fa-bfaf-43d8-81b5-2f78283f19a0 - 200 [4.21ms]
+2026-09-03 22:37:37,902 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/e685c147-a6e3-4290-a83c-e5fe37de1056/ - 307 [0.09ms]
+2026-09-03 22:37:37,906 INFO app.crud.validator_config updated validator config id=e685c147-a6e3-4290-a83c-e5fe37de1056
+2026-09-03 22:37:37,907 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/e685c147-a6e3-4290-a83c-e5fe37de1056 - 200 [4.27ms]
+2026-09-03 22:37:37,907 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/eed72a1c-47a3-40ec-a488-17c30067fd6c/ - 307 [0.11ms]
+2026-09-03 22:37:37,911 INFO app.crud.validator_config updated validator config id=eed72a1c-47a3-40ec-a488-17c30067fd6c
+2026-09-03 22:37:37,911 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/eed72a1c-47a3-40ec-a488-17c30067fd6c - 200 [4.08ms]
+2026-09-03 22:37:37,913 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [1.49ms]
+2026-09-03 22:37:37,920 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [1.71ms]
+2026-09-03 22:37:37,928 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [2.49ms]
+2026-09-03 22:37:37,936 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [2.32ms]
+2026-09-03 22:37:37,944 INFO app.crud.validator_config created validator config id=287eecbf-2eef-4864-b5d5-cc080e00a843 org=1 project=1 type=ValidatorType.LexicalSlur
+2026-09-03 22:37:37,944 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [4.13ms]
+2026-09-03 22:37:37,948 INFO app.crud.validator_config created validator config id=c74d9315-1f93-4016-83dd-296443f1038a org=1 project=1 type=ValidatorType.PIIRemover
+2026-09-03 22:37:37,948 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [3.67ms]
+2026-09-03 22:37:37,951 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [2.05ms]
+2026-09-03 22:37:37,957 INFO app.crud.validator_config created validator config id=045e80ba-a4ea-46e3-98bb-2000ef10ac83 org=1 project=1 type=ValidatorType.LexicalSlur
+2026-09-03 22:37:37,957 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.68ms]
+2026-09-03 22:37:37,960 INFO app.crud.validator_config created validator config id=031e05d8-6583-4a3c-af65-834aa725044a org=1 project=1 type=ValidatorType.PIIRemover
+2026-09-03 22:37:37,960 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [2.44ms]
+2026-09-03 22:37:37,962 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [1.61ms]
+2026-09-03 22:37:37,967 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 422 [0.90ms]
+2026-09-03 22:37:37,971 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [1.69ms]
+2026-09-03 22:37:37,978 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [1.89ms]
+2026-09-03 22:37:37,978 INFO http_request_logger GET /api/v1/guardrails/validators/configs/2dd84ecc-9c78-42d8-983e-c041f25fa5cb/ - 307 [0.10ms]
+2026-09-03 22:37:37,980 INFO http_request_logger GET /api/v1/guardrails/validators/configs/2dd84ecc-9c78-42d8-983e-c041f25fa5cb - 200 [1.40ms]
+2026-09-03 22:37:37,983 INFO http_request_logger GET /api/v1/guardrails/validators/configs/d3cd1093-84d5-4c36-97b0-f84223bebdc5/ - 307 [0.09ms]
+2026-09-03 22:37:37,985 INFO http_request_logger GET /api/v1/guardrails/validators/configs/d3cd1093-84d5-4c36-97b0-f84223bebdc5 - 404 [1.56ms]
+2026-09-03 22:37:37,988 INFO http_request_logger GET /api/v1/guardrails/validators/configs/not-a-uuid/ - 307 [0.09ms]
+2026-09-03 22:37:37,989 INFO http_request_logger GET /api/v1/guardrails/validators/configs/not-a-uuid - 422 [0.83ms]
+2026-09-03 22:37:37,996 INFO app.crud.validator_config created validator config id=1b34b2f7-4071-48b8-a6cf-fd48a92fc770 org=1 project=1 type=ValidatorType.GenderAssumptionBias
+2026-09-03 22:37:37,997 INFO http_request_logger POST /api/v1/guardrails/validators/configs/ - 200 [3.37ms]
+2026-09-03 22:37:37,997 INFO http_request_logger GET /api/v1/guardrails/validators/configs/1b34b2f7-4071-48b8-a6cf-fd48a92fc770/ - 307 [0.09ms]
+2026-09-03 22:37:37,999 INFO http_request_logger GET /api/v1/guardrails/validators/configs/1b34b2f7-4071-48b8-a6cf-fd48a92fc770 - 404 [1.25ms]
+2026-09-03 22:37:38,006 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [2.04ms]
+2026-09-03 22:37:38,006 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/5c19a4df-70f2-4995-b560-89ff80b3736a/ - 307 [0.09ms]
+2026-09-03 22:37:38,009 INFO app.crud.validator_config updated validator config id=5c19a4df-70f2-4995-b560-89ff80b3736a
+2026-09-03 22:37:38,009 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/5c19a4df-70f2-4995-b560-89ff80b3736a - 200 [2.71ms]
+2026-09-03 22:37:38,017 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [2.35ms]
+2026-09-03 22:37:38,018 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/b2d50f89-1005-4fb7-b7f3-21d62e36245f/ - 307 [0.09ms]
+2026-09-03 22:37:38,021 INFO app.crud.validator_config updated validator config id=b2d50f89-1005-4fb7-b7f3-21d62e36245f
+2026-09-03 22:37:38,021 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/b2d50f89-1005-4fb7-b7f3-21d62e36245f - 200 [3.14ms]
+2026-09-03 22:37:38,024 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/cab14d1a-3e2c-427c-8743-37048577ab5f/ - 307 [0.09ms]
+2026-09-03 22:37:38,027 INFO http_request_logger PATCH /api/v1/guardrails/validators/configs/cab14d1a-3e2c-427c-8743-37048577ab5f - 404 [2.06ms]
+2026-09-03 22:37:38,036 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [3.03ms]
+2026-09-03 22:37:38,037 INFO http_request_logger DELETE /api/v1/guardrails/validators/configs/cc0f6518-1c02-44f9-9aa7-9d7059379486/ - 307 [0.10ms]
+2026-09-03 22:37:38,039 INFO app.crud.validator_config deleted validator config id=cc0f6518-1c02-44f9-9aa7-9d7059379486
+2026-09-03 22:37:38,039 INFO http_request_logger DELETE /api/v1/guardrails/validators/configs/cc0f6518-1c02-44f9-9aa7-9d7059379486 - 200 [2.39ms]
+2026-09-03 22:37:38,040 INFO http_request_logger GET /api/v1/guardrails/validators/configs/cc0f6518-1c02-44f9-9aa7-9d7059379486/ - 307 [0.09ms]
+2026-09-03 22:37:38,042 INFO http_request_logger GET /api/v1/guardrails/validators/configs/cc0f6518-1c02-44f9-9aa7-9d7059379486 - 404 [1.52ms]
+2026-09-03 22:37:38,046 INFO http_request_logger DELETE /api/v1/guardrails/validators/configs/b8985903-89ea-4010-afb2-717c086631b3/ - 307 [0.14ms]
+2026-09-03 22:37:38,049 INFO http_request_logger DELETE /api/v1/guardrails/validators/configs/b8985903-89ea-4010-afb2-717c086631b3 - 404 [2.53ms]
+2026-09-03 22:37:38,057 INFO http_request_logger GET /api/v1/guardrails/validators/configs/ - 200 [2.10ms]
+2026-09-03 22:37:38,057 INFO http_request_logger DELETE /api/v1/guardrails/validators/configs/eef98e9e-0400-4d1f-bfa4-27499549ebd1/ - 307 [0.10ms]
+2026-09-03 22:37:38,060 INFO http_request_logger DELETE /api/v1/guardrails/validators/configs/eef98e9e-0400-4d1f-bfa4-27499549ebd1 - 404 [2.16ms]
+2026-09-03 22:37:38,061 INFO http_request_logger GET /api/v1/guardrails/validators/configs/eef98e9e-0400-4d1f-bfa4-27499549ebd1/ - 307 [0.10ms]
+2026-09-03 22:37:38,063 INFO http_request_logger GET /api/v1/guardrails/validators/configs/eef98e9e-0400-4d1f-bfa4-27499549ebd1 - 200 [1.99ms]
+2026-09-03 22:37:38,157 INFO presidio-analyzer Loaded recognizer: InAadhaarRecognizer
+2026-09-03 22:37:38,158 INFO presidio-analyzer Loaded recognizer: InPanRecognizer
+2026-09-03 22:37:38,218 INFO LiteLLM 
+LiteLLM completion() model= gpt-4o-mini; provider = openai
+2026-09-03 22:37:40,446 INFO LiteLLM Wrapper: Completed Call, calling success_handler
+2026-09-03 22:37:40,477 INFO LiteLLM 
+LiteLLM completion() model= gpt-4o-mini; provider = openai
+2026-09-03 22:37:42,163 INFO LiteLLM Wrapper: Completed Call, calling success_handler
+2026-09-03 22:37:42,172 INFO LiteLLM 
+LiteLLM completion() model= gpt-4o-mini; provider = openai
+2026-09-03 22:37:43,647 INFO LiteLLM Wrapper: Completed Call, calling success_handler
+2026-09-03 22:37:43,660 INFO LiteLLM 
+LiteLLM completion() model= gpt-4o-mini; provider = openai
+2026-09-03 22:37:45,286 INFO LiteLLM Wrapper: Completed Call, calling success_handler
+2026-09-03 22:37:45,297 INFO LiteLLM 
+LiteLLM completion() model= gpt-4o-mini; provider = openai
+2026-09-03 22:37:46,726 INFO LiteLLM Wrapper: Completed Call, calling success_handler
+2026-09-03 22:37:46,730 INFO LiteLLM 
+LiteLLM completion() model= gpt-4o-mini; provider = openai
+2026-09-03 22:37:47,847 INFO LiteLLM Wrapper: Completed Call, calling success_handler
+2026-09-03 22:37:47,849 INFO LiteLLM 
+LiteLLM completion() model= gpt-4o-mini; provider = openai
+2026-09-03 22:37:49,015 INFO LiteLLM Wrapper: Completed Call, calling success_handler
