@@ -43,6 +43,7 @@ dependencies = [
     "guardrails-ai-llm-critic>=0.1.0",
     "guardrails-ai-profanity-free>=0.1.0",
     "guardrails-ai-nsfw-text>=0.1.0",
+    "watchtower>=3.3.1",
 ]
 
 [dependency-groups]

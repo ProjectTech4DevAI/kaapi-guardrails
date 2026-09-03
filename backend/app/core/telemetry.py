@@ -9,12 +9,14 @@ import logging
 
 import sentry_sdk
 from fastapi import FastAPI
+from guardrails.settings import settings as guardrails_settings
 from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.propagate import set_global_textmap
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from sentry_sdk.integrations.opentelemetry import SentryPropagator, SentrySpanProcessor
 
@@ -55,20 +57,22 @@ def setup_telemetry(app: FastAPI) -> None:
         before_send=_scrub_event,
     )
 
-    provider = TracerProvider()
+    # guardrails-ai emits its own "guard"/"step"/"call"/"<validator>.validate"
+    # spans via the same global tracer; too granular for our traces.
+    guardrails_settings.disable_tracing = True
+
+    resource = Resource.create({SERVICE_NAME: settings.OTEL_SERVICE_NAME})
+    provider = TracerProvider(resource=resource)
     provider.add_span_processor(SentrySpanProcessor())
     trace.set_tracer_provider(provider)
     set_global_textmap(SentryPropagator())
 
-    FastAPIInstrumentor.instrument_app(app, excluded_urls=EXCLUDED_URLS)
+    FastAPIInstrumentor.instrument_app(
+        app, excluded_urls=EXCLUDED_URLS, exclude_spans=["receive", "send"]
+    )
     HTTPXClientInstrumentor().instrument()
     RequestsInstrumentor().instrument()
-    # DB transaction/connection spans (SQLAlchemyInstrumentor) are deliberately
-    # not instrumented: they added noise without helping debug guardrails
-    # execution. Keep instrumentation scoped to the request span, outbound
-    # HTTP (LLM calls), and the two manual spans in llm_utils/guardrails.py.
-
-    # Injects trace_id/span_id into log records for trace<->log correlation.
+    # No SQLAlchemyInstrumentor: DB spans are noise, not useful here.
     LoggingInstrumentor().instrument(set_logging_format=False)
 
     logger.info("Telemetry initialized (environment=%s)", settings.ENVIRONMENT)
