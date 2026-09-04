@@ -34,7 +34,7 @@ class ValidatorLog(SQLModel, table=True):
         sa_column_kwargs={"comment": "Identifier for the project"},
     )
 
-    request_id: UUID = Field(
+    request_log_id: UUID = Field(
         foreign_key="request_log.id",
         nullable=False,
         sa_column_kwargs={"comment": "Foreign key to the associated request log entry"},

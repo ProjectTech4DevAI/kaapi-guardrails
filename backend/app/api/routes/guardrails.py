@@ -553,7 +553,7 @@ def add_validator_logs(
             )
 
         validator_log = ValidatorLog(
-            request_id=request_log_id,
+            request_log_id=request_log_id,
             organization_id=auth.organization_id,
             project_id=auth.project_id,
             name=log.validator_name,
