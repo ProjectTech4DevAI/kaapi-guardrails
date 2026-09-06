@@ -50,7 +50,7 @@ def check_source_ip(request: Request) -> None:
         if client_ip not in allowed:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Forbidden",
+                detail=f"Source IP '{client_ip}' is not permitted to access this service.",
             )
 
 

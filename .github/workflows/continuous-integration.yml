@@ -42,7 +42,6 @@ jobs:
             AUTH_TOKEN_HASH="$(echo -n "ci-test-token" | sha256sum | awk '{print $1}')"
           fi
           sed -i "s|AUTH_TOKEN=\"<ADD-HASH-TOKEN>\"|AUTH_TOKEN=\"${AUTH_TOKEN_HASH}\"|" .env.test
-          sed -i "s|GUARDRAILS_HUB_API_KEY=\"<ADD-KEY>\"|GUARDRAILS_HUB_API_KEY=\"${{ secrets.GUARDRAILS_HUB_API_KEY }}\"|" .env.test
           cp .env.test .env
 
       - name: Install uv
@@ -53,15 +52,6 @@ jobs:
 
       - name: Install dependencies
         run: uv sync
-        working-directory: backend
-
-      - name: Install Guardrails hub validators
-        env:
-          GUARDRAILS_HUB_API_KEY: ${{ secrets.GUARDRAILS_HUB_API_KEY }}
-        run: |
-          source .venv/bin/activate
-          chmod +x scripts/install_guardrails_from_hub.sh
-          scripts/install_guardrails_from_hub.sh
         working-directory: backend
 
       - name: Activate virtual environment and run Alembic migrations
