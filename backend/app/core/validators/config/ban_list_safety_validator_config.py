@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional
 from uuid import UUID
 
-from guardrails.hub import BanList
+from guardrails_ai.ban_list import BanList
 from pydantic import model_validator
 
 from app.core.validators.config.base_validator_config import BaseValidatorConfig

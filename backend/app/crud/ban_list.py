@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 from uuid import UUID
 
@@ -8,6 +9,8 @@ from sqlmodel import Session, select
 from app.models.config.ban_list import BanList
 from app.schemas.ban_list import BanListCreate, BanListUpdate
 from app.utils import now
+
+logger = logging.getLogger(__name__)
 
 
 class BanListCrud:
@@ -29,14 +32,30 @@ class BanListCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
+            logger.warning(
+                "create ban list failed: duplicate (org=%s project=%s)",
+                organization_id,
+                project_id,
+            )
             raise HTTPException(
                 400, "Ban list already exists for the given configuration"
             )
         except Exception:
             session.rollback()
+            logger.exception(
+                "create ban list failed (org=%s project=%s)",
+                organization_id,
+                project_id,
+            )
             raise
 
         session.refresh(ban_list)
+        logger.info(
+            "created ban list id=%s org=%s project=%s",
+            ban_list.id,
+            organization_id,
+            project_id,
+        )
         return ban_list
 
     def get(
@@ -113,14 +132,17 @@ class BanListCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
+            logger.warning("update ban list %s failed: duplicate", ban_list.id)
             raise HTTPException(
                 400, "Ban list already exists for the given configuration"
             )
         except Exception:
             session.rollback()
+            logger.exception("update ban list %s failed", ban_list.id)
             raise
 
         session.refresh(ban_list)
+        logger.info("updated ban list id=%s", ban_list.id)
         return ban_list
 
     def delete(self, session: Session, ban_list: BanList):
@@ -129,7 +151,9 @@ class BanListCrud:
             session.commit()
         except Exception:
             session.rollback()
+            logger.exception("delete ban list %s failed", ban_list.id)
             raise
+        logger.info("deleted ban list id=%s", ban_list.id)
 
     def check_owner(
         self, ban_list: BanList, organization_id: int, project_id: int

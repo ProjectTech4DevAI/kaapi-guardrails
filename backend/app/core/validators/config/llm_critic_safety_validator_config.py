@@ -1,6 +1,6 @@
 from typing import Literal
 
-from guardrails.hub import LLMCritic
+from guardrails_ai.llm_critic import LLMCritic
 
 from app.core.config import settings
 from app.core.constants import LLM_CRITIC_REPHRASE_MESSAGE

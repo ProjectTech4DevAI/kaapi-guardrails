@@ -17,3 +17,5 @@ backend/app/evaluation/outputs/**/*.json
 # marimo related artefacts
 backend/notebooks/*.csv
 **/__marimo__/
+
+backend/logs/app.log

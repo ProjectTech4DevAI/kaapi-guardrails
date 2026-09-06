@@ -10,8 +10,6 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
-from litellm import completion
-
 from app.core.config import settings
 from app.core.constants import (
     ANSWER_RELEVANCE_EMPTY_FIELDS_ERROR,
@@ -20,6 +18,7 @@ from app.core.constants import (
     ANSWER_RELEVANCE_NOT_RELEVANT_ERROR,
     ANSWER_RELEVANCE_UNEXPECTED_RESPONSE_TEMPLATE,
 )
+from app.core.validators.llm_utils import traced_completion as completion
 
 DEFAULT_PROMPT_TEMPLATE = (
     "Query: {query}\n"

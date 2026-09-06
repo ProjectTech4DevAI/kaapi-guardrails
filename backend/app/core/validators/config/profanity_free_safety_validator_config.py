@@ -1,6 +1,6 @@
 from typing import Literal
 
-from guardrails.hub import ProfanityFree
+from guardrails_ai.profanity_free import ProfanityFree
 
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 

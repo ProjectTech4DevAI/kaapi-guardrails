@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
+from opentelemetry import trace
 from sqlmodel import Session
 
 from app.api.deps import AuthDep, SessionDep, TenantContext
@@ -44,6 +45,8 @@ from app.schemas.guardrail_config import (
 from app.utils import APIResponse, load_description
 
 logger = logging.getLogger(__name__)
+exec_logger = logging.getLogger("guardrails.execution")
+tracer = trace.get_tracer(__name__)
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
@@ -339,7 +342,31 @@ def _validate_with_guard(
 
     try:
         guard = build_guard(validators)
-        result = guard.validate(data)
+        exec_logger.info(
+            "request=%s starting guardrails execution (validators=%s) input=%r",
+            request_log_id,
+            [v.type for v in validators],
+            _strip_for_log(data),
+        )
+        # The only manual span in business code; per-validator detail lives
+        # in validator_log, joinable via kaapi.request_log_id.
+        with tracer.start_as_current_span(
+            "guardrails.validate",
+            attributes={
+                "kaapi.request_log_id": str(request_log_id),
+                "kaapi.validator_types": [v.type for v in validators],
+            },
+        ) as span:
+            result = guard.validate(data)
+            span.set_attribute("guardrails.passed", result.validated_output is not None)
+        exec_logger.info(
+            "request=%s guardrails execution finished (passed=%s) output=%r",
+            request_log_id,
+            result.validated_output is not None,
+            _strip_for_log(result.validated_output)
+            if result.validated_output is not None
+            else None,
+        )
 
         # Case 1: validation passed OR failed-with-fix (on_fail=FIX)
         if result.validated_output is not None:
@@ -407,6 +434,13 @@ def _redact_input(error_message: str, input_text: str) -> str:
     return error_message.replace(input_text, "")
 
 
+def _strip_for_log(value, limit: int = 120) -> str:
+    text = " ".join(str(value).split())
+    if len(text) > limit:
+        return f"{text[:limit]}…"
+    return text
+
+
 def _map_validator_configs(
     guard: Guard, validator_configs: list[ValidatorConfigItem] | None
 ) -> dict[str, ValidatorConfigItem]:
@@ -455,13 +489,12 @@ def add_validator_logs(
 
     config_by_alias = _map_validator_configs(guard, validator_configs)
 
+    total_steps = len(iteration.outputs.validator_logs)
+
     for order, log in enumerate(iteration.outputs.validator_logs, start=1):
         result = log.validation_result
 
         if result is None:
-            continue
-
-        if suppress_pass_logs and isinstance(result, PassResult):
             continue
 
         error_message = None
@@ -481,6 +514,33 @@ def add_validator_logs(
             stage = config.stage.value if config.stage else Stage.Input.value
             meta = config.model_dump(mode="json")
 
+        duration_ms = None
+        start_time = getattr(log, "start_time", None)
+        end_time = getattr(log, "end_time", None)
+        if start_time and end_time:
+            duration_ms = int((end_time - start_time).total_seconds() * 1000)
+
+        exec_logger.info(
+            "request=%s step=%d/%d validator=%s stage=%s outcome=%s "
+            "start=%s end=%s duration_ms=%s input=%r output=%r",
+            request_log_id,
+            order,
+            total_steps,
+            log.validator_name,
+            stage,
+            result.outcome,
+            start_time.isoformat() if start_time else None,
+            end_time.isoformat() if end_time else None,
+            duration_ms,
+            _strip_for_log(log.value_before_validation),
+            _strip_for_log(log.value_after_validation)
+            if log.value_after_validation is not None
+            else None,
+        )
+
+        if suppress_pass_logs and isinstance(result, PassResult):
+            continue
+
         # Verdict detail the validator attached to its result (e.g. topic
         # relevance scope_score/reasoning); stored beside the config dump.
         result_metadata = getattr(result, "metadata", None)
@@ -492,14 +552,8 @@ def add_validator_logs(
                 json.dumps(result_metadata, default=str)
             )
 
-        duration_ms = None
-        start_time = getattr(log, "start_time", None)
-        end_time = getattr(log, "end_time", None)
-        if start_time and end_time:
-            duration_ms = int((end_time - start_time).total_seconds() * 1000)
-
         validator_log = ValidatorLog(
-            request_id=request_log_id,
+            request_log_id=request_log_id,
             organization_id=auth.organization_id,
             project_id=auth.project_id,
             name=log.validator_name,
