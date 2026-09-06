@@ -53,6 +53,9 @@ def setup_telemetry(app: FastAPI) -> None:
         instrumenter="otel",
         traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
         send_default_pii=False,
+        # Guardrails input/output is end-user text; never attach request/response
+        # bodies to error events or trace transactions.
+        max_request_body_size="never",
         enable_logs=True,  # INFO+ log records are shipped to Sentry Logs
         before_send=_scrub_event,
     )
