@@ -15,6 +15,7 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
+
 def parse_ip_list(v: Any) -> list[str] | str:
     """Accepts a comma-separated string or a JSON-encoded array string (some
     env/deploy tooling JSON-encodes list-valued env vars)."""

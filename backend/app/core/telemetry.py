@@ -34,7 +34,11 @@ def _scrub_event(event: dict, hint: dict) -> dict:
 
 def setup_telemetry(app: FastAPI) -> None:
     """Initialize Sentry + OpenTelemetry. Call once from main.py; no-op in tests/local."""
-    if not settings.OTEL_ENABLED or not settings.SENTRY_DSN or settings.ENVIRONMENT == "testing":
+    if (
+        not settings.OTEL_ENABLED
+        or not settings.SENTRY_DSN
+        or settings.ENVIRONMENT == "testing"
+    ):
         return
 
     sentry_sdk.init(

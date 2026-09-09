@@ -123,9 +123,7 @@ class ValidatorConfigCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
-            logger.warning(
-                "update validator config %s failed: duplicate name", obj.id
-            )
+            logger.warning("update validator config %s failed: duplicate name", obj.id)
             raise HTTPException(
                 400,
                 "Validator configuration with this name already exists",
