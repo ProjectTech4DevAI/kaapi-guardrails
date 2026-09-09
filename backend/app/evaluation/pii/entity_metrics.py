@@ -24,9 +24,7 @@ def compute_entity_metrics(
     gold_texts: Iterable[str],
     pred_texts: Iterable[str],
 ) -> Dict[str, dict]:
-    """
-    Compute per-entity TP / FP / FN counts across the dataset.
-    """
+    """Computes per-entity TP/FP/FN counts across the dataset."""
     stats = defaultdict(
         lambda: {"true_positive": 0, "false_positive": 0, "false_negative": 0}
     )
@@ -48,9 +46,7 @@ def compute_entity_metrics(
 
 
 def finalize_entity_metrics(stats: Dict[str, dict]) -> Dict[str, dict]:
-    """
-    Convert raw counts into precision / recall / F1 per entity.
-    """
+    """Converts raw counts into precision/recall/F1 per entity."""
     report = {}
 
     for entity, s in stats.items():
