@@ -41,6 +41,7 @@ from app.schemas.guardrail_config import (
     GuardrailRequest,
     GuardrailResponse,
     ValidatorConfigItem,
+    ValidatorResult,
 )
 from app.utils import APIResponse, load_description
 
@@ -106,11 +107,16 @@ def run_guardrails(
             raise
         return APIResponse.failure_response(error=error_message)
 
-    has_output_validator = any(
-        isinstance(v, AnswerRelevanceCustomLLMSafetyValidatorConfig)
-        for v in payload.validators
-    )
-    data = (payload.output or "") if has_output_validator else payload.input
+    # A validator's own `stage` field is descriptive metadata set once when
+    # the validator config was created — it does not reliably say whether
+    # THIS request is validating input or output (the same stored config
+    # can be reused as either). Whether the caller actually sent `output`
+    # is the reliable signal: ai-platform only includes it when calling for
+    # output guardrails.
+    if payload.output is not None:
+        data = payload.output
+    else:
+        data = payload.input
     return _validate_with_guard(
         payload,
         data,
@@ -322,10 +328,15 @@ def _validate_with_guard(
             or validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
         )
 
+        validator_results = []
+        if guard is not None:
+            validator_results = _summarize_validator_results(guard, validators)
+
         response_model = GuardrailResponse(
             response_id=response_id,
             rephrase_needed=rephrase_needed,
             safe_text=validated_output,
+            validator_results=validator_results or None,
         )
 
         if status == RequestStatus.SUCCESS:
@@ -441,24 +452,77 @@ def _strip_for_log(value, limit: int = 120) -> str:
     return text
 
 
-def _map_validator_configs(
+def _validator_config_at(
+    validator_configs: list[ValidatorConfigItem] | None, index: int
+) -> ValidatorConfigItem | None:
+    # build_guard() builds one runtime validator per config, in the same
+    # order, so the i-th guard-history log entry pairs with the i-th config.
+    # Matching by position (not by alias) keeps two same-type validators in
+    # one request from colliding.
+    if not validator_configs:
+        return None
+    if index >= len(validator_configs):
+        return None
+    return validator_configs[index]
+
+
+def _summarize_validator_results(
     guard: Guard, validator_configs: list[ValidatorConfigItem] | None
-) -> dict[str, ValidatorConfigItem]:
-    """
-    Maps guard-history validator names (rail_alias) back to the request's
-    validator configs, using the built validators the guard actually ran.
-    """
-    built = getattr(guard, "_validators", None)
-    if not built or not validator_configs:
-        return {}
-    # ponytail: first config wins per alias; two same-type validators in one
-    # request share trace fields. Split by position if that ever matters.
-    mapping: dict[str, ValidatorConfigItem] = {}
-    for validator, config in zip(built, validator_configs):
-        alias = getattr(validator, "rail_alias", None)
-        if alias:
-            mapping.setdefault(alias, config)
-    return mapping
+) -> list[ValidatorResult]:
+    history = getattr(guard, "history", None)
+    if not history:
+        return []
+
+    last_call = getattr(history, "last", None)
+    if not last_call or not getattr(last_call, "iterations", None):
+        return []
+
+    iteration = last_call.iterations[-1]
+    outputs = getattr(iteration, "outputs", None)
+    if not outputs or not getattr(outputs, "validator_logs", None):
+        return []
+
+    results: list[ValidatorResult] = []
+    for order, log in enumerate(iteration.outputs.validator_logs, start=1):
+        result = log.validation_result
+        if result is None:
+            continue
+
+        error_message = None
+        if isinstance(result, FailResult):
+            error_message = result.error_message
+
+        config = _validator_config_at(validator_configs, order - 1)
+
+        type_ = None
+        stage = Stage.Input.value
+        if config is not None:
+            type_ = config.type
+            if config.stage:
+                stage = config.stage.value
+
+        input_text = None
+        if log.value_before_validation is not None:
+            input_text = str(log.value_before_validation)
+
+        output_text = None
+        if log.value_after_validation is not None:
+            output_text = str(log.value_after_validation)
+
+        results.append(
+            ValidatorResult(
+                name=log.validator_name,
+                type=type_,
+                stage=stage,
+                order=order,
+                outcome=result.outcome.upper(),
+                error=error_message,
+                input_text=input_text,
+                output_text=output_text,
+            )
+        )
+
+    return results
 
 
 def add_validator_logs(
@@ -487,8 +551,6 @@ def add_validator_logs(
     if not outputs or not getattr(outputs, "validator_logs", None):
         return
 
-    config_by_alias = _map_validator_configs(guard, validator_configs)
-
     total_steps = len(iteration.outputs.validator_logs)
 
     for order, log in enumerate(iteration.outputs.validator_logs, start=1):
@@ -501,11 +563,7 @@ def add_validator_logs(
         if isinstance(result, FailResult):
             error_message = result.error_message
 
-        # registered_name is the rail alias ("guardrails/ban_list");
-        # validator_name is only the display/class name.
-        config = config_by_alias.get(
-            getattr(log, "registered_name", None) or log.validator_name
-        )
+        config = _validator_config_at(validator_configs, order - 1)
         stage = type_ = meta = None
         if config is not None:
             type_ = config.type

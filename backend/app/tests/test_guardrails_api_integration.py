@@ -40,6 +40,74 @@ def test_input_guardrails_with_real_ban_list(integration_client):
     assert body["data"][SAFE_TEXT_FIELD] == "this contains b"
 
 
+def test_input_guardrails_validates_input_even_when_validator_stage_is_output(
+    integration_client,
+):
+    """A stored validator config's own `stage` field is just descriptive
+    metadata from when it was created — it can be reused as an input
+    guardrail even if `stage="output"`. Routing must key off whether the
+    caller actually sent `output`, not off this field."""
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        headers=TENANT_HEADERS,
+        json={
+            "request_id": request_id,
+            "input": "this contains badword",
+            "validators": [
+                {
+                    "type": "ban_list",
+                    "stage": "output",
+                    "banned_words": ["badword"],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"][SAFE_TEXT_FIELD] == "this contains b"
+
+
+def test_validator_results_report_per_validator_before_after_text(
+    integration_client,
+):
+    """Each validator_results entry must carry the text that specific
+    validator saw and produced, chained in execution order (so the second
+    validator's input_text is the first validator's output_text, not the
+    original raw input)."""
+    response = integration_client.post(
+        VALIDATE_API_PATH,
+        headers=TENANT_HEADERS,
+        json={
+            "request_id": request_id,
+            "input": "this contains badword",
+            "validators": [
+                {"type": "ban_list", "banned_words": ["badword"]},
+                {"type": "uli_slur_match", "severity": "all"},
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+
+    validator_results = body["data"]["validator_results"]
+    assert len(validator_results) == 2
+
+    ban_list_result = validator_results[0]
+    assert ban_list_result["outcome"] == "FAIL"
+    assert ban_list_result["input_text"] == "this contains badword"
+    assert ban_list_result["output_text"] == "this contains b"
+
+    slur_result = validator_results[1]
+    assert slur_result["outcome"] == "PASS"
+    assert slur_result["input_text"] == "this contains b"
+    assert slur_result["output_text"] == "this contains b"
+
+
 def test_input_guardrails_passes_clean_text(integration_client):
     response = integration_client.post(
         VALIDATE_API_PATH,

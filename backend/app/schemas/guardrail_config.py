@@ -116,7 +116,21 @@ class GuardrailRequest(SQLModel):
         return normalized_payload
 
 
+class ValidatorResult(SQLModel):
+    """Outcome of a single validator in the chain, in execution order."""
+
+    name: str
+    type: Optional[str] = None
+    stage: Optional[str] = None
+    order: int
+    outcome: str
+    error: Optional[str] = None
+    input_text: Optional[str] = None
+    output_text: Optional[str] = None
+
+
 class GuardrailResponse(SQLModel):
     response_id: UUID
     rephrase_needed: bool = False
     safe_text: Optional[str] = None
+    validator_results: Optional[List[ValidatorResult]] = None
