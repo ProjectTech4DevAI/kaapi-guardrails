@@ -64,10 +64,7 @@ def run_guardrails(
     auth: AuthDep,
     suppress_pass_logs: bool = False,
 ):
-    """
-    Resolves any config-backed validator references (ban list words, topic relevance scope),
-    then runs validation and returns a structured guardrail response.
-    """
+    """Resolves config-backed validator references, then runs validation."""
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
 
@@ -107,12 +104,8 @@ def run_guardrails(
             raise
         return APIResponse.failure_response(error=error_message)
 
-    # A validator's own `stage` field is descriptive metadata set once when
-    # the validator config was created — it does not reliably say whether
-    # THIS request is validating input or output (the same stored config
-    # can be reused as either). Whether the caller actually sent `output`
-    # is the reliable signal: ai-platform only includes it when calling for
-    # output guardrails.
+    # A stored validator config's `stage` isn't reliable here (the same config
+    # can be reused as input or output); route on what the caller actually sent.
     if payload.output is not None:
         data = payload.output
     else:
@@ -130,9 +123,7 @@ def run_guardrails(
 
 @router.get("/", description=load_description("guardrails/list_validators.md"))
 def list_validators(_: AuthDep):
-    """
-    Lists all validators and their parameters directly.
-    """
+    """Lists all validators and their parameters directly."""
     validator_config_models = get_validator_config_models()
     validators = []
 
@@ -184,15 +175,7 @@ def _mark_request_failed(
 def _resolve_validator_configs(
     payload: GuardrailRequest, session: Session, auth: TenantContext
 ) -> None:
-    """
-    Resolves config-backed references for all validators in-place before guard execution:
-    - BanList: fetches banned_words from the stored BanList when not provided inline.
-    - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
-    - TopicRelevanceLLM: fetches configuration from stored config.
-    - AnswerRelevance: fetches custom prompt template from stored config.
-
-    Returns the data string to pass to guard.validate().
-    """
+    """Resolves config-backed references for all validators, in-place, before guard execution."""
     for validator in payload.validators:
         if isinstance(validator, BanListSafetyValidatorConfig):
             if validator.type == BAN_LIST and validator.banned_words is None:
@@ -260,13 +243,7 @@ def _validate_with_guard(
     auth: TenantContext,
     suppress_pass_logs: bool = False,
 ) -> APIResponse:
-    """
-    Runs Guardrails validation on input/output data, persists request & validator logs,
-    and returns a structured APIResponse.
-
-    This function treats validation failures as first-class outcomes (not exceptions),
-    while still safely handling unexpected runtime errors.
-    """
+    """Runs guardrails validation, persists request/validator logs, returns an APIResponse."""
     response_id = uuid.uuid4()
     validators = payload.validators
     guard: Guard | None = None
@@ -277,12 +254,7 @@ def _validate_with_guard(
         validated_output: str | None = None,
         error_message: str | None = None,
     ) -> APIResponse:
-        """
-        Single exit-point helper to ensure:
-        - request logs are always updated
-        - validator logs are written when available
-        - API responses are consistent
-        """
+        """Single exit-point: always updates the request log and writes validator logs."""
         response_text = (
             validated_output if validated_output is not None else error_message
         )
@@ -400,9 +372,8 @@ def _validate_with_guard(
             exc,
             exc_info=True,
         )
-        # Case 3: unexpected system / runtime failure
-        # First try to extract structured fail results from guard history.
-        # This handles on_fail="exception" where guardrails raises instead of returning.
+        # Case 3: unexpected failure. on_fail="exception" raises instead of
+        # returning, so check guard history for a structured fail result first.
         if guard is not None:
             extracted = _extract_error_from_guard(guard, data)
             if extracted is not None:
@@ -416,10 +387,7 @@ def _validate_with_guard(
 
 
 def _extract_error_from_guard(guard: Guard, data: str) -> str | None:
-    """
-    Scans the guard's last history iteration for the first FailResult and returns
-    a normalized, redacted error message. Returns None if no fail result is found.
-    """
+    """Scans the guard's last iteration for the first FailResult and returns its redacted message."""
     history = getattr(guard, "history", None)
     if not history or not getattr(history, "last", None):
         return None
@@ -455,10 +423,7 @@ def _strip_for_log(value, limit: int = 120) -> str:
 def _validator_config_at(
     validator_configs: list[ValidatorConfigItem] | None, index: int
 ) -> ValidatorConfigItem | None:
-    # build_guard() builds one runtime validator per config, in the same
-    # order, so the i-th guard-history log entry pairs with the i-th config.
-    # Matching by position (not by alias) keeps two same-type validators in
-    # one request from colliding.
+    # Matched by position, not alias, so two same-type validators don't collide.
     if not validator_configs:
         return None
     if index >= len(validator_configs):
@@ -533,11 +498,7 @@ def add_validator_logs(
     suppress_pass_logs: bool = False,
     validator_configs: list[ValidatorConfigItem] | None = None,
 ) -> None:
-    """
-    Writes a ValidatorLog entry for each validator outcome in the guard's last iteration.
-    Pass results are skipped when suppress_pass_logs is True; `order` keeps each
-    row's true execution position, so persisted orders may have gaps — intentional.
-    """
+    """Writes a ValidatorLog per outcome; `order` is the true execution position, so gaps are intentional."""
     history = getattr(guard, "history", None)
     if not history:
         return

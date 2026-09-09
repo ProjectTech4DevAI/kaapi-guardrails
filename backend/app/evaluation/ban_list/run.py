@@ -16,27 +16,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 OUT_DIR = BASE_DIR / "outputs" / "ban_list"
 DATASET_PATH = BASE_DIR / "datasets" / "ban_list_testing_dataset.csv"
 
-# Define ban list evaluations here
 BAN_LIST_EVALUATIONS = [
     {
         "name": "maternal_healthcare",
         "banned_words": ["sonography", "gender check"],
     },
-    # Future configs can be added here
-    # {
-    #     "name": "abuse_terms",
-    #     "banned_words": ["slur1", "slur2"],
-    # },
 ]
 
 
 def run_evaluation(config: dict):
-    """
-    Run the ban list evaluation for a single config.
-    Instantiates a BanList validator with the given banned words, runs each row through it,
-    computes binary metrics and exact-match rate if target text is available,
-    and writes prediction CSV and metrics JSON to the output directory.
-    """
+    """Runs the ban list evaluation for a single config and writes CSV/JSON outputs."""
     name = config["name"]
     banned_words = config["banned_words"]
 

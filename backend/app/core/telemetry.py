@@ -1,9 +1,4 @@
-"""Single home for all observability wiring: Sentry (errors/logs) + OTel (traces).
-
-Spans are produced only by the auto-instrumentors below plus two manual sites:
-the guardrails.validate span in the guardrails route and the traced litellm
-completion wrapper in llm_utils. Do not add instrumentation elsewhere.
-"""
+"""Single home for observability wiring (Sentry + OTel). Don't add spans elsewhere."""
 
 import logging
 
@@ -38,11 +33,7 @@ def _scrub_event(event: dict, hint: dict) -> dict:
 
 
 def setup_telemetry(app: FastAPI) -> None:
-    """Initialize Sentry + OpenTelemetry. Call once from main.py.
-
-    No-op unless OTEL_ENABLED is set, without a SENTRY_DSN, or in the
-    testing environment, so tests and local runs stay instrumentation-free.
-    """
+    """Initialize Sentry + OpenTelemetry. Call once from main.py; no-op in tests/local."""
     if not settings.OTEL_ENABLED or not settings.SENTRY_DSN or settings.ENVIRONMENT == "testing":
         return
 
