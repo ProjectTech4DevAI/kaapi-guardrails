@@ -31,11 +31,7 @@ _ANSWER_RELEVANCE_PLACEHOLDERS = ("{query}", "{answer}")
 
 
 def validate_answer_relevance_prompt(prompt: str) -> None:
-    """Ensure an answer-relevance prompt contains the required placeholders.
-
-    Raises ValueError if any placeholder is missing. Shared by the create
-    schema (Pydantic) and the CRUD update path.
-    """
+    """Raises ValueError if the prompt is missing a required placeholder; shared with the CRUD update path."""
     missing = [p for p in _ANSWER_RELEVANCE_PLACEHOLDERS if p not in prompt]
     if missing:
         raise ValueError(

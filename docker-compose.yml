@@ -3,8 +3,6 @@ version: "3.9"
 secrets:
   HF_TOKEN:
     environment: HF_TOKEN
-  GUARDRAILS_HUB_API_KEY:
-    environment: GUARDRAILS_HUB_API_KEY
 
 services:
 
@@ -16,7 +14,6 @@ services:
       context: ./backend
       secrets:
         - HF_TOKEN
-        - GUARDRAILS_HUB_API_KEY
     command: bash scripts/prestart.sh
     env_file:
       - .env
@@ -32,7 +29,6 @@ services:
       context: ./backend
       secrets:
         - HF_TOKEN
-        - GUARDRAILS_HUB_API_KEY
     env_file:
       - .env
     extra_hosts:

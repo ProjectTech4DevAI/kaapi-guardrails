@@ -15,14 +15,12 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
-#1. A comma-separated string like "1.2.3.4,5.6.7.8" → splits on , and strips whitespace.
-#2. A JSON-encoded array string like '["1.2.3.4","5.6.7.8"]' 
-# (some env/deploy tooling JSON-encodes list-valued env vars) → parses it with json.loads.
 
 def parse_ip_list(v: Any) -> list[str] | str:
+    """Accepts a comma-separated string or a JSON-encoded array string (some
+    env/deploy tooling JSON-encodes list-valued env vars)."""
     if isinstance(v, str):
         if v.lstrip().startswith("["):
-           
             try:
                 parsed = json.loads(v)
             except json.JSONDecodeError:
@@ -49,15 +47,16 @@ class Settings(BaseSettings):
     AUTH_TOKEN: str
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.1
+    OTEL_ENABLED: bool = False
     POSTGRES_SERVER: str
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
     GUARDRAILS_HUB_API_KEY: str | None = None
-    # Source IPs allowed to reach this service (kaapi-backend). Empty = check disabled.
-    # `| str` keeps pydantic-settings from JSON-parsing the dotenv value before
-    # parse_ip_list gets to split it.
+    # Source IPs allowed to reach this service; empty disables the check.
+    # `| str` stops pydantic-settings from JSON-parsing the value before parse_ip_list does.
     ALLOWED_IPS: Annotated[list[str] | str, BeforeValidator(parse_ip_list)] = []
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
     OPENAI_API_KEY: str | None = None

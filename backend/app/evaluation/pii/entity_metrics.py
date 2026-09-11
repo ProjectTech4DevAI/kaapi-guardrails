@@ -7,22 +7,13 @@ ENTITY_PATTERN = re.compile(r"[\[<]([A-Z0-9_]+)[\]>]")
 
 
 def extract_entities(text: str) -> Set[str]:
-    """
-    Extract entity labels from a masked/anonymized string.
-
-    Examples:
-        "Call me at [PHONE_NUMBER]" -> {"PHONE_NUMBER"}
-        "<IN_PAN> <PHONE_NUMBER>"  -> {"IN_PAN", "PHONE_NUMBER"}
-    """
+    """Extracts entity labels (e.g. [PHONE_NUMBER]) from a masked/anonymized string."""
     if not isinstance(text, str):
         return set()
     return set(ENTITY_PATTERN.findall(text))
 
 
 def compare_entities(gold: Set[str], pred: Set[str]):
-    """
-    Compare gold vs predicted entity sets.
-    """
     tp = gold & pred  # correctly detected
     fn = gold - pred  # missed entities
     fp = pred - gold  # hallucinated entities
@@ -33,9 +24,7 @@ def compute_entity_metrics(
     gold_texts: Iterable[str],
     pred_texts: Iterable[str],
 ) -> Dict[str, dict]:
-    """
-    Compute per-entity TP / FP / FN counts across the dataset.
-    """
+    """Computes per-entity TP/FP/FN counts across the dataset."""
     stats = defaultdict(
         lambda: {"true_positive": 0, "false_positive": 0, "false_negative": 0}
     )
@@ -57,9 +46,7 @@ def compute_entity_metrics(
 
 
 def finalize_entity_metrics(stats: Dict[str, dict]) -> Dict[str, dict]:
-    """
-    Convert raw counts into precision / recall / F1 per entity.
-    """
+    """Converts raw counts into precision/recall/F1 per entity."""
     report = {}
 
     for entity, s in stats.items():

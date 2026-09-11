@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from guardrails import OnFailAction
-from guardrails.hub import LLMCritic
+from guardrails_ai.llm_critic import LLMCritic
 from guardrails.validators import (
     FailResult,
     PassResult,
@@ -57,13 +57,7 @@ def _build_metric_prompt(prompt_schema_version: int, topic_config: str) -> str:
 
 @register_validator(name="topic-relevance", data_type="string")
 class TopicRelevance(Validator):
-    """
-    Validates whether a user message is within the defined topic scope
-    using Guardrails Hub's LLMCritic validator.
-
-    If the message is clearly within scope → PassResult
-    If partially related or outside scope → FailResult
-    """
+    """Validates whether a user message is within the defined topic scope, via Guardrails Hub's LLMCritic."""
 
     def __init__(
         self,

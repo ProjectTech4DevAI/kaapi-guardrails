@@ -18,12 +18,12 @@
         {
             "type": "ban_list",
             "version": "0.1.0",
-            "source": "hub://guardrails/ban_list"
+            "source": "pypi://guardrails-ai-ban-list"
         },
         {
             "type": "llm_critic",
             "version": "0.1.0",
-            "source": "hub://guardrails/llm_critic"
+            "source": "pypi://guardrails-ai-llm-critic"
         },
         {
             "type": "topic_relevance",
@@ -43,12 +43,12 @@
         {
             "type": "profanity_free",
             "version": "0.1.0",
-            "source": "hub://guardrails/profanity_free"
+            "source": "pypi://guardrails-ai-profanity-free"
         },
         {
             "type": "nsfw_text",
             "version": "0.1.0",
-            "source": "hub://guardrails/nsfw_text"
+            "source": "pypi://guardrails-ai-nsfw-text"
         }
     ]
 }

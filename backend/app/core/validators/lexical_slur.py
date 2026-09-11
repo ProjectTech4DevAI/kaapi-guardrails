@@ -62,14 +62,7 @@ class LexicalSlur(Validator):
         )
 
     def normalize_for_matching(self, text: str) -> str:
-        """
-        Normalize input text for detection:
-        - remove emojis
-        - fix encoding issues
-        - normalize unicode (NFKC)
-        - lowercase
-        - normalize whitespace
-        """
+        """Strips emojis, fixes encoding, normalizes unicode/case/whitespace."""
         text = self.remove_emojis(text)
         text = ftfy.fix_text(text)
         text = unicodedata.normalize("NFKC", text)
@@ -77,16 +70,10 @@ class LexicalSlur(Validator):
         return text.lower()
 
     def remove_emojis(self, text):
-        """
-        Removed emojis from given string.
-        """
         return emoji.replace_emoji(text, replace="")
 
     def _compile_slur_patterns(self):
-        """
-        Compile regex patterns for all slurs.
-        Uses Unicode-safe boundaries and longest-match-first ordering.
-        """
+        """Compiles slur patterns with Unicode-safe boundaries, longest match first."""
         self._slur_patterns = []
 
         for slur in self.slur_list:
