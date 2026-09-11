@@ -11,14 +11,19 @@ class RequestLogCrud:
     def __init__(self, session: Session):
         self.session = session
 
-    def create(self, payload: GuardrailRequest) -> RequestLog:
+    def create(
+        self,
+        payload: GuardrailRequest,
+        organization_id: int,
+        project_id: int,
+    ) -> RequestLog:
         request_id = UUID(payload.request_id)
         create_request_log = RequestLog(
             request_id=request_id,
             request_text=payload.input,
             output_text=payload.output,
-            organization_id=payload.organization_id,
-            project_id=payload.project_id,
+            organization_id=organization_id,
+            project_id=project_id,
         )
         self.session.add(create_request_log)
         self.session.commit()

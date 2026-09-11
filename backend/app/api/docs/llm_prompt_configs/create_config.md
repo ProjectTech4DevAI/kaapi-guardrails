@@ -1,4 +1,4 @@
-Creates an LLM prompt config for the tenant resolved from `X-API-KEY`.
+Creates an LLM prompt config for the tenant resolved from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Behavior notes:
 - Stores a named prompt used by an LLM-backed validator (`topic_relevance` or `answer_relevance_custom_llm`).
