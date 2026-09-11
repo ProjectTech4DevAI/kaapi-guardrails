@@ -21288,3 +21288,17 @@ LiteLLM completion() model= gpt-4o-mini; provider = openai
 2026-09-09 16:58:26,562 INFO watchfiles.main 1 change detected
 2026-09-09 16:58:26,950 INFO watchfiles.main 30 changes detected
 2026-09-09 16:58:29,728 INFO watchfiles.main 6 changes detected
+2026-09-11 14:36:04,068 INFO presidio-analyzer Using device of type: cpu
+2026-09-11 14:36:05,006 INFO app.core.telemetry Telemetry initialized (environment=production)
+2026-09-11 14:36:05,006 INFO uvicorn.error Started server process [45507]
+2026-09-11 14:36:05,007 INFO uvicorn.error Waiting for application startup.
+2026-09-11 14:36:05,007 INFO uvicorn.error Application startup complete.
+2026-09-11 14:36:05,008 INFO uvicorn.error Shutting down
+2026-09-11 14:36:05,109 INFO uvicorn.error Waiting for application shutdown.
+2026-09-11 14:36:05,110 INFO uvicorn.error Application shutdown complete.
+2026-09-11 14:36:05,110 INFO uvicorn.error Finished server process [45507]
+2026-09-11 14:36:09,841 INFO presidio-analyzer Using device of type: cpu
+2026-09-11 14:36:10,619 INFO app.core.telemetry Telemetry initialized (environment=production)
+2026-09-11 14:36:10,619 INFO uvicorn.error Started server process [45642]
+2026-09-11 14:36:10,620 INFO uvicorn.error Waiting for application startup.
+2026-09-11 14:36:10,620 INFO uvicorn.error Application startup complete.

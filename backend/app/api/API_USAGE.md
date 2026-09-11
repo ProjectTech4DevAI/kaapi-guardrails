@@ -186,7 +186,7 @@ Endpoint:
 - `POST /api/v1/guardrails/`
 
 Query params:
-- `suppress_pass_logs=true|false` (default `true`)
+- `suppress_pass_logs=true|false` (default `false`: pass-case validator logs are persisted too; set `true` to store only fail-case logs)
 
 Request fields:
 - `request_id` (UUID string)
@@ -204,7 +204,7 @@ Important:
 Example:
 
 ```bash
-curl -X POST "http://localhost:8001/api/v1/guardrails/?suppress_pass_logs=true" \
+curl -X POST "http://localhost:8001/api/v1/guardrails/" \
   -H "Authorization: Bearer <token>" \
   -H "X-ORGANIZATION-ID: 1" \
   -H "X-PROJECT-ID: 101" \

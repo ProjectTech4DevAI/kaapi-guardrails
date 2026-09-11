@@ -57,3 +57,10 @@ services:
           path: ./backend/pyproject.toml
         - action: rebuild
           path: ./backend/uv.lock
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-south-1
+        awslogs-group: ${AWSLOGS_GROUP:-/ec2/kaapi-staging-ui-guardrails}
+        awslogs-stream: backend
+        awslogs-create-group: "true"
