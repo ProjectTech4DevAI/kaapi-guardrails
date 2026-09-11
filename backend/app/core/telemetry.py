@@ -11,7 +11,6 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.propagate import set_global_textmap
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from sentry_sdk.integrations.opentelemetry import SentryPropagator, SentrySpanProcessor
 
@@ -59,8 +58,9 @@ def setup_telemetry(app: FastAPI) -> None:
     # spans via the same global tracer; too granular for our traces.
     guardrails_settings.disable_tracing = True
 
-    resource = Resource.create({SERVICE_NAME: settings.OTEL_SERVICE_NAME})
-    provider = TracerProvider(resource=resource)
+    # Service identity comes from baggage the ai-platform propagates upstream,
+    # not a static resource attribute set here.
+    provider = TracerProvider()
     provider.add_span_processor(SentrySpanProcessor())
     trace.set_tracer_provider(provider)
     set_global_textmap(SentryPropagator())
