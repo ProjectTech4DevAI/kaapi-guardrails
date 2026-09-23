@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 import pandas as pd
 from guardrails.validators import FailResult
 
 from app.core.config import settings
-from app.core.validators.topic_relevance import TopicRelevance
 from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 from app.evaluation.common.helper import (
     Profiler,
     build_evaluation_report,
+    build_validator_config,
+    combine_binary_metrics,
     compute_binary_metrics,
     write_csv,
     write_json,
@@ -33,18 +35,33 @@ DATASETS = [
     },
 ]
 
+
+# v2 = forbidden-topics-only scoring (see prompts/topic_relevance_llm/v2.md);
+# matches the education/healthcare configs, which now list forbidden topics only.
+TOPIC_RELEVANCE_LLM_PROMPT_SCHEMA_VERSION = 2
+
+
+def _build_topic_relevance(topic_config: str):
+    # Imported lazily: TopicRelevance pulls in guardrails.hub's LLMCritic, which
+    # requires the llm_critic hub validator to be installed. Deferring the import
+    # means selecting only --backend topic_relevance_llm doesn't need that install.
+    from app.core.validators.topic_relevance import TopicRelevance
+
+    return TopicRelevance(
+        topic_config=topic_config,
+        prompt_schema_version=1,
+        llm_callable=settings.DEFAULT_LLM_CALLABLE,
+    )
+
+
 BACKENDS = [
     {
         "name": "topic_relevance",
         "out_dir": OUTPUTS_DIR / "topic_relevance",
-        "build": lambda tc: TopicRelevance(
-            topic_config=tc,
-            prompt_schema_version=1,
-            llm_callable=settings.DEFAULT_LLM_CALLABLE,
-        ),
-        "report_extra": {
-            "llm_callable": settings.DEFAULT_LLM_CALLABLE,
-            "prompt_schema_version": 1,
+        "build": _build_topic_relevance,
+        "config_fields": lambda v: {
+            "llm_callable": v.llm_callable,
+            "prompt_schema_version": v.prompt_schema_version,
         },
     },
     {
@@ -54,16 +71,21 @@ BACKENDS = [
             system_prompt=tc,
             llm_callable=settings.DEFAULT_LLM_CALLABLE,
             threshold=settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
+            prompt_schema_version=TOPIC_RELEVANCE_LLM_PROMPT_SCHEMA_VERSION,
         ),
-        "report_extra": {
-            "llm_callable": settings.DEFAULT_LLM_CALLABLE,
-            "threshold": settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
+        # TopicRelevanceLLM doesn't store prompt_schema_version on the instance
+        # (it's only used to pick the prompt template at construction time), so
+        # it's recorded here from the constant rather than read off the validator.
+        "config_fields": lambda v: {
+            "llm_callable": v.llm_callable,
+            "threshold": v.threshold,
+            "prompt_schema_version": TOPIC_RELEVANCE_LLM_PROMPT_SCHEMA_VERSION,
         },
     },
 ]
 
 
-def run_evaluation(dataset: dict, backend: dict) -> None:
+def run_evaluation(dataset: dict, backend: dict) -> dict:
     domain = dataset["domain"]
     topic_config = (DATASETS_DIR / dataset["topic_config"]).read_text()
     dataset_path = DATASETS_DIR / dataset["dataset"]
@@ -73,6 +95,7 @@ def run_evaluation(dataset: dict, backend: dict) -> None:
 
     df = pd.read_csv(dataset_path)
     validator = backend["build"](topic_config)
+    config = build_validator_config(validator, **backend["config_fields"](validator))
 
     normalized_df = pd.DataFrame(
         {
@@ -115,7 +138,7 @@ def run_evaluation(dataset: dict, backend: dict) -> None:
             num_samples=len(normalized_df),
             profiler=p,
             dataset=str(dataset_path),
-            **backend["report_extra"],
+            config=config,
             metrics=metrics,
         ),
         out_dir / f"{domain}-metrics.json",
@@ -123,11 +146,43 @@ def run_evaluation(dataset: dict, backend: dict) -> None:
 
     print(f"Completed {backend['name']} {domain} evaluation")
 
+    return metrics
+
 
 def main() -> None:
-    for backend in BACKENDS:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--backend",
+        choices=[backend["name"] for backend in BACKENDS],
+        help="Only run this backend (default: run all backends)",
+    )
+    args = parser.parse_args()
+
+    backends = BACKENDS
+    if args.backend:
+        backends = [b for b in BACKENDS if b["name"] == args.backend]
+
+    for backend in backends:
+        domain_metrics = []
+        domain_labels = []
         for dataset in DATASETS:
-            run_evaluation(dataset, backend)
+            domain_metrics.append(run_evaluation(dataset, backend))
+            domain_labels.append(dataset["domain"])
+
+        combined = combine_binary_metrics(domain_metrics, labels=domain_labels)
+        write_json(
+            {
+                "guardrail": backend["name"],
+                "domains": domain_labels,
+                "num_samples": sum(
+                    m["true_positive"] + m["true_negative"] + m["false_positive"] + m["false_negative"]
+                    for m in domain_metrics
+                ),
+                **combined,
+            },
+            backend["out_dir"] / "combined-metrics.json",
+        )
+        print(f"\nWrote combined metrics for {backend['name']} across {domain_labels}")
 
 
 if __name__ == "__main__":

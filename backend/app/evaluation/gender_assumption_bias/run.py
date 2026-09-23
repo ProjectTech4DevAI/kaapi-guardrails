@@ -5,6 +5,7 @@ from guardrails.validators import FailResult
 from app.core.validators.gender_assumption_bias import GenderAssumptionBias
 from app.evaluation.common.helper import (
     build_evaluation_report,
+    build_validator_config,
     compute_binary_metrics,
     Profiler,
     write_csv,
@@ -17,6 +18,12 @@ OUT_DIR = BASE_DIR / "outputs" / "gender_assumption_bias"
 df = pd.read_csv(BASE_DIR / "datasets" / "gender_bias_assumption_dataset.csv")
 
 validator = GenderAssumptionBias()
+
+config = build_validator_config(
+    validator,
+    categories=validator.categories,
+    num_bias_words_loaded=len(validator.gender_bias_list),
+)
 
 with Profiler() as p:
     df["biased_result"] = (
@@ -57,6 +64,7 @@ write_json(
         guardrail="gender_assumption_bias",
         num_samples=len(df) * 2,
         profiler=p,
+        config=config,
         metrics=metrics,
     ),
     OUT_DIR / "metrics.json",

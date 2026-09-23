@@ -6,6 +6,7 @@ from guardrails.validators import FailResult
 
 from app.evaluation.common.helper import (
     build_evaluation_report,
+    build_validator_config,
     Profiler,
     compute_binary_metrics,
     write_csv,
@@ -35,6 +36,7 @@ def run_evaluation(config: dict):
     dataset = pd.read_csv(DATASET_PATH)
 
     validator = BanList(banned_words=banned_words)
+    validator_config = build_validator_config(validator, banned_words=banned_words)
 
     def run_ban_list(text: str) -> tuple[str, int]:
         """Validate a single text and return the (possibly redacted) text and a binary prediction label."""
@@ -81,7 +83,7 @@ def run_evaluation(config: dict):
             guardrail="ban_list",
             num_samples=len(dataset),
             profiler=p,
-            banned_words=banned_words,
+            config=validator_config,
             dataset=str(DATASET_PATH.name),
             metrics=metrics,
         ),

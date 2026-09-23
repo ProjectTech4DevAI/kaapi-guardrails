@@ -259,6 +259,14 @@ The predictions CSV includes `scope_score` (the LLM-assigned score) and `error_m
 python3 app/evaluation/topic_relevance/run.py
 ```
 
+Use `--backend` to run only one of the two validators (`topic_relevance` or `topic_relevance_llm`) instead of both:
+
+```bash
+python3 app/evaluation/topic_relevance/run.py --backend topic_relevance_llm
+```
+
+`topic_relevance` (the `LLMCritic`-based validator) is only imported when that backend actually runs, so `--backend topic_relevance_llm` works without installing the `llm_critic` hub validator.
+
 > **Note:** Requires `OPENAI_API_KEY` to be set. Uses `gpt-4o-mini` by default (`DEFAULT_CONFIG` in the script).
 
 ---
