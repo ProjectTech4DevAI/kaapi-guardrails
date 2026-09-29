@@ -19,3 +19,5 @@ backend/notebooks/*.csv
 **/__marimo__/
 
 backend/logs/*
+
+*.log
