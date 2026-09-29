@@ -85,7 +85,9 @@ The default prompt works well for general use, but you may want domain-specific 
 ```bash
 # Create a custom prompt
 POST /api/v1/guardrails/answer_relevance_prompts/
-Authorization: X-API-KEY your-api-key
+Authorization: Bearer <token>
+X-ORGANIZATION-ID: 1
+X-PROJECT-ID: 101
 
 {
   "name": "Healthcare Relevance Check",

@@ -1,20 +1,23 @@
+import json
+import logging
 import uuid
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from guardrails.guard import Guard
 from guardrails.validators import FailResult, PassResult
+from opentelemetry import trace
 from sqlmodel import Session
 
-from app.api.deps import AuthDep, SessionDep
+from app.api.deps import AuthDep, SessionDep, TenantContext
 from app.core.constants import (
     BAN_LIST,
     LLM_CRITIC_ERROR_MESSAGE,
     LLM_CRITIC_REPHRASE_MESSAGE,
     REPHRASE_ON_FAIL_PREFIX,
 )
-from app.core.enum import LLMValidatorName, ValidatorType
-from app.core.exception_handlers import _safe_error_message
+from app.core.enum import LLMValidatorName, Stage, ValidatorType
+from app.core.exception_handlers import _normalize_error_detail, _safe_error_message
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
     AnswerRelevanceCustomLLMSafetyValidatorConfig,
@@ -34,8 +37,17 @@ from app.crud.request_log import RequestLogCrud
 from app.crud.validator_log import ValidatorLogCrud
 from app.models.logging.request_log import RequestLogUpdate, RequestStatus
 from app.models.logging.validator_log import ValidatorLog, ValidatorOutcome
-from app.schemas.guardrail_config import GuardrailRequest, GuardrailResponse
+from app.schemas.guardrail_config import (
+    GuardrailRequest,
+    GuardrailResponse,
+    ValidatorConfigItem,
+    ValidatorResult,
+)
 from app.utils import APIResponse, load_description
+
+logger = logging.getLogger(__name__)
+exec_logger = logging.getLogger("guardrails.execution")
+tracer = trace.get_tracer(__name__)
 
 router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 
@@ -49,42 +61,69 @@ router = APIRouter(prefix="/guardrails", tags=["guardrails"])
 def run_guardrails(
     payload: GuardrailRequest,
     session: SessionDep,
-    _: AuthDep,
-    suppress_pass_logs: bool = True,
+    auth: AuthDep,
+    suppress_pass_logs: bool = False,
 ):
-    """
-    Resolves any config-backed validator references (ban list words, topic relevance scope),
-    then runs validation and returns a structured guardrail response.
-    """
+    """Resolves config-backed validator references, then runs validation."""
     request_log_crud = RequestLogCrud(session=session)
     validator_log_crud = ValidatorLogCrud(session=session)
 
     try:
-        request_log = request_log_crud.create(payload)
+        request_log = request_log_crud.create(
+            payload, auth.organization_id, auth.project_id, suppress_pass_logs
+        )
     except ValueError:
+        logger.warning(
+            "[run_guardrails] invalid request_id %r (org=%s project=%s), no request log written",
+            payload.request_id,
+            auth.organization_id,
+            auth.project_id,
+        )
         return APIResponse.failure_response(error="Invalid request_id")
 
-    _resolve_validator_configs(payload, session)
-    has_output_validator = any(
-        isinstance(v, AnswerRelevanceCustomLLMSafetyValidatorConfig)
-        for v in payload.validators
-    )
-    data = (payload.output or "") if has_output_validator else payload.input
+    try:
+        _resolve_validator_configs(payload, session, auth)
+    except Exception as exc:
+        # Config resolution failed (missing/mismatched stored config, DB error).
+        # Finalize the request log so it never sits at PROCESSING forever.
+        error_message = (
+            _normalize_error_detail(exc.detail)
+            if isinstance(exc, HTTPException)
+            else _safe_error_message(exc)
+        )
+        if isinstance(error_message, list):
+            error_message = "; ".join(str(item) for item in error_message)
+        logger.error(
+            "[run_guardrails] config resolution failed for request_log %s: %s",
+            request_log.id,
+            exc,
+            exc_info=not isinstance(exc, HTTPException),
+        )
+        _mark_request_failed(request_log_crud, request_log.id, error_message)
+        if isinstance(exc, HTTPException):
+            raise
+        return APIResponse.failure_response(error=error_message)
+
+    # A stored validator config's `stage` isn't reliable here (the same config
+    # can be reused as input or output); route on what the caller actually sent.
+    if payload.output is not None:
+        data = payload.output
+    else:
+        data = payload.input
     return _validate_with_guard(
         payload,
         data,
         request_log_crud,
         request_log.id,
         validator_log_crud,
+        auth,
         suppress_pass_logs,
     )
 
 
 @router.get("/", description=load_description("guardrails/list_validators.md"))
 def list_validators(_: AuthDep):
-    """
-    Lists all validators and their parameters directly.
-    """
+    """Lists all validators and their parameters directly."""
     validator_config_models = get_validator_config_models()
     validators = []
 
@@ -110,24 +149,41 @@ def list_validators(_: AuthDep):
     return {"validators": validators}
 
 
-def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> None:
-    """
-    Resolves config-backed references for all validators in-place before guard execution:
-    - BanList: fetches banned_words from the stored BanList when not provided inline.
-    - TopicRelevance: fetches configuration and prompt_schema_version from stored config.
-    - TopicRelevanceLLM: fetches configuration from stored config.
-    - AnswerRelevance: fetches custom prompt template from stored config.
+def _mark_request_failed(
+    request_log_crud: RequestLogCrud, request_log_id: UUID, error_message: str
+) -> None:
+    """Best-effort finalization of a request log on an early-exit error path."""
+    try:
+        # The error that got us here may have left the shared session in a
+        # failed-transaction state; clear it or this update raises too.
+        request_log_crud.session.rollback()
+        request_log_crud.update(
+            request_log_id=request_log_id,
+            request_status=RequestStatus.ERROR,
+            request_log_update=RequestLogUpdate(
+                response_text=error_message,
+                response_id=uuid.uuid4(),
+            ),
+        )
+    except Exception:
+        logger.exception(
+            "[_mark_request_failed] failed to finalize request log %s after an error",
+            request_log_id,
+        )
 
-    Returns the data string to pass to guard.validate().
-    """
+
+def _resolve_validator_configs(
+    payload: GuardrailRequest, session: Session, auth: TenantContext
+) -> None:
+    """Resolves config-backed references for all validators, in-place, before guard execution."""
     for validator in payload.validators:
         if isinstance(validator, BanListSafetyValidatorConfig):
             if validator.type == BAN_LIST and validator.banned_words is None:
                 ban_list = ban_list_crud.get(
                     session,
                     id=validator.ban_list_id,
-                    organization_id=payload.organization_id,
-                    project_id=payload.project_id,
+                    organization_id=auth.organization_id,
+                    project_id=auth.project_id,
                 )
                 validator.banned_words = ban_list.banned_words
 
@@ -142,8 +198,8 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 config = llm_prompt_config_crud.get(
                     session=session,
                     id=validator.topic_relevance_config_id,
-                    organization_id=payload.organization_id,
-                    project_id=payload.project_id,
+                    organization_id=auth.organization_id,
+                    project_id=auth.project_id,
                 )
                 if config.validator_name != LLMValidatorName.TopicRelevance:
                     raise HTTPException(
@@ -163,8 +219,8 @@ def _resolve_validator_configs(payload: GuardrailRequest, session: Session) -> N
                 prompt_config = llm_prompt_config_crud.get(
                     session=session,
                     id=validator.custom_prompt_id,
-                    organization_id=payload.organization_id,
-                    project_id=payload.project_id,
+                    organization_id=auth.organization_id,
+                    project_id=auth.project_id,
                 )
                 if (
                     prompt_config.validator_name
@@ -184,15 +240,10 @@ def _validate_with_guard(
     request_log_crud: RequestLogCrud,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
+    auth: TenantContext,
     suppress_pass_logs: bool = False,
 ) -> APIResponse:
-    """
-    Runs Guardrails validation on input/output data, persists request & validator logs,
-    and returns a structured APIResponse.
-
-    This function treats validation failures as first-class outcomes (not exceptions),
-    while still safely handling unexpected runtime errors.
-    """
+    """Runs guardrails validation, persists request/validator logs, returns an APIResponse."""
     response_id = uuid.uuid4()
     validators = payload.validators
     guard: Guard | None = None
@@ -203,41 +254,61 @@ def _validate_with_guard(
         validated_output: str | None = None,
         error_message: str | None = None,
     ) -> APIResponse:
-        """
-        Single exit-point helper to ensure:
-        - request logs are always updated
-        - validator logs are written when available
-        - API responses are consistent
-        """
+        """Single exit-point: always updates the request log and writes validator logs."""
         response_text = (
             validated_output if validated_output is not None else error_message
         )
         if response_text is None:
             response_text = "Validation failed"
 
-        request_log_crud.update(
-            request_log_id=request_log_id,
-            request_status=status,
-            request_log_update=RequestLogUpdate(
-                response_text=response_text,
-                response_id=response_id,
-            ),
-        )
+        # Log-persistence failures are logged but never break the user response.
+        try:
+            request_log_crud.update(
+                request_log_id=request_log_id,
+                request_status=status,
+                request_log_update=RequestLogUpdate(
+                    response_text=response_text,
+                    response_id=response_id,
+                ),
+            )
+        except Exception:
+            logger.exception(
+                "[_finalize] failed to update request log %s", request_log_id
+            )
+            # Clear the failed transaction so the validator-log writes
+            # below still have a usable session.
+            request_log_crud.session.rollback()
 
         if guard is not None:
-            add_validator_logs(
-                guard, request_log_id, validator_log_crud, payload, suppress_pass_logs
-            )
+            try:
+                add_validator_logs(
+                    guard,
+                    request_log_id,
+                    validator_log_crud,
+                    auth,
+                    suppress_pass_logs,
+                    validator_configs=validators,
+                )
+            except Exception:
+                logger.exception(
+                    "[_finalize] failed to write validator logs for request log %s",
+                    request_log_id,
+                )
 
         rephrase_needed = validated_output is not None and (
             validated_output == LLM_CRITIC_REPHRASE_MESSAGE
             or validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
         )
 
+        validator_results = []
+        if guard is not None:
+            validator_results = _summarize_validator_results(guard, validators)
+
         response_model = GuardrailResponse(
             response_id=response_id,
             rephrase_needed=rephrase_needed,
             safe_text=validated_output,
+            validator_results=validator_results or None,
         )
 
         if status == RequestStatus.SUCCESS:
@@ -254,7 +325,31 @@ def _validate_with_guard(
 
     try:
         guard = build_guard(validators)
-        result = guard.validate(data)
+        exec_logger.info(
+            "request=%s starting guardrails execution (validators=%s) input=%r",
+            request_log_id,
+            [v.type for v in validators],
+            _strip_for_log(data),
+        )
+        # The only manual span in business code; per-validator detail lives
+        # in validator_log, joinable via kaapi.request_log_id.
+        with tracer.start_as_current_span(
+            "guardrails.validate",
+            attributes={
+                "kaapi.request_log_id": str(request_log_id),
+                "kaapi.validator_types": [v.type for v in validators],
+            },
+        ) as span:
+            result = guard.validate(data)
+            span.set_attribute("guardrails.passed", result.validated_output is not None)
+        exec_logger.info(
+            "request=%s guardrails execution finished (passed=%s) output=%r",
+            request_log_id,
+            result.validated_output is not None,
+            _strip_for_log(result.validated_output)
+            if result.validated_output is not None
+            else None,
+        )
 
         # Case 1: validation passed OR failed-with-fix (on_fail=FIX)
         if result.validated_output is not None:
@@ -271,9 +366,14 @@ def _validate_with_guard(
         )
 
     except Exception as exc:
-        # Case 3: unexpected system / runtime failure
-        # First try to extract structured fail results from guard history.
-        # This handles on_fail="exception" where guardrails raises instead of returning.
+        logger.error(
+            "[_validate_with_guard] guardrails execution failed for request log %s: %s",
+            request_log_id,
+            exc,
+            exc_info=True,
+        )
+        # Case 3: unexpected failure. on_fail="exception" raises instead of
+        # returning, so check guard history for a structured fail result first.
         if guard is not None:
             extracted = _extract_error_from_guard(guard, data)
             if extracted is not None:
@@ -287,10 +387,7 @@ def _validate_with_guard(
 
 
 def _extract_error_from_guard(guard: Guard, data: str) -> str | None:
-    """
-    Scans the guard's last history iteration for the first FailResult and returns
-    a normalized, redacted error message. Returns None if no fail result is found.
-    """
+    """Scans the guard's last iteration for the first FailResult and returns its redacted message."""
     history = getattr(guard, "history", None)
     if not history or not getattr(history, "last", None):
         return None
@@ -316,17 +413,92 @@ def _redact_input(error_message: str, input_text: str) -> str:
     return error_message.replace(input_text, "")
 
 
+def _strip_for_log(value, limit: int = 120) -> str:
+    text = " ".join(str(value).split())
+    if len(text) > limit:
+        return f"{text[:limit]}…"
+    return text
+
+
+def _validator_config_at(
+    validator_configs: list[ValidatorConfigItem] | None, index: int
+) -> ValidatorConfigItem | None:
+    # Matched by position, not alias, so two same-type validators don't collide.
+    if not validator_configs:
+        return None
+    if index >= len(validator_configs):
+        return None
+    return validator_configs[index]
+
+
+def _summarize_validator_results(
+    guard: Guard, validator_configs: list[ValidatorConfigItem] | None
+) -> list[ValidatorResult]:
+    history = getattr(guard, "history", None)
+    if not history:
+        return []
+
+    last_call = getattr(history, "last", None)
+    if not last_call or not getattr(last_call, "iterations", None):
+        return []
+
+    iteration = last_call.iterations[-1]
+    outputs = getattr(iteration, "outputs", None)
+    if not outputs or not getattr(outputs, "validator_logs", None):
+        return []
+
+    results: list[ValidatorResult] = []
+    for order, log in enumerate(iteration.outputs.validator_logs, start=1):
+        result = log.validation_result
+        if result is None:
+            continue
+
+        error_message = None
+        if isinstance(result, FailResult):
+            error_message = result.error_message
+
+        config = _validator_config_at(validator_configs, order - 1)
+
+        type_ = None
+        stage = Stage.Input.value
+        if config is not None:
+            type_ = config.type
+            if config.stage:
+                stage = config.stage.value
+
+        input_text = None
+        if log.value_before_validation is not None:
+            input_text = str(log.value_before_validation)
+
+        output_text = None
+        if log.value_after_validation is not None:
+            output_text = str(log.value_after_validation)
+
+        results.append(
+            ValidatorResult(
+                name=log.validator_name,
+                type=type_,
+                stage=stage,
+                order=order,
+                outcome=result.outcome.upper(),
+                error=error_message,
+                input_text=input_text,
+                output_text=output_text,
+            )
+        )
+
+    return results
+
+
 def add_validator_logs(
     guard: Guard,
     request_log_id: UUID,
     validator_log_crud: ValidatorLogCrud,
-    payload: GuardrailRequest,
+    auth: TenantContext,
     suppress_pass_logs: bool = False,
+    validator_configs: list[ValidatorConfigItem] | None = None,
 ) -> None:
-    """
-    Writes a ValidatorLog entry for each validator outcome in the guard's last iteration.
-    Pass results are skipped when suppress_pass_logs is True.
-    """
+    """Writes a ValidatorLog per outcome; `order` is the true execution position, so gaps are intentional."""
     history = getattr(guard, "history", None)
     if not history:
         return
@@ -340,31 +512,92 @@ def add_validator_logs(
     if not outputs or not getattr(outputs, "validator_logs", None):
         return
 
-    for log in iteration.outputs.validator_logs:
+    total_steps = len(iteration.outputs.validator_logs)
+
+    for order, log in enumerate(iteration.outputs.validator_logs, start=1):
         result = log.validation_result
 
         if result is None:
-            continue
-
-        if suppress_pass_logs and isinstance(result, PassResult):
             continue
 
         error_message = None
         if isinstance(result, FailResult):
             error_message = result.error_message
 
+        config = _validator_config_at(validator_configs, order - 1)
+        stage = type_ = meta = None
+        if config is not None:
+            type_ = config.type
+            # Per-config stage defaults live on the config classes
+            # (answer_relevance defaults to output).
+            stage = config.stage.value if config.stage else Stage.Input.value
+            meta = config.model_dump(mode="json")
+
+        duration_ms = None
+        start_time = getattr(log, "start_time", None)
+        end_time = getattr(log, "end_time", None)
+        if start_time and end_time:
+            duration_ms = int((end_time - start_time).total_seconds() * 1000)
+
+        exec_logger.info(
+            "request=%s step=%d/%d validator=%s stage=%s outcome=%s "
+            "start=%s end=%s duration_ms=%s input=%r output=%r",
+            request_log_id,
+            order,
+            total_steps,
+            log.validator_name,
+            stage,
+            result.outcome,
+            start_time.isoformat() if start_time else None,
+            end_time.isoformat() if end_time else None,
+            duration_ms,
+            _strip_for_log(log.value_before_validation),
+            _strip_for_log(log.value_after_validation)
+            if log.value_after_validation is not None
+            else None,
+        )
+
+        if suppress_pass_logs and isinstance(result, PassResult):
+            continue
+
+        # Verdict detail the validator attached to its result (e.g. topic
+        # relevance scope_score/reasoning); stored beside the config dump.
+        result_metadata = getattr(result, "metadata", None)
+        if result_metadata:
+            meta = meta or {}
+            # Round-trip through json so a non-serializable value degrades to
+            # its str() instead of failing the row insert.
+            meta["result_metadata"] = json.loads(
+                json.dumps(result_metadata, default=str)
+            )
+
         validator_log = ValidatorLog(
-            request_id=request_log_id,
-            organization_id=payload.organization_id,
-            project_id=payload.project_id,
+            request_log_id=request_log_id,
+            organization_id=auth.organization_id,
+            project_id=auth.project_id,
             name=log.validator_name,
+            order=order,
+            duration_ms=duration_ms,
+            stage=stage,
+            type=type_,
+            meta=meta,
             input=str(log.value_before_validation),
             output=log.value_after_validation,
             error=error_message,
             outcome=ValidatorOutcome(result.outcome.upper()),
         )
 
-        validator_log_crud.create(log=validator_log)
+        try:
+            validator_log_crud.create(log=validator_log)
+        except Exception:
+            logger.exception(
+                "[add_validator_logs] failed to write validator log (validator=%s, request_log=%s)",
+                log.validator_name,
+                request_log_id,
+            )
+            # Clear the failed transaction so one bad row doesn't poison
+            # the inserts for the remaining validators.
+            validator_log_crud.session.rollback()
 
 
 def _normalize_llm_critic_error(message: str) -> str:

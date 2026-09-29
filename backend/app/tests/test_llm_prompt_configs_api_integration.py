@@ -7,8 +7,8 @@ from app.schemas.llm_prompt_config import MAX_NAME_LENGTH, MAX_DESCRIPTION_LENGT
 pytestmark = pytest.mark.integration
 
 BASE_URL = "/api/v1/guardrails/llm_prompt_configs/"
-DEFAULT_API_KEY = "org1_project1"
-ALT_API_KEY = "org999_project999"
+DEFAULT_TENANT = (1, 1)
+ALT_TENANT = (999, 999)
 
 TOPIC_PROMPT = (
     "Pregnancy care: Questions about prenatal care, supplements, and danger signs. "
@@ -24,10 +24,14 @@ CUSTOM_ANSWER_PROMPT = (
 
 
 class BaseLLMPromptConfigTest:
-    def _headers(self, api_key=DEFAULT_API_KEY):
-        return {"X-API-Key": api_key}
+    def _headers(self, tenant=DEFAULT_TENANT):
+        organization_id, project_id = tenant
+        return {
+            "X-ORGANIZATION-ID": str(organization_id),
+            "X-PROJECT-ID": str(project_id),
+        }
 
-    def create_topic(self, client, api_key=DEFAULT_API_KEY, **overrides):
+    def create_topic(self, client, tenant=DEFAULT_TENANT, **overrides):
         name = overrides.get("name", "Maternal Health Scope")
         payload = {
             "validator_name": "topic_relevance",
@@ -37,9 +41,9 @@ class BaseLLMPromptConfigTest:
             "llm_prompt": f"{TOPIC_PROMPT} Scope name: {name}.",
             **overrides,
         }
-        return client.post(BASE_URL, json=payload, headers=self._headers(api_key))
+        return client.post(BASE_URL, json=payload, headers=self._headers(tenant))
 
-    def create_answer(self, client, api_key=DEFAULT_API_KEY, **overrides):
+    def create_answer(self, client, tenant=DEFAULT_TENANT, **overrides):
         payload = {
             "validator_name": "answer_relevance_custom_llm",
             "name": "Health Relevance",
@@ -47,23 +51,23 @@ class BaseLLMPromptConfigTest:
             "llm_prompt": ANSWER_PROMPT,
             **overrides,
         }
-        return client.post(BASE_URL, json=payload, headers=self._headers(api_key))
+        return client.post(BASE_URL, json=payload, headers=self._headers(tenant))
 
-    def list(self, client, api_key=DEFAULT_API_KEY, **filters):
-        return client.get(BASE_URL, params=filters, headers=self._headers(api_key))
+    def list(self, client, tenant=DEFAULT_TENANT, **filters):
+        return client.get(BASE_URL, params=filters, headers=self._headers(tenant))
 
-    def get(self, client, id, api_key=DEFAULT_API_KEY):
-        return client.get(f"{BASE_URL}{id}", headers=self._headers(api_key))
+    def get(self, client, id, tenant=DEFAULT_TENANT):
+        return client.get(f"{BASE_URL}{id}", headers=self._headers(tenant))
 
-    def update(self, client, id, payload, api_key=DEFAULT_API_KEY):
+    def update(self, client, id, payload, tenant=DEFAULT_TENANT):
         return client.patch(
             f"{BASE_URL}{id}",
             json=payload,
-            headers=self._headers(api_key),
+            headers=self._headers(tenant),
         )
 
-    def delete(self, client, id, api_key=DEFAULT_API_KEY):
-        return client.delete(f"{BASE_URL}{id}", headers=self._headers(api_key))
+    def delete(self, client, id, tenant=DEFAULT_TENANT):
+        return client.delete(f"{BASE_URL}{id}", headers=self._headers(tenant))
 
 
 class TestCreateLLMPromptConfig(BaseLLMPromptConfigTest):
@@ -213,7 +217,7 @@ class TestListLLMPromptConfigs(BaseLLMPromptConfigTest):
     def test_list_is_tenant_scoped(self, integration_client, clear_database):
         self.create_topic(integration_client, name="Tenant1 scope")
 
-        response = self.list(integration_client, api_key=ALT_API_KEY)
+        response = self.list(integration_client, tenant=ALT_TENANT)
 
         assert response.status_code == 200
         assert response.json()["data"] == []
@@ -243,7 +247,7 @@ class TestGetLLMPromptConfig(BaseLLMPromptConfigTest):
         create_resp = self.create_topic(integration_client)
         config_id = create_resp.json()["data"]["id"]
 
-        response = self.get(integration_client, config_id, api_key=ALT_API_KEY)
+        response = self.get(integration_client, config_id, tenant=ALT_TENANT)
 
         assert response.status_code == 404
         assert response.json()["success"] is False
@@ -297,7 +301,7 @@ class TestUpdateLLMPromptConfig(BaseLLMPromptConfigTest):
             integration_client,
             config_id,
             {"name": "other-tenant-update"},
-            api_key=ALT_API_KEY,
+            tenant=ALT_TENANT,
         )
 
         assert response.status_code == 404
@@ -389,6 +393,6 @@ class TestDeleteLLMPromptConfig(BaseLLMPromptConfigTest):
         create_resp = self.create_topic(integration_client)
         config_id = create_resp.json()["data"]["id"]
 
-        response = self.delete(integration_client, config_id, api_key=ALT_API_KEY)
+        response = self.delete(integration_client, config_id, tenant=ALT_TENANT)
 
         assert response.status_code == 404

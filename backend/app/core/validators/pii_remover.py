@@ -190,11 +190,7 @@ def _get_cached_analyzer(
 
 @register_validator(name="pii-remover", data_type="string")
 class PIIRemover(Validator):
-    """
-    Anonymize sensitive data in the text using NLP (English only) and predefined regex patterns.
-    Anonymizes detected entities with placeholders like [REDACTED_PERSON_1] and stores the real values in a Vault.
-    Deanonymizer can be used to replace the placeholders back to their original values.
-    """
+    """Anonymizes detected PII entities in the text with placeholders like [REDACTED_PERSON_1]."""
 
     def __init__(
         self,

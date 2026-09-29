@@ -425,7 +425,7 @@ Code:
 
 What it does:
 
-- Classifies text as NSFW (not safe for work) using a [HuggingFace transformer model](https://huggingface.co/textdetox/xlmr-large-toxicity-classifier).
+- Classifies text as NSFW (not safe for work) using a [HuggingFace transformer model](https://huggingface.co/michellejieli/NSFW_text_classifier).
 - Validates at the sentence level by default; fails if any sentence exceeds the configured threshold.
 
 Why this is used:
@@ -446,7 +446,7 @@ Parameters / customization:
   - `"sentence"`: each sentence is classified independently; validation fails if **any** sentence exceeds the threshold. Preferred when inputs are multi-sentence and you want to catch a single offensive sentence without failing the whole message.
   - `"full"`: the entire text is passed as one unit for classification. Use when inputs are short (single-sentence messages or responses) or when you want to evaluate overall tone rather than per-sentence content.
 - `device: str | None` (default: `"cpu"`) — inference device (`"cpu"` or `"cuda"`)
-- `model_name: str | None` (default: `"textdetox/xlmr-large-toxicity-classifier"`) — HuggingFace model identifier used for classification. Other acceptable value: `"michellejieli/NSFW_text_classifier"`
+- `model_name: str | None` (default: `"michellejieli/NSFW_text_classifier"`) — HuggingFace model identifier used for classification. Must emit an `"NSFW"` label — `guardrails_ai.nsfw_text.NSFWText.is_nsfw()` only matches `label == "NSFW"`, so a differently-labeled classifier (e.g. a toxicity/hate-speech model) will never fail validation regardless of score.
 - `on_fail`
 
 Notes / limitations:
@@ -591,6 +591,39 @@ Tuning strategy:
 - Start with conservative defaults and log validator outcomes.
 - Review false positives/false negatives by validator and stage.
 - Iterate on per-validator parameters (`severity`, `threshold`, `categories`, `banned_words`).
+
+## Convention: `use_local=True` for every `guardrails_ai` validator
+
+Guardrails Hub's hosted inference (`hub.api.guardrailsai.com`) and its CLI/registry sunset on
+2026-08-25. Every validator here now runs from either a `guardrails_ai.*` PyPI package or fully
+custom in-repo code — none of them should ever call out to that sunset service.
+
+The footgun: `guardrails.validators.Validator.__init__` only forces local inference when a config
+explicitly passes `use_local=True`. If it's omitted, the base class falls back to
+`not get_use_remote_inference(settings.rc)` — i.e. it silently follows whatever
+`use_remote_inferencing` is set to in the developer's own `~/.guardrailsrc`, a machine-level file
+outside this repo. Some `guardrails_ai` validators declare `has_guardrails_endpoint=True` and have
+a real remote code path (e.g. `NSFWText`); for those, an unset `use_local` on a machine with
+`use_remote_inferencing=true` means the validator quietly tries to hit the sunset Hub endpoint
+instead of running the local model.
+
+**Rule: before adding or upgrading a `guardrails_ai.*` validator, check whether it declares
+`has_guardrails_endpoint=True` in its `@register_validator(...)` decorator (grep the installed
+package). If it does, its config's `build()` must pass `use_local=True` explicitly** — that's
+the only way to force local inference regardless of what a teammate's `~/.guardrailsrc` says.
+`NSFWText` is the current example (`nsfw_text_safety_validator_config.py`); its own
+`__init__` reads `self.use_local` to decide whether to load the HF pipeline locally or fall
+through to a remote call against the (sunset) Hub inference endpoint.
+
+This is **not** a blanket rule to add `use_local=True` everywhere — most validator constructors
+here don't even accept it. `BanList`'s `__init__` has no `**kwargs` at all and raises
+`TypeError: unexpected keyword argument 'use_local'` if you pass it. `ProfanityFree` and
+`LLMCritic` accept it silently via `**kwargs` but never read it — neither declares
+`has_guardrails_endpoint=True`, so it's a no-op either way. Check the constructor and the
+decorator before adding the kwarg to a new validator's `build()`. The fully custom in-repo
+validators (`pii_remover`, `gender_assumption_bias`, `uli_slur_match`, `topic_relevance`,
+`topic_relevance_llm`, `answer_relevance_custom_llm`) have no hub/remote code path at all and
+don't need it.
 
 ## Related Files
 

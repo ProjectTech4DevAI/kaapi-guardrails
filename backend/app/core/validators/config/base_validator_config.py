@@ -5,7 +5,7 @@ from guardrails.validators import FailResult, Validator
 from pydantic import ConfigDict, PrivateAttr
 from sqlmodel import SQLModel
 
-from app.core.enum import GuardrailOnFail, ValidatorType
+from app.core.enum import GuardrailOnFail, Stage, ValidatorType
 from app.core.on_fail_actions import rephrase_query_on_fail
 
 
@@ -13,6 +13,8 @@ class BaseValidatorConfig(SQLModel):
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     on_fail: GuardrailOnFail = GuardrailOnFail.Fix
+    # Which text this validator is meant to check; recorded in ValidatorLog.
+    stage: Optional[Stage] = None
     _validator_metadata: Optional[Dict[str, Any]] = PrivateAttr(default=None)
 
     def _on_fix(self, value: str, fail_result: FailResult):

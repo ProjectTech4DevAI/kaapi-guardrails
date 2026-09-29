@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -24,6 +23,10 @@ class ValidatorConfigCrud:
     ) -> dict:
         data = payload.model_dump()
         model_fields, config_fields = split_validator_payload(data)
+        # The tenant always comes from the auth context (the explicit
+        # organization_id/project_id args), never from the request body.
+        model_fields.pop("organization_id", None)
+        model_fields.pop("project_id", None)
 
         obj = ValidatorConfig(
             organization_id=organization_id,
@@ -38,12 +41,24 @@ class ValidatorConfigCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
+            logger.warning(
+                "create validator config failed: duplicate name (org=%s project=%s)",
+                organization_id,
+                project_id,
+            )
             raise HTTPException(
                 400,
                 "Validator configuration with this name already exists",
             )
 
         session.refresh(obj)
+        logger.info(
+            "created validator config id=%s org=%s project=%s type=%s",
+            obj.id,
+            organization_id,
+            project_id,
+            obj.type,
+        )
         return self.flatten(obj)
 
     def list(
@@ -51,10 +66,10 @@ class ValidatorConfigCrud:
         session: Session,
         organization_id: int,
         project_id: int,
-        ids: Optional[list[UUID]] = None,
-        stage: Optional[Stage] = None,
-        type: Optional[ValidatorType] = None,
-    ) -> List[dict]:
+        ids: list[UUID] | None = None,
+        stage: Stage | None = None,
+        type: ValidatorType | None = None,
+    ) -> list[dict]:
         query = select(ValidatorConfig).where(
             ValidatorConfig.organization_id == organization_id,
             ValidatorConfig.project_id == project_id,
@@ -108,15 +123,18 @@ class ValidatorConfigCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
+            logger.warning("update validator config %s failed: duplicate name", obj.id)
             raise HTTPException(
                 400,
                 "Validator configuration with this name already exists",
             )
         except Exception:
             session.rollback()
+            logger.exception("update validator config %s failed", obj.id)
             raise
 
         session.refresh(obj)
+        logger.info("updated validator config id=%s", obj.id)
         return self.flatten(obj)
 
     def delete(self, session: Session, obj: ValidatorConfig):
@@ -125,7 +143,9 @@ class ValidatorConfigCrud:
             session.commit()
         except Exception:
             session.rollback()
+            logger.exception("delete validator config %s failed", obj.id)
             raise
+        logger.info("deleted validator config id=%s", obj.id)
 
     def flatten(self, row: ValidatorConfig) -> dict:
         base = row.model_dump(exclude={"config"})

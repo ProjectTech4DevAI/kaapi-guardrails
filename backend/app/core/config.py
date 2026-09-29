@@ -1,10 +1,12 @@
+import json
 import os
-from pathlib import Path
 import re
-from typing import Any, ClassVar, Literal
 import warnings
+from pathlib import Path
+from typing import Annotated, Any, ClassVar, Literal
 
 from pydantic import (
+    BeforeValidator,
     HttpUrl,
     PostgresDsn,
     computed_field,
@@ -14,8 +16,18 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
 
-def parse_cors(v: Any) -> list[str] | str:
-    if isinstance(v, str) and not v.startswith("["):
+def parse_ip_list(v: Any) -> list[str] | str:
+    """Accepts a comma-separated string or a JSON-encoded array string (some
+    env/deploy tooling JSON-encodes list-valued env vars)."""
+    if isinstance(v, str):
+        if v.lstrip().startswith("["):
+            try:
+                parsed = json.loads(v)
+            except json.JSONDecodeError:
+                return v
+            if isinstance(parsed, list):
+                return [str(item).strip() for item in parsed]
+            return v
         return [i.strip() for i in v.split(",") if i.strip()]
     elif isinstance(v, list | str):
         return v
@@ -35,14 +47,17 @@ class Settings(BaseSettings):
     AUTH_TOKEN: str
     PROJECT_NAME: str
     SENTRY_DSN: HttpUrl | None = None
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.1
+    OTEL_ENABLED: bool = False
     POSTGRES_SERVER: str
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
     GUARDRAILS_HUB_API_KEY: str | None = None
-    KAAPI_AUTH_URL: str = ""
-    KAAPI_AUTH_TIMEOUT: int
+    # Source IPs allowed to reach this service; empty disables the check.
+    # `| str` stops pydantic-settings from JSON-parsing the value before parse_ip_list does.
+    ALLOWED_IPS: Annotated[list[str] | str, BeforeValidator(parse_ip_list)] = []
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
     OPENAI_API_KEY: str | None = None
     ANSWER_RELEVANCE_LLM_MODEL: str = "gpt-4o-mini"
@@ -92,6 +107,10 @@ class Settings(BaseSettings):
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
         self._validate_auth_token_hash()
+        if self.ENVIRONMENT == "production" and not self.ALLOWED_IPS:
+            raise ValueError(
+                "ALLOWED_IPS must list the kaapi-backend source IP(s) in production."
+            )
         return self
 
 

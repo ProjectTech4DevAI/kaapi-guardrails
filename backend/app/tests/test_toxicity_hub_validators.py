@@ -28,6 +28,12 @@ _PROFANITY_PATCH = (
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.skip(
+    reason="llamaguard_7b is disabled: Guardrails Hub's hosted inference "
+    "(hub.api.guardrailsai.com) shut down 2026-08-25 and the PyPI replacement "
+    "has no local-inference support, so LlamaGuard7B is no longer importable "
+    "until a self-hosted endpoint (or a replacement validator) is wired up."
+)
 class TestLlamaGuard7BSafetyValidatorConfig:
     def test_build_with_default_policies(self):
         config = LlamaGuard7BSafetyValidatorConfig(type="llamaguard_7b")
@@ -304,7 +310,7 @@ class TestNSFWTextSafetyValidatorConfig:
         assert kwargs["threshold"] == 0.8
         assert kwargs["validation_method"] == "sentence"
         assert kwargs["device"] == "cpu"
-        assert kwargs["model_name"] == "textdetox/xlmr-large-toxicity-classifier"
+        assert kwargs["model_name"] == "michellejieli/NSFW_text_classifier"
 
     def test_build_with_custom_params(self):
         config = NSFWTextSafetyValidatorConfig(

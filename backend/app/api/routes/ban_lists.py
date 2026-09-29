@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query
 
-from app.api.deps import MultitenantAuthDep, SessionDep
+from app.api.deps import AuthDep, SessionDep
 from app.crud.ban_list import ban_list_crud
 from app.schemas.ban_list import BanListCreate, BanListUpdate, BanListResponse
 from app.utils import APIResponse, load_description
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/guardrails/ban_lists", tags=["Ban Lists"])
 def create_ban_list(
     payload: BanListCreate,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ):
     ban_list = ban_list_crud.create(
         session, payload, auth.organization_id, auth.project_id
@@ -34,7 +34,7 @@ def create_ban_list(
 )
 def list_ban_lists(
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
     domain: Optional[str] = None,
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int | None, Query(ge=1, le=100)] = None,
@@ -58,7 +58,7 @@ def list_ban_lists(
 def get_ban_list(
     id: UUID,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ):
     obj = ban_list_crud.get(session, id, auth.organization_id, auth.project_id)
     return APIResponse.success_response(data=obj)
@@ -73,7 +73,7 @@ def update_ban_list(
     id: UUID,
     payload: BanListUpdate,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ):
     ban_list = ban_list_crud.update(
         session,
@@ -93,7 +93,7 @@ def update_ban_list(
 def delete_ban_list(
     id: UUID,
     session: SessionDep,
-    auth: MultitenantAuthDep,
+    auth: AuthDep,
 ):
     obj = ban_list_crud.get(
         session,

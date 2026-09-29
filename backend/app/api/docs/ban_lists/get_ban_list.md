@@ -1,4 +1,4 @@
-Fetches a single ban list by id for the tenant resolved from `X-API-KEY`.
+Fetches a single ban list by id for the tenant resolved from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Behavior notes:
 - Tenant's scope is enforced from the API key context.

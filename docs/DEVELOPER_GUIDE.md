@@ -1972,7 +1972,7 @@ Client
   ▼
 FastAPI Application (port 8001)
   │
-  ├─ Authentication middleware (Bearer token / X-API-KEY)
+  ├─ Authentication dependency (source IP + Bearer token -> tenant)
   │
   ├─ Config Resolution
   │    ├─ Fetch ban list words from DB (if ban_list_id provided)
@@ -2081,7 +2081,7 @@ else:
 
 **Bearer token** (main guardrail endpoints): `Authorization: Bearer <token>`. Validated against SHA-256 hash of the plaintext `AUTH_TOKEN` env var.
 
-**X-API-KEY** (ban list, topic relevance, validator config endpoints): Multi-tenant auth validated against `KAAPI_AUTH_URL`. Scopes access to specific `organization_id` + `project_id`.
+**Source IP + tenant headers** (all endpoints except health check): the caller must appear in `ALLOWED_IPS`, and sends `X-ORGANIZATION-ID` / `X-PROJECT-ID` resolved by the Kaapi backend. These scope every read and write; tenant is never taken from the query string or body.
 
 ### Key Environment Variables
 
@@ -2091,7 +2091,7 @@ else:
 | `OPENAI_API_KEY` | For LLM validators | Used by `topic_relevance`, `llm_critic`, `answer_relevance_custom_llm` |
 | `GUARDRAILS_HUB_API_KEY` | For hub validators | Required for `ban_list`, `llamaguard_7b`, `nsfw_text`, `profanity_free` |
 | `POSTGRES_*` | Yes | Database connection settings |
-| `KAAPI_AUTH_URL` | For config endpoints | Multi-tenant auth service URL |
+| `ALLOWED_IPS` | Yes in production | Comma-separated source IPs allowed to call this service |
 
 ### Tech Stack
 

@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -13,6 +14,8 @@ from app.schemas.llm_prompt_config import (
     validate_answer_relevance_prompt,
 )
 from app.utils import now
+
+logger = logging.getLogger(__name__)
 
 
 class LLMPromptConfigCrud:
@@ -33,12 +36,28 @@ class LLMPromptConfigCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
+            logger.warning(
+                "create llm prompt config failed: duplicate (org=%s project=%s)",
+                organization_id,
+                project_id,
+            )
             raise HTTPException(400, DUPLICATE_LLM_PROMPT_CONFIG_ERROR)
         except Exception:
             session.rollback()
+            logger.exception(
+                "create llm prompt config failed (org=%s project=%s)",
+                organization_id,
+                project_id,
+            )
             raise
 
         session.refresh(obj)
+        logger.info(
+            "created llm prompt config id=%s org=%s project=%s",
+            obj.id,
+            organization_id,
+            project_id,
+        )
         return obj
 
     def get(
@@ -114,12 +133,15 @@ class LLMPromptConfigCrud:
             session.commit()
         except IntegrityError:
             session.rollback()
+            logger.warning("update llm prompt config %s failed: duplicate", obj.id)
             raise HTTPException(400, DUPLICATE_LLM_PROMPT_CONFIG_ERROR)
         except Exception:
             session.rollback()
+            logger.exception("update llm prompt config %s failed", obj.id)
             raise
 
         session.refresh(obj)
+        logger.info("updated llm prompt config id=%s", obj.id)
         return obj
 
     def delete(self, session: Session, obj: LLMPromptConfig) -> None:
@@ -128,7 +150,9 @@ class LLMPromptConfigCrud:
             session.commit()
         except Exception:
             session.rollback()
+            logger.exception("delete llm prompt config %s failed", obj.id)
             raise
+        logger.info("deleted llm prompt config id=%s", obj.id)
 
 
 llm_prompt_config_crud = LLMPromptConfigCrud()

@@ -1,11 +1,13 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pydantic import ValidationError
 from sqlmodel import Session
 
-from app.crud.validator_config import validator_config_crud
 from app.core.enum import GuardrailOnFail, ValidatorType
+from app.crud.validator_config import validator_config_crud
 from app.models.config.validator_config import ValidatorConfig
+from app.schemas.validator_config import ValidatorCreate
 from app.tests.seed_data import (
     VALIDATOR_TEST_CONFIG,
     VALIDATOR_TEST_ID,
@@ -128,3 +130,25 @@ class TestUpdate:
 
         assert result["languages"] == ["en", "hi"]
         assert result["severity"] == "all"
+
+
+class TestCreateRejectsBodyTenant:
+    @pytest.mark.parametrize("field", ["organization_id", "project_id"])
+    def test_body_tenant_field_is_rejected(self, field):
+        """The tenant must come from X-ORGANIZATION-ID / X-PROJECT-ID headers,
+        never the request body — a body tenant field must fail loudly, not
+        crash the create path (TypeError) or be silently honoured."""
+        payload = {
+            "name": "body-tenant-probe",
+            "type": "ban_list",
+            "stage": "input",
+            "on_fail_action": "fix",
+            "is_enabled": True,
+            field: 999,
+        }
+
+        with pytest.raises(ValidationError) as exc_info:
+            ValidatorCreate(**payload)
+
+        message = str(exc_info.value)
+        assert "X-ORGANIZATION-ID" in message or "X-PROJECT-ID" in message

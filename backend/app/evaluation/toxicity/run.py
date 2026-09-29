@@ -1,6 +1,8 @@
 from pathlib import Path
 import pandas as pd
-from guardrails.hub import LlamaGuard7B, NSFWText, ProfanityFree
+from guardrails.hub import LlamaGuard7B  # noqa: not yet migrated, see backend README
+from guardrails_ai.nsfw_text import NSFWText
+from guardrails_ai.profanity_free import ProfanityFree
 from guardrails.validators import FailResult
 
 from app.evaluation.common.helper import (
