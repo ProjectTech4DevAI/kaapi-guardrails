@@ -1,10 +1,11 @@
 # kaapi-guardrails
+
 A repo for our experiments with Guardrails so can be integrated with Kaapi
 
 # Kaapi Guardrails
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-![](https://github.com/ProjectTech4DevAI/ai-platform/workflows/Continuous%20Integration/badge.svg)
+[![License: AGPL v3](<https://img.shields.io/badge/License-AGPL%20v3-blue.svg>)](https://www.gnu.org/licenses/agpl-3.0)
+![](<https://github.com/ProjectTech4DevAI/ai-platform/workflows/Continuous%20Integration/badge.svg>)
 ![GitHub issues](https://img.shields.io/github/issues-raw/ProjectTech4DevAI/kaapi-guardrails)
 [![Commits](https://img.shields.io/github/commit-activity/m/ProjectTech4DevAI/kaapi-guardrails)](https://img.shields.io/github/commit-activity/m/ProjectTech4DevAI/kaapi-guardrails)
 
@@ -34,10 +35,12 @@ You can then update configs in the `.env` files to customize your configurations
 ## Bootstrap & development mode
 
 You have two options to start this dockerized setup:
+
 ### Option A: Run migrations & seed data
 
 Use the prestart profile to automatically run database migrations and seed data.
 This does **not** reset/drop the database.
+
 ```bash
 docker compose --profile prestart up prestart
 ```
@@ -45,9 +48,11 @@ docker compose --profile prestart up prestart
 ### Option B: Start normally
 
 Start the project directly:
+
 ```bash
 docker compose watch
 ```
+
 This will start all services in watch mode for development — ideal for local iterations.
 
 Backend is exposed at `http://localhost:8001` (container port `8000` mapped to host `8001`).
@@ -59,6 +64,7 @@ docker compose up --build -d
 ```
 
 This is also necessary when:
+
 - Dependencies change in `pyproject.toml` or `uv.lock`
 - You modify Dockerfile configurations
 - Changes aren't being reflected in the running containers
@@ -84,3 +90,7 @@ Release notes file is not currently maintained in this repository.
 ## Credits
 
 This project was created using [full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template). A big thank you to the team for creating and maintaining the template!!!
+
+## License
+
+This project is licensed under the GNU AGPL v3.0 or later — see [LICENSE](./LICENSE).
