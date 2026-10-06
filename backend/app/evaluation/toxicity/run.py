@@ -7,6 +7,7 @@ from guardrails.validators import FailResult
 
 from app.evaluation.common.helper import (
     build_evaluation_report,
+    build_validator_config,
     compute_binary_metrics,
     Profiler,
     write_csv,
@@ -32,16 +33,31 @@ DATASETS = {
 }
 
 VALIDATORS = {
-    "llamaguard_7b": lambda: LlamaGuard7B(on_fail="noop"),
-    "nsfw_text": lambda: NSFWText(
-        threshold=0.8,
-        validation_method="sentence",
-        device="cpu",
-        model_name="textdetox/xlmr-large-toxicity-classifier",
-        on_fail="noop",
-        use_local=True,
-    ),
-    "profanity_free": lambda: ProfanityFree(on_fail="noop"),
+    "llamaguard_7b": {
+        "build": lambda: LlamaGuard7B(on_fail="noop"),
+        "config_fields": {},
+    },
+    "nsfw_text": {
+        "build": lambda: NSFWText(
+            threshold=0.8,
+            validation_method="sentence",
+            device="cpu",
+            model_name="textdetox/xlmr-large-toxicity-classifier",
+            on_fail="noop",
+            use_local=True,
+        ),
+        "config_fields": {
+            "threshold": 0.8,
+            "validation_method": "sentence",
+            "device": "cpu",
+            "model_name": "textdetox/xlmr-large-toxicity-classifier",
+            "use_local": True,
+        },
+    },
+    "profanity_free": {
+        "build": lambda: ProfanityFree(on_fail="noop"),
+        "config_fields": {},
+    },
 }
 
 
@@ -67,9 +83,10 @@ def run_dataset(dataset_name: str, dataset_cfg: dict):
 
     all_metrics = {}
 
-    for validator_name, build_fn in VALIDATORS.items():
+    for validator_name, spec in VALIDATORS.items():
         print(f"  Running {validator_name} on {dataset_name}...")
-        validator = build_fn()
+        validator = spec["build"]()
+        config = build_validator_config(validator, **spec["config_fields"])
 
         with Profiler() as p:
             df[f"{validator_name}_result"] = df[text_col].apply(
@@ -89,6 +106,7 @@ def run_dataset(dataset_name: str, dataset_cfg: dict):
             dataset=dataset_name,
             num_samples=len(df),
             profiler=p,
+            config=config,
             metrics=metrics,
         )
 

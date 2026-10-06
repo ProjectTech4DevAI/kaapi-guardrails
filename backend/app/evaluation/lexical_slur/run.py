@@ -5,6 +5,7 @@ from guardrails.validators import FailResult
 from app.core.validators.lexical_slur import LexicalSlur
 from app.evaluation.common.helper import (
     build_evaluation_report,
+    build_validator_config,
     Profiler,
     compute_binary_metrics,
     write_csv,
@@ -17,6 +18,13 @@ OUT_DIR = BASE_DIR / "outputs" / "lexical_slur"
 df = pd.read_csv(BASE_DIR / "datasets" / "lexical_slur_testing_dataset.csv")
 
 validator = LexicalSlur()
+
+config = build_validator_config(
+    validator,
+    severity=validator.severity,
+    languages=validator.languages,
+    num_slurs_loaded=len(validator.slur_list),
+)
 
 with Profiler() as p:
     df["result"] = (
@@ -38,6 +46,7 @@ write_json(
         guardrail="lexical_slur",
         num_samples=len(df),
         profiler=p,
+        config=config,
         metrics=metrics,
     ),
     OUT_DIR / "metrics.json",

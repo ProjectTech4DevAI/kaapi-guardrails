@@ -11,6 +11,7 @@ from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 from app.evaluation.common.helper import (
     Profiler,
     build_evaluation_report,
+    build_validator_config,
     compute_binary_metrics,
     write_csv,
     write_json,
@@ -42,9 +43,9 @@ BACKENDS = [
             prompt_schema_version=1,
             llm_callable=settings.DEFAULT_LLM_CALLABLE,
         ),
-        "report_extra": {
-            "llm_callable": settings.DEFAULT_LLM_CALLABLE,
-            "prompt_schema_version": 1,
+        "config_fields": lambda v: {
+            "llm_callable": v.llm_callable,
+            "prompt_schema_version": v.prompt_schema_version,
         },
     },
     {
@@ -55,9 +56,9 @@ BACKENDS = [
             llm_callable=settings.DEFAULT_LLM_CALLABLE,
             threshold=settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
         ),
-        "report_extra": {
-            "llm_callable": settings.DEFAULT_LLM_CALLABLE,
-            "threshold": settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
+        "config_fields": lambda v: {
+            "llm_callable": v.llm_callable,
+            "threshold": v.threshold,
         },
     },
 ]
@@ -73,6 +74,7 @@ def run_evaluation(dataset: dict, backend: dict) -> None:
 
     df = pd.read_csv(dataset_path)
     validator = backend["build"](topic_config)
+    config = build_validator_config(validator, **backend["config_fields"](validator))
 
     normalized_df = pd.DataFrame(
         {
@@ -115,7 +117,7 @@ def run_evaluation(dataset: dict, backend: dict) -> None:
             num_samples=len(normalized_df),
             profiler=p,
             dataset=str(dataset_path),
-            **backend["report_extra"],
+            config=config,
             metrics=metrics,
         ),
         out_dir / f"{domain}-metrics.json",

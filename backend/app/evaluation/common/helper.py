@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 from typing import Any
 import json
@@ -50,6 +51,33 @@ def build_evaluation_report(
         **extra_fields,
         "performance": build_performance_payload(profiler),
     }
+
+
+def _to_jsonable(value: Any) -> Any:
+    """Recursively normalize enums (and lists/dicts containing them) to JSON-safe values."""
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, (list, tuple)):
+        return [_to_jsonable(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _to_jsonable(v) for k, v in value.items()}
+    return value
+
+
+def build_validator_config(validator: Any, **fields: Any) -> dict[str, Any]:
+    """
+    Build the `config` block for an evaluation's metrics.json.
+
+    `on_fail` is read from `validator.on_fail_descriptor`, which every
+    guardrails Validator subclass sets in its base __init__, so it's always
+    available without each evaluation script re-deriving it. Any
+    validator-specific constructor params (entity_types, threshold,
+    categories, ...) are passed in as keyword args and normalized the same
+    way (e.g. enums -> their .value).
+    """
+    config = {"on_fail": _to_jsonable(validator.on_fail_descriptor)}
+    config.update({key: _to_jsonable(value) for key, value in fields.items()})
+    return config
 
 
 def compute_binary_metrics(y_true, y_pred):
