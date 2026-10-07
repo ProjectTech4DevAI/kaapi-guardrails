@@ -10,8 +10,6 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
-from litellm import completion
-
 from app.core.config import settings
 from app.core.constants import (
     ANSWER_RELEVANCE_EMPTY_FIELDS_ERROR,
@@ -20,6 +18,7 @@ from app.core.constants import (
     ANSWER_RELEVANCE_NOT_RELEVANT_ERROR,
     ANSWER_RELEVANCE_UNEXPECTED_RESPONSE_TEMPLATE,
 )
+from app.core.validators.llm_utils import traced_completion as completion
 
 DEFAULT_PROMPT_TEMPLATE = (
     "Query: {query}\n"
@@ -31,15 +30,7 @@ DEFAULT_PROMPT_TEMPLATE = (
 
 @register_validator(name="answer-relevance-custom-llm", data_type="string")
 class AnswerRelevanceCustomLLM(Validator):
-    """
-    Validates whether an LLM answer is relevant to the user query.
-
-    Expects `value` to be the plain-text answer. The query must be provided
-    via the `query` constructor argument (set by the validator config from
-    payload.input before guard execution).
-    Uses a configurable prompt template with {query} and {answer} placeholders.
-    Returns PassResult for YES, FailResult for NO.
-    """
+    """Validates whether an LLM answer (`value`) is relevant to the `input`/`output` query pair."""
 
     def __init__(
         self,

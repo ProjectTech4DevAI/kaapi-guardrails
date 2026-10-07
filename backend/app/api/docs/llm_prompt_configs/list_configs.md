@@ -1,4 +1,4 @@
-Lists LLM prompt configs for the tenant resolved from `X-API-KEY`.
+Lists LLM prompt configs for the tenant resolved from the `X-ORGANIZATION-ID` / `X-PROJECT-ID` headers.
 
 Behavior notes:
 - Returns configs scoped to the tenant's `organization_id` and `project_id`.

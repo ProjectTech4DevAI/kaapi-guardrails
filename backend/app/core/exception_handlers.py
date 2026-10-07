@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.responses import JSONResponse
@@ -9,6 +11,8 @@ from starlette.status import (
 
 from app.core.config import settings
 from app.utils import APIResponse
+
+logger = logging.getLogger(__name__)
 
 
 def _format_validation_errors(errors: list[dict]) -> str:
@@ -102,6 +106,12 @@ def register_exception_handlers(app: FastAPI):
     async def response_validation_error_handler(
         request: Request, exc: ResponseValidationError
     ):
+        logger.error(
+            "[response_validation_error_handler] response validation failed for %s %s",
+            request.method,
+            request.url.path,
+            exc_info=exc,
+        )
         return JSONResponse(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             content=APIResponse.failure_response(_safe_error_message(exc)).model_dump(),
@@ -109,6 +119,12 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(Exception)
     async def generic_error_handler(request: Request, exc: Exception):
+        logger.error(
+            "[generic_error_handler] unhandled exception for %s %s",
+            request.method,
+            request.url.path,
+            exc_info=exc,
+        )
         return JSONResponse(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR,
             content=APIResponse.failure_response(_safe_error_message(exc)).model_dump(),

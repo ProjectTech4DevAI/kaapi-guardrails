@@ -13,13 +13,12 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
-from litellm import completion
-
 from app.core.config import settings
 from app.core.constants import EMPTY_MESSAGE_ERROR, TOPIC_OUT_OF_SCOPE_ERROR
 from app.core.validators.llm_utils import (
     JSON_OBJECT_RESPONSE_FORMAT,
     supports_response_format,
+    traced_completion as completion,
 )
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
@@ -63,22 +62,10 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
 
 @register_validator(name="topic-relevance-llm", data_type="string")
 class TopicRelevanceLLM(Validator):
-    """
-    Validates whether a user message is within the defined topic scope
-    using a direct LLM call via litellm.
+    """Validates topic scope via a direct LLM call, scored 1-3 against `threshold`.
 
-    The caller supplies the topic configuration as ``system_prompt``. Scoring
-    and response-format instructions are loaded from a versioned prompt template
-    (v1/v2/v3) and appended to the system message. The user message contains
-    only the raw query.
-
-    Scores 1–3 where 3 = clearly in scope, 2 = partially related,
-    1 = outside scope. Passes when score >= threshold (default 2).
-
-    ``prompt_schema_version`` selects the scoring strategy:
-      v1 = allowed topics only
-      v2 = forbidden topics only
-      v3 = combined allowed + forbidden (checks forbidden first)
+    `prompt_schema_version` selects the scoring strategy: v1 = allowed topics
+    only, v2 = forbidden topics only, v3 = combined (forbidden checked first).
     """
 
     def __init__(

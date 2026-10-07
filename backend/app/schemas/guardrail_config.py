@@ -63,8 +63,6 @@ ValidatorConfigItem = Annotated[
 class GuardrailRequest(SQLModel):
     model_config = ConfigDict(extra="forbid")
     request_id: str
-    organization_id: int
-    project_id: int
     input: str
     output: Optional[str] = None
     validators: List[ValidatorConfigItem]
@@ -86,11 +84,11 @@ class GuardrailRequest(SQLModel):
         normalized_payload = dict(data)
         normalized_validators = []
 
-        # Strip persistence/system fields before handing a stored validator
-        # config to Guardrails. Reuse the shared system-field set, but keep
-        # `type` (the discriminator) and `on_fail_action` (remapped below),
-        # and add the DB-only columns.
-        drop_fields = (VALIDATOR_CONFIG_SYSTEM_FIELDS - {"type", "on_fail_action"}) | {
+        # Strip system fields before handing a stored config to Guardrails, but
+        # keep `type`/`stage`/`on_fail_action` (remapped below) and DB-only columns.
+        drop_fields = (
+            VALIDATOR_CONFIG_SYSTEM_FIELDS - {"type", "on_fail_action", "stage"}
+        ) | {
             "id",
             "created_at",
             "updated_at",
@@ -116,7 +114,21 @@ class GuardrailRequest(SQLModel):
         return normalized_payload
 
 
+class ValidatorResult(SQLModel):
+    """Outcome of a single validator in the chain, in execution order."""
+
+    name: str
+    type: Optional[str] = None
+    stage: Optional[str] = None
+    order: int
+    outcome: str
+    error: Optional[str] = None
+    input_text: Optional[str] = None
+    output_text: Optional[str] = None
+
+
 class GuardrailResponse(SQLModel):
     response_id: UUID
     rephrase_needed: bool = False
     safe_text: Optional[str] = None
+    validator_results: Optional[List[ValidatorResult]] = None

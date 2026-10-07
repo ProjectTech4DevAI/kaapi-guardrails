@@ -1,7 +1,20 @@
-from litellm import get_supported_openai_params
+from litellm import completion, get_supported_openai_params
 
 # Passed to litellm/OpenAI to force a strict JSON object response.
 JSON_OBJECT_RESPONSE_FORMAT = {"type": "json_object"}
+
+
+def traced_completion(**kwargs):
+    """litellm.completion, untraced.
+
+    Deliberately not wrapped in a span: any span covering a single LLM call
+    ends up carrying the user query and/or LLM response (directly as
+    attributes, or indirectly via auto-instrumentation), which we never want
+    to expose in traces. Validators import this (aliased as ``completion``)
+    so there's one place that decision lives.
+    """
+    return completion(**kwargs)
+
 
 # Models known to support JSON-object response_format that litellm may not list yet.
 _KNOWN_JSON_CAPABLE_MODELS = frozenset(
