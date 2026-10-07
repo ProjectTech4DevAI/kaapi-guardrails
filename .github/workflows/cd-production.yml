@@ -75,12 +75,13 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.AWS_RESOURCE_PREFIX }}-prod-repo
           IMAGE_TAG: ${{ github.ref_name }}
         run: |
-          DEPLOY_CMD="cd ${BUILD_DIRECTORY} && git fetch --tags origin && git checkout --force ${IMAGE_TAG} && aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${ECR_REGISTRY} && export ECR_REGISTRY=${ECR_REGISTRY} ECR_REPOSITORY=${ECR_REPOSITORY} IMAGE_TAG=${IMAGE_TAG} && docker compose pull backend && docker compose --profile prestart run --rm prestart && docker compose up -d --remove-orphans && docker image prune -f"
+          DEPLOY_CMD="cd ${BUILD_DIRECTORY} && git fetch --tags origin && git checkout --force ${IMAGE_TAG} && aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${ECR_REGISTRY} && export ECR_REGISTRY=${ECR_REGISTRY} ECR_REPOSITORY=${ECR_REPOSITORY} IMAGE_TAG=${IMAGE_TAG} && docker compose pull --quiet backend && docker compose --profile prestart run --rm prestart && docker compose up -d --remove-orphans && docker image prune -f"
 
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy kaapi-guardrails production" \
+            --cloud-watch-output-config CloudWatchOutputEnabled=true \
             --parameters "commands=[\"set -eux\", \"sudo chown -R ec2-user:ec2-user ${BUILD_DIRECTORY}\", \"sudo -iu ec2-user bash -lc \\\"${DEPLOY_CMD}\\\"\"]" \
             --query "Command.CommandId" \
             --output text)
@@ -89,7 +90,7 @@ jobs:
           echo "Sent SSM command: $CMD_ID"
 
       - name: Wait for SSM command to finish
-        timeout-minutes: 15
+        timeout-minutes: 20
         env:
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
           CMD_ID: ${{ steps.ssm.outputs.cmd_id }}
