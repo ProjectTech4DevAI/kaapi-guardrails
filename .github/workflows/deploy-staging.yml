@@ -1,12 +1,8 @@
 name: Deploy Kaapi Guardrails Staging To EC2
 
 on:
-  # workflow_run:
-  #   workflows: ["Kaapi Guardrails CI"]
-  #   branches: [main]
-  #   types: [completed]
   push:
-    branches: [feat/deployment-script-updates]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -17,10 +13,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: Staging
-    # push/workflow_dispatch run unconditionally; workflow_run only on a green CI push to main.
+    # workflow_dispatch runs unconditionally; workflow_run only on a green CI push to main.
     if: >-
-      ${{ github.event_name == 'push' ||
-          github.event_name == 'workflow_dispatch' ||
+      ${{ github.event_name == 'workflow_dispatch' ||
           (github.event.workflow_run.conclusion == 'success' &&
            github.event.workflow_run.event == 'push') }}
 
