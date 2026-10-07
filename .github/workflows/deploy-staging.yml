@@ -1,10 +1,12 @@
 name: Deploy Kaapi Guardrails Staging To EC2
 
 on:
-  workflow_run:
-    workflows: ["Kaapi Guardrails CI"]
-    branches: [main]
-    types: [completed]
+  # workflow_run:
+  #   workflows: ["Kaapi Guardrails CI"]
+  #   branches: [main]
+  #   types: [completed]
+  push:
+    branches: [feat/deployment-script-updates]
   workflow_dispatch:
 
 concurrency:
@@ -37,7 +39,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ secrets.EC2_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -56,7 +58,7 @@ jobs:
       - name: Trigger deploy on EC2 via SSM
         id: ssm
         env:
-          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+          INSTANCE_ID: ${{ secrets.INSTANCE_ID }}
           BUILD_DIRECTORY: ${{ secrets.BUILD_DIRECTORY }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.AWS_RESOURCE_PREFIX }}-staging-repo
@@ -80,7 +82,7 @@ jobs:
       - name: Wait for SSM command to finish
         timeout-minutes: 10
         env:
-          INSTANCE_ID: ${{ secrets.STAGING_EC2_INSTANCE_ID }}
+          INSTANCE_ID: ${{ secrets.INSTANCE_ID }}
           CMD_ID: ${{ steps.ssm.outputs.cmd_id }}
         run: |
           while true; do
