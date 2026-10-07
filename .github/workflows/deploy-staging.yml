@@ -16,7 +16,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: AWS_ENV_SECRETS
+    environment: Staging
     # push/workflow_dispatch run unconditionally; workflow_run only on a green CI push to main.
     if: >-
       ${{ github.event_name == 'push' ||
