@@ -80,12 +80,7 @@ def build_validator_config(validator: Any, **fields: Any) -> dict[str, Any]:
     return config
 
 
-def compute_binary_metrics(y_true, y_pred):
-    tp = sum((yt == 1 and yp == 1) for yt, yp in zip(y_true, y_pred, strict=True))
-    tn = sum((yt == 0 and yp == 0) for yt, yp in zip(y_true, y_pred, strict=True))
-    fp = sum((yt == 0 and yp == 1) for yt, yp in zip(y_true, y_pred, strict=True))
-    fn = sum((yt == 1 and yp == 0) for yt, yp in zip(y_true, y_pred, strict=True))
-
+def _confusion_rates(tp: int, tn: int, fp: int, fn: int) -> dict[str, float]:
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
@@ -94,15 +89,65 @@ def compute_binary_metrics(y_true, y_pred):
     accuracy = (tp + tn) / total if total else 0.0
 
     return {
-        "true_positive": tp,
-        "true_negative": tn,
-        "false_positive": fp,
-        "false_negative": fn,
         "accuracy": round(accuracy, 2),
         "precision": round(precision, 2),
         "recall": round(recall, 2),
         "f1": round(f1, 2),
     }
+
+
+def compute_binary_metrics(y_true, y_pred):
+    tp = sum((yt == 1 and yp == 1) for yt, yp in zip(y_true, y_pred, strict=True))
+    tn = sum((yt == 0 and yp == 0) for yt, yp in zip(y_true, y_pred, strict=True))
+    fp = sum((yt == 0 and yp == 1) for yt, yp in zip(y_true, y_pred, strict=True))
+    fn = sum((yt == 1 and yp == 0) for yt, yp in zip(y_true, y_pred, strict=True))
+
+    return {
+        "true_positive": tp,
+        "true_negative": tn,
+        "false_positive": fp,
+        "false_negative": fn,
+        **_confusion_rates(tp, tn, fp, fn),
+    }
+
+
+def combine_binary_metrics(
+    metrics_list: list[dict[str, Any]], labels: list[str] | None = None
+) -> dict[str, Any]:
+    """
+    Combine multiple compute_binary_metrics() results (e.g. one per dataset or
+    domain) into a single aggregate by summing their confusion-matrix counts
+    and re-deriving accuracy/precision/recall/f1 from the totals.
+
+    Pure arithmetic over already-computed metrics — does not re-run any
+    validator, so combining results costs no extra API/LLM calls.
+
+    `labels` (one per entry in metrics_list) namespaces category_metrics keys
+    (e.g. "education/Misc") so identically-named categories from different
+    sources don't collide; defaults to the entry's index if omitted.
+    """
+    tp = sum(m["true_positive"] for m in metrics_list)
+    tn = sum(m["true_negative"] for m in metrics_list)
+    fp = sum(m["false_positive"] for m in metrics_list)
+    fn = sum(m["false_negative"] for m in metrics_list)
+
+    combined: dict[str, Any] = {
+        "true_positive": tp,
+        "true_negative": tn,
+        "false_positive": fp,
+        "false_negative": fn,
+        **_confusion_rates(tp, tn, fp, fn),
+    }
+
+    category_metrics = {}
+    for i, m in enumerate(metrics_list):
+        label = labels[i] if labels else str(i)
+        for category, category_metric in m.get("category_metrics", {}).items():
+            category_metrics[f"{label}/{category}"] = category_metric
+    if category_metrics:
+        combined["category_metrics"] = category_metrics
+
+    return combined
 
 
 class Profiler:
