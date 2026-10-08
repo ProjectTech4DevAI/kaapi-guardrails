@@ -13,7 +13,6 @@ backend/app/evaluation/
 ├── datasets/                              # Evaluation datasets (downloaded separately)
 │   ├── ban_list_testing_dataset.csv
 │   ├── gender_bias_assumption_dataset.csv
-│   ├── lexical_slur_testing_dataset.csv
 │   ├── multi_validator_whatsapp_dataset.csv
 │   ├── pii_detection_testing_dataset.csv
 │   ├── sharechat_toxic_dataset.csv
@@ -22,20 +21,16 @@ backend/app/evaluation/
 │   │   ├── education_topic_config.txt
 │   │   ├── healthcare-topic-relevance-dataset.csv
 │   │   └── healthcare_topic_config.txt
-│   └── toxicity/                          # Toxicity evaluation datasets
-│       ├── toxicity_test_hasoc.csv
-│       └── toxicity_test_sharechat.csv
+│   └── toxicity/                          # Toxicity evaluation dataset
+│       └── toxicity_test_combined.csv     # Standardized input consumed by run.py (see Toxicity section for its source mapping)
 ├── gender_assumption_bias/
 │   └── run.py                             # Gender assumption bias evaluation script
-├── lexical_slur/
-│   └── run.py                             # Lexical slur evaluation script
 ├── multiple_validators/
 │   ├── config.json                        # Multi-validator run configuration
 │   └── run.py                             # End-to-end multi-validator evaluation script
 ├── outputs/                               # Generated outputs (created at runtime)
 │   ├── ban_list/
 │   ├── gender_assumption_bias/
-│   ├── lexical_slur/
 │   ├── multi_validator_whatsapp/
 │   ├── multiple_validators/
 │   ├── pii_remover/
@@ -49,7 +44,7 @@ backend/app/evaluation/
 ├── topic_relevance/
 │   └── run.py                             # Topic relevance evaluation script
 └── toxicity/
-    └── run.py                             # Toxicity evaluation script (LlamaGuard7B, NSFWText, ProfanityFree)
+    └── run.py                             # Toxicity evaluation script (LlamaGuard7B, NSFWText, ProfanityFree, LexicalSlur)
 ```
 
 ## Prerequisites
@@ -92,7 +87,7 @@ Validators that use LLM-as-judge approach will require credentials for LLM provi
 
 ## Running All Evaluations
 
-To run all individual validator evaluations in sequence (lexical slur, PII, gender assumption bias, ban list, topic relevance, toxicity):
+To run all individual validator evaluations in sequence (PII, gender assumption bias, ban list, topic relevance, toxicity):
 
 ```bash
 bash scripts/run_all_evaluations.sh
@@ -109,34 +104,6 @@ Run any individual evaluation from the `backend/` directory:
 ```bash
 python3 app/evaluation/<validator_folder>/run.py
 ```
-
-### Lexical Slur (`uli_slur_match`)
-
-**Script:** `app/evaluation/lexical_slur/run.py`
-
-**Dataset:** `datasets/lexical_slur_testing_dataset.csv`
-
-Expected columns in input csv:
-
-- `commentText` — text to validate
-- `label` — ground truth (`1` = abusive, `0` = not abusive)
-
-**What it does:** Runs each row through the `LexicalSlur` validator and records a binary prediction (`1` if `FailResult`, `0` otherwise). Computes binary classification metrics against the ground truth labels.
-
-**Output:**
-
-```
-outputs/lexical_slur/predictions.csv
-outputs/lexical_slur/metrics.json
-```
-
-**Run:**
-
-```bash
-python3 app/evaluation/lexical_slur/run.py
-```
-
----
 
 ### PII Remover (`pii_remover`)
 
@@ -271,38 +238,55 @@ python3 app/evaluation/topic_relevance/run.py --backend topic_relevance_llm
 
 ---
 
-### Toxicity (`llamaguard_7b`, `nsfw_text`, `profanity_free`)
+### Toxicity (`llamaguard_7b`, `nsfw_text`, `profanity_free`, `lexical_slur`)
 
 **Script:** `app/evaluation/toxicity/run.py`
 
-**Datasets:**
-- `datasets/toxicity/toxicity_test_hasoc.csv` (The HASOC (Hate Speech and Offensive Content) dataset is a multilingual benchmark (mainly Hindi, English, and code-mixed text) used to train and evaluate models for detecting hate speech, offensive language, and abusive content in social media.)
-- `datasets/toxicity/toxicity_test_sharechat.csv`
+**Dataset:** `datasets/toxicity/toxicity_test_combined.csv` — one standardized file combining three original sources (HASOC, ShareChat, and a lexical-slur set), tagged by origin.
 
-Expected columns — HASOC dataset:
+Expected columns:
 
-- `text` — tweet/comment text to validate
-- `task1` — ground truth label (`HOF` = hate/offensive/profanity → `1`, `NOT` → `0`)
-- `lang` — language code (informational)
-
-Expected columns — ShareChat dataset:
-
-- `commentText` — comment text to validate
-- `label` — binary ground truth (`1` = toxic, `0` = not toxic)
+- `text` — text to validate
+- `label` — binary ground truth (`1` = toxic/abusive, `0` = not)
 - `language` — language label (informational)
+- `dataset` — which original source the row came from (`hasoc`, `sharechat`, or `lexical`) — used for the per-source metrics breakdown and the `--sources` filter, not for validation itself
 
-**What it does:** Runs three validators — `LlamaGuard7B`, `NSFWText`, and `ProfanityFree` — across both datasets independently. For each validator, a binary prediction is recorded (`1` if `FailResult`, `0` otherwise) and compared against the ground truth label to compute classification metrics.
+This file was assembled from three original per-source CSVs, each normalized into the schema above via a one-off local data-prep step (not a script checked into the repo) using this column mapping:
 
-**Output per dataset:**
+- HASOC: `text` → `text`, `task1` (`HOF`/`NOT`) → `label` (`1`/`0`), `lang` → `language`
+- ShareChat: `commentText` → `text`, `label` (already `1`/`0`) → `label`, `language` → `language`
+- Lexical: `commentText` → `text`, `label` (already `1.0`/`0.0`) → `label`, `language` → `language`
+
+Each row is tagged with `dataset` = its source name. To add or refresh a source, re-apply this same mapping and re-concatenate into `toxicity_test_combined.csv`.
+
+> HASOC (Hate Speech and Offensive Content) is a multilingual benchmark (mainly Hindi, English, and code-mixed text) for detecting hate speech, offensive language, and abusive content in social media.
+
+**What it does:** Runs four validators — `LlamaGuard7B`, `NSFWText`, `ProfanityFree`, and `LexicalSlur` — against the combined dataset. For each validator, a binary prediction is recorded (`1` if `FailResult`, `0` otherwise) and compared against the ground truth label to compute classification metrics, further broken down per original `dataset` source (`source_metrics`). A `combined_pred` column (logical OR across whichever validators ran, computed from their already-produced `*_pred` columns without re-running anything) is also recorded, with its own `combined` entry (and `source_metrics` breakdown) in the metrics JSON — useful for seeing each validator's standalone effectiveness alongside what running them together would catch, both overall and per source.
+
+`LexicalSlur` (`uli_slur_match`) is evaluated here rather than in its own script — this eval covers it over a superset of the rows its standalone eval used, so to reproduce that older run exactly, use `--validators lexical_slur --sources lexical`.
+
+Use `--validators` to run only a subset of validators instead of all four:
+
+```bash
+python3 app/evaluation/toxicity/run.py --validators lexical_slur profanity_free
+```
+
+Use `--sources` to run only rows from a subset of original sources instead of all three:
+
+```bash
+python3 app/evaluation/toxicity/run.py --sources hasoc lexical
+```
+
+The two flags can be combined. `--validators` is useful for skipping `llamaguard_7b` or `nsfw_text` when only exercising `lexical_slur`/`profanity_free` locally.
+
+**Output:**
 
 ```
-outputs/toxicity/predictions_hasoc.csv
-outputs/toxicity/metrics_hasoc.json
-outputs/toxicity/predictions_sharechat.csv
-outputs/toxicity/metrics_sharechat.json
+outputs/toxicity/predictions.csv
+outputs/toxicity/metrics.json
 ```
 
-Each predictions CSV contains the source text, ground truth (`y_true`), and one `*_pred` column per validator. Each metrics JSON contains accuracy, precision, recall, F1, and performance stats broken down per validator.
+`predictions.csv` contains the source text, its origin `dataset`, `language`, ground truth (`y_true`), one `*_pred` column per validator that ran, and a `combined_pred` column. `metrics.json` contains accuracy, precision, recall, F1, and performance stats per validator (each with a `source_metrics` breakdown by origin dataset), plus a `combined` entry for the OR-combined prediction (with its own `source_metrics` breakdown).
 
 **Run:**
 
@@ -310,7 +294,7 @@ Each predictions CSV contains the source text, ground truth (`y_true`), and one 
 python3 app/evaluation/toxicity/run.py
 ```
 
-> **Note:** `LlamaGuard7B` uses remote inferencing — requires a valid `GUARDRAILS_HUB_API_KEY` and internet access. `NSFWText` downloads the `textdetox/xlmr-large-toxicity-classifier` model on first run.
+> **Note:** `llamaguard_7b` is not yet migrated off the sunset Guardrails Hub install path (see `backend/app/core/validators/README.md`) — running it will currently fail regardless of credentials. Use `--validators` to exclude it until that migration lands. `NSFWText` downloads the `textdetox/xlmr-large-toxicity-classifier` model on first run.
 
 ---
 
@@ -379,7 +363,7 @@ The output CSV contains `ID`, `text`, `validators_present`, and `response` (the 
 
 ### Binary Classification Metrics (`metrics.json`)
 
-Used by lexical slur, gender assumption bias, ban list, and topic relevance evaluations.
+Used by the gender assumption bias, ban list, topic relevance, and toxicity evaluations.
 
 | Metric             | Description                                               |
 | ------------------ | --------------------------------------------------------- |
@@ -450,13 +434,12 @@ Each evaluation script expects a specific filename — files must be named exact
 
 | Validator              | Expected filename                                                                                                     |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Lexical Slur           | `lexical_slur_testing_dataset.csv`                                                                                  |
 | PII Remover            | `pii_detection_testing_dataset.csv`                                                                                 |
 | Gender Assumption Bias | `gender_bias_assumption_dataset.csv`                                                                                |
 | Ban List               | `ban_list_testing_dataset.csv`                                                                                      |
 | Multiple Validators    | `multi_validator_whatsapp_dataset.csv`                                                                              |
 | Topic Relevance        | `topic_relevance/education-topic-relevance-dataset.csv`, `topic_relevance/healthcare-topic-relevance-dataset.csv` |
-| Toxicity               | `toxicity/toxicity_test_hasoc.csv`, `toxicity/toxicity_test_sharechat.csv`                                        |
+| Toxicity               | `toxicity/toxicity_test_combined.csv` (see Toxicity section for the raw sources and column mapping it's derived from) |
 
 Topic relevance also requires plain-text topic config files alongside each dataset:
 

@@ -6,7 +6,6 @@ BACKEND_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 EVAL_DIR="$BACKEND_DIR/app/evaluation"
 
 RUNNERS=(
-  "$EVAL_DIR/lexical_slur/run.py"
   "$EVAL_DIR/pii/run.py"
   "$EVAL_DIR/gender_assumption_bias/run.py"
   "$EVAL_DIR/ban_list/run.py"
