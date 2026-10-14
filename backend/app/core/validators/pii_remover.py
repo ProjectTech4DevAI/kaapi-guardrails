@@ -34,12 +34,10 @@ from app.core.enum import PIIEntityType
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-ALL_ENTITY_TYPES = [e.value for e in PIIEntityType]
-
 # NER-based types (PERSON, LOCATION, NRP) are opt-in: the NER model is English-only
 # and noisy on Indic names. Everything else is pattern/regex based.
 NER_ENTITY_TYPES = {"PERSON", "LOCATION", "NRP"}
-DEFAULT_ENTITY_TYPES = [t for t in ALL_ENTITY_TYPES if t not in NER_ENTITY_TYPES]
+DEFAULT_ENTITY_TYPES = [e.value for e in PIIEntityType if e.value not in NER_ENTITY_TYPES]
 
 SPACY_CONFIGURATION = {
     "nlp_engine_name": "spacy",

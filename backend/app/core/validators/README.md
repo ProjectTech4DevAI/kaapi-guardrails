@@ -176,8 +176,7 @@ Recommendation:
 Parameters / customization:
 
 - `entity_types: list[PIIEntityType]` (default: all pattern-based types; NER-based `PERSON`, `LOCATION`, `NRP` are opt-in). Unknown values are rejected.
-- `threshold`, `nlp_engine_type`, `model_name` are `PIIRemover` constructor params only (used by evals); not accepted via the API.
-- `threshold: float` (default: `0.5` for spaCy, `0.7` for transformers). Only effective in transformers mode — spaCy scores every NER hit `0.85`, and pattern recognizers are not thresholded.
+- `threshold: float` (default: `0.5` for spaCy, `0.7` for transformers). Constructor-only (evals), like `nlp_engine_type` and `model_name` below; not accepted via the API. Only effective in transformers mode — spaCy scores every NER hit `0.85`, and pattern recognizers are not thresholded.
 - `nlp_engine_type: str` (default: `"spacy"`) — NLP backend to use. `"spacy"` uses a spaCy model for both tokenization and NER; `"transformers"` uses a spaCy model for tokenization only and a HuggingFace token-classification model for NER.
 - `model_name: str | None` (default: `None`) — Override the NLP model. For `"spacy"`, a spaCy model name (resolved to `en_core_web_lg`); for `"transformers"`, a HuggingFace model ID (resolved to `dslim/bert-base-NER-uncased`).
 - `on_fail`

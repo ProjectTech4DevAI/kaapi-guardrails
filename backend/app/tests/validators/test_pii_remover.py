@@ -8,6 +8,7 @@ from app.core.validators.pii_remover import (
     DEFAULT_ENTITY_TYPES,
     DEFAULT_TRANSFORMERS_MODEL,
     DEFAULT_TRANSFORMERS_THRESHOLD,
+    NER_ENTITY_TYPES,
     PIIRemover,
 )
 from app.core.validators.config.pii_remover_safety_validator_config import (
@@ -80,7 +81,7 @@ def test_analyzer_called_with_correct_arguments(validator):
 
 def test_default_entity_types_applied(validator):
     assert validator.entity_types == DEFAULT_ENTITY_TYPES
-    assert not {"PERSON", "LOCATION", "NRP"} & set(DEFAULT_ENTITY_TYPES)
+    assert not NER_ENTITY_TYPES & set(DEFAULT_ENTITY_TYPES)
 
 
 def test_config_default_entity_types_passed_as_strings(mock_presidio):
