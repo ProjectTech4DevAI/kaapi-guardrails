@@ -445,8 +445,13 @@ def test_invalid_prompt_schema_version_returns_fail():
 
 
 # ---------------------------------------------------------------------------
-# Config — fallback_message
+# Config — defaults and fallback_message
 # ---------------------------------------------------------------------------
+
+
+def test_config_defaults_to_forbidden_topics_schema():
+    config = TopicRelevanceLLMSafetyValidatorConfig(type="topic_relevance_llm")
+    assert config.prompt_schema_version == 2
 
 
 def test_config_rephrase_without_fallback_uses_generic_text():
