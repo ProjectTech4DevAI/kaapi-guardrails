@@ -3,6 +3,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from guardrails.validators import FailResult, PassResult
 
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
+    TopicRelevanceLLMSafetyValidatorConfig,
+)
 from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 
 TOPIC_CONFIG = "Only answer questions about cooking and recipes."
@@ -438,3 +442,116 @@ def test_invalid_prompt_schema_version_returns_fail():
 
     assert isinstance(result, FailResult)
     assert "not found" in result.error_message
+
+
+# ---------------------------------------------------------------------------
+# Config — defaults and fallback_message
+# ---------------------------------------------------------------------------
+
+
+def test_config_defaults_to_forbidden_topics_schema():
+    config = TopicRelevanceLLMSafetyValidatorConfig(type="topic_relevance_llm")
+    assert config.prompt_schema_version == 2
+
+
+def test_config_rephrase_returns_fallback_message():
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        type="topic_relevance_llm",
+        on_fail="rephrase",
+        fallback_message="I can only help with farming.",
+    )
+    on_fail = config.resolve_on_fail()
+    assert on_fail("Who won?", FailResult(error_message="out of scope")) == (
+        "I can only help with farming."
+    )
+
+
+def test_config_rephrase_without_fallback_uses_generic_text():
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        type="topic_relevance_llm", on_fail="rephrase"
+    )
+    on_fail = config.resolve_on_fail()
+    assert on_fail("Who won?", FailResult(error_message="out of scope")).startswith(
+        REPHRASE_ON_FAIL_PREFIX
+    )
+
+
+def test_config_rejects_empty_fallback_message():
+    with pytest.raises(ValueError):
+        TopicRelevanceLLMSafetyValidatorConfig(
+            type="topic_relevance_llm", fallback_message=""
+        )
+
+
+# ---------------------------------------------------------------------------
+# Fallback translation
+# ---------------------------------------------------------------------------
+
+FALLBACK = "I can only help with cooking questions."
+
+
+def _fallback_validator(**kwargs):
+    with patch(
+        "app.core.validators.llm_utils.get_supported_openai_params",
+        return_value=["response_format"],
+    ):
+        return TopicRelevanceLLM(
+            system_prompt=TOPIC_CONFIG, fallback_message=FALLBACK, **kwargs
+        )
+
+
+def test_fallback_instructions_added_to_system_prompt():
+    validator = _fallback_validator()
+    assert "localized_fallback" in validator._system_prompt
+    assert FALLBACK in validator._system_prompt
+
+
+def test_no_fallback_instructions_without_fallback_message(validator):
+    assert "localized_fallback" not in validator._system_prompt
+
+
+def test_fallback_raises_max_tokens():
+    validator = _fallback_validator()
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate("How do I make pasta?")
+
+    assert mock_llm.call_args.kwargs["max_tokens"] == 600
+
+
+def test_localized_fallback_exposed_in_fail_metadata():
+    validator = _fallback_validator()
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(
+            '{"scope_violation": 1, "localized_fallback": "मैं केवल खाना पकाने में मदद कर सकता हूँ।"}'
+        )
+        result = validator._validate("क्रिकेट मैच किसने जीता?")
+
+    assert isinstance(result, FailResult)
+    assert (
+        result.metadata["localized_fallback"]
+        == "मैं केवल खाना पकाने में मदद कर सकता हूँ।"
+    )
+
+
+def test_config_rephrase_prefers_localized_fallback():
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        type="topic_relevance_llm", on_fail="rephrase", fallback_message=FALLBACK
+    )
+    on_fail = config.resolve_on_fail()
+    fail = FailResult(
+        error_message="out of scope", metadata={"localized_fallback": " नमस्ते "}
+    )
+    assert on_fail("x", fail) == "नमस्ते"
+
+
+@pytest.mark.parametrize("localized", [None, "", "   ", 123, {"text": "hi"}])
+def test_config_rephrase_ignores_invalid_localized_fallback(localized):
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        type="topic_relevance_llm", on_fail="rephrase", fallback_message=FALLBACK
+    )
+    on_fail = config.resolve_on_fail()
+    fail = FailResult(
+        error_message="out of scope", metadata={"localized_fallback": localized}
+    )
+    assert on_fail("x", fail) == FALLBACK

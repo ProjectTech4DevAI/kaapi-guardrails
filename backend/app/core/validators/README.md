@@ -368,6 +368,28 @@ Notes / limitations:
 - Configuration is resolved in `backend/app/api/routes/guardrails.py` from tenant LLM Prompt Config APIs (`/guardrails/llm_prompt_configs`).
 - Prompt templates must include the `{{TOPIC_CONFIGURATION}}` placeholder.
 
+### 6b) Topic Relevance LLM Validator (`topic_relevance_llm`)
+
+Code:
+
+- Config: `backend/app/core/validators/config/topic_relevance_llm_safety_validator_config.py`
+- Runtime validator: `backend/app/core/validators/topic_relevance_llm.py`
+- Prompt templates: `backend/app/core/validators/prompts/topic_relevance_llm/`
+
+What it does:
+
+- One direct LLM call scores the message 1–3 against `configuration` (1 = clearly out of scope, 3 = clearly fine). Fails when score < `threshold`.
+- Blank `configuration`, empty message, LLM error, or unparseable response all fail (fail-closed).
+
+Parameters / customization:
+
+- `configuration: str` — topic text. Inline, or resolved from `topic_relevance_config_id`.
+- `prompt_schema_version: int` (default `2`) — `1` = `configuration` lists allowed topics, `2` = forbidden topics, `3` = both (forbidden checked first). Resolved from the stored config when `topic_relevance_config_id` is used.
+- `threshold: int` (1–3, default `2`) — `3` also fails ambiguous messages.
+- `llm_callable: str` (default `gpt-4o-mini`)
+- `fallback_message: str` (optional) — with `on_fail=rephrase`, returned as `safe_text` instead of the generic rephrase text; `rephrase_needed` stays `true`. The same LLM call translates it into the user's language (`prompts/topic_relevance_llm/fallback_translation.md`); if no translation comes back, the original text is used. Adds ~30–60 output tokens per call when set.
+- `on_fail` — use `rephrase`. `fix` returns an empty string, since this validator has no fix value.
+
 ### 7) LlamaGuard 7B Validator (`llamaguard_7b`)
 
 Code:
