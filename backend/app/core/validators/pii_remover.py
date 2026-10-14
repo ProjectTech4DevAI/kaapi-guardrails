@@ -30,24 +30,15 @@ from presidio_analyzer.predefined_recognizers.country_specific.india.in_voter_re
     InVoterRecognizer,
 )
 
+from app.core.enum import PIIEntityType
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-ALL_ENTITY_TYPES = [
-    "CREDIT_CARD",
-    "EMAIL_ADDRESS",
-    "IBAN_CODE",
-    "IP_ADDRESS",
-    "LOCATION",
-    "MEDICAL_LICENSE",
-    "NRP",
-    "PERSON",
-    "PHONE_NUMBER",
-    "URL",
-    "IN_AADHAAR",
-    "IN_PAN",
-    "IN_PASSPORT",
-    "IN_VEHICLE_REGISTRATION",
-    "IN_VOTER",
+# NER-based types (PERSON, LOCATION, NRP) are opt-in: the NER model is English-only
+# and noisy on Indic names. Everything else is pattern/regex based.
+NER_ENTITY_TYPES = {"PERSON", "LOCATION", "NRP"}
+DEFAULT_ENTITY_TYPES = [
+    e.value for e in PIIEntityType if e.value not in NER_ENTITY_TYPES
 ]
 
 SPACY_CONFIGURATION = {
@@ -190,7 +181,7 @@ def _get_cached_analyzer(
 
 @register_validator(name="pii-remover", data_type="string")
 class PIIRemover(Validator):
-    """Anonymizes detected PII entities in the text with placeholders like [REDACTED_PERSON_1]."""
+    """Anonymizes detected PII entities in the text with placeholders like <PERSON>."""
 
     def __init__(
         self,
@@ -202,7 +193,7 @@ class PIIRemover(Validator):
     ):
         super().__init__(on_fail=on_fail)
 
-        self.entity_types = entity_types or ALL_ENTITY_TYPES
+        self.entity_types = entity_types or DEFAULT_ENTITY_TYPES
         self.nlp_engine_type = nlp_engine_type
         if nlp_engine_type == "transformers":
             self.model_name = model_name or DEFAULT_TRANSFORMERS_MODEL
@@ -211,6 +202,8 @@ class PIIRemover(Validator):
             )
         else:
             self.model_name = model_name or "en_core_web_lg"
+            # ponytail: no-op in spaCy mode — SpacyRecognizer scores every NER hit 0.85
+            # and regex recognizers aren't thresholded. Only matters for transformers.
             self.threshold = threshold if threshold is not None else 0.5
         self.on_fail = on_fail
         self.analyzer = _get_cached_analyzer(

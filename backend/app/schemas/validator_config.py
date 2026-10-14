@@ -2,6 +2,9 @@ from pydantic import ConfigDict, model_validator
 from sqlmodel import Field, SQLModel
 
 from app.core.enum import GuardrailOnFail, Stage, ValidatorType
+from app.core.validators.config.pii_remover_safety_validator_config import (
+    PIIRemoverSafetyValidatorConfig,
+)
 
 
 class ValidatorBase(SQLModel):
@@ -29,6 +32,16 @@ class ValidatorCreate(ValidatorBase):
                     "X-PROJECT-ID headers, not the request body: " + ", ".join(reserved)
                 )
         return data
+
+    @model_validator(mode="after")
+    def validate_pii_config(self):
+        # Reject bad entity_types at save time, not first guardrail run.
+        # ponytail: PII only; route other types through their configs when needed.
+        if self.type == ValidatorType.PIIRemover:
+            PIIRemoverSafetyValidatorConfig.model_validate(
+                {"type": "pii_remover", **(self.model_extra or {})}
+            )
+        return self
 
 
 class ValidatorUpdate(SQLModel):

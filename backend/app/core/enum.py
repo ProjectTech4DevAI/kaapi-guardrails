@@ -20,6 +20,24 @@ class BiasCategories(Enum):
     All = "all"
 
 
+class PIIEntityType(str, Enum):
+    CreditCard = "CREDIT_CARD"
+    EmailAddress = "EMAIL_ADDRESS"
+    IbanCode = "IBAN_CODE"
+    IpAddress = "IP_ADDRESS"
+    Location = "LOCATION"
+    MedicalLicense = "MEDICAL_LICENSE"
+    Nrp = "NRP"
+    Person = "PERSON"
+    PhoneNumber = "PHONE_NUMBER"
+    Url = "URL"
+    InAadhaar = "IN_AADHAAR"
+    InPan = "IN_PAN"
+    InPassport = "IN_PASSPORT"
+    InVehicleRegistration = "IN_VEHICLE_REGISTRATION"
+    InVoter = "IN_VOTER"
+
+
 class GuardrailOnFail(Enum):
     Exception = "exception"
     Fix = "fix"

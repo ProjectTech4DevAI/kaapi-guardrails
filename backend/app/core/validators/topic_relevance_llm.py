@@ -40,8 +40,9 @@ _OPTIONAL_FIELDS = (
     "interpreted_meaning",
     "reasoning",
     "classification_confidence_score",
+    "localized_fallback",
 )
-# Budget for the richer 4-field JSON response.
+# Budget for the 4-field JSON response; doubled when localized_fallback is requested.
 _MAX_TOKENS = 300
 
 
@@ -60,6 +61,11 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
     return prompt_file.read_text(encoding="utf-8")
 
 
+@lru_cache(maxsize=1)
+def _load_fallback_template() -> str:
+    return (_PROMPTS_DIR / "fallback_translation.md").read_text(encoding="utf-8")
+
+
 @register_validator(name="topic-relevance-llm", data_type="string")
 class TopicRelevanceLLM(Validator):
     """Validates topic scope via a direct LLM call, scored 1-3 against `threshold`.
@@ -74,6 +80,7 @@ class TopicRelevanceLLM(Validator):
         llm_callable: str = settings.DEFAULT_LLM_CALLABLE,
         threshold: int = settings.TOPIC_RELEVANCE_LLM_THRESHOLD,
         prompt_schema_version: int = 1,
+        fallback_message: Optional[str] = None,
         on_fail: Optional[Callable] = OnFailAction.NOOP,
     ):
         super().__init__(on_fail=on_fail)
@@ -83,6 +90,7 @@ class TopicRelevanceLLM(Validator):
         self._invalid_config_reason: Optional[str] = None
         self._system_prompt: Optional[str] = None
         self._supports_response_format: bool = False
+        self._max_tokens = _MAX_TOKENS * 2 if fallback_message else _MAX_TOKENS
 
         if not system_prompt or not system_prompt.strip():
             self._invalid_config_reason = "system_prompt is blank or missing"
@@ -95,6 +103,11 @@ class TopicRelevanceLLM(Validator):
             return
 
         self._system_prompt = f"{system_prompt.strip()}\n\n{scoring_rules}"
+        if fallback_message:
+            fallback_rules = _load_fallback_template().replace(
+                "{{FALLBACK_MESSAGE}}", fallback_message
+            )
+            self._system_prompt = f"{self._system_prompt}\n\n{fallback_rules}"
         self._supports_response_format = supports_response_format(llm_callable)
 
     def _validate(
@@ -113,7 +126,7 @@ class TopicRelevanceLLM(Validator):
                     {"role": "system", "content": self._system_prompt},
                     {"role": "user", "content": value},
                 ],
-                "max_tokens": _MAX_TOKENS,
+                "max_tokens": self._max_tokens,
             }
             if self._supports_response_format:
                 kwargs["response_format"] = JSON_OBJECT_RESPONSE_FORMAT

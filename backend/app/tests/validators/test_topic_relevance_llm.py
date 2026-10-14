@@ -3,6 +3,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from guardrails.validators import FailResult, PassResult
 
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
+    TopicRelevanceLLMSafetyValidatorConfig,
+)
 from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 
 TOPIC_CONFIG = "Only answer questions about cooking and recipes."
@@ -25,11 +29,6 @@ def validator():
         return TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
 
-# ---------------------------------------------------------------------------
-# PassResult — score >= threshold (2)
-# ---------------------------------------------------------------------------
-
-
 def test_passes_when_score_is_3(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
@@ -48,11 +47,6 @@ def test_passes_when_score_equals_threshold(validator):
     assert result.metadata["scope_score"] == 2
 
 
-# ---------------------------------------------------------------------------
-# FailResult — score < threshold (1)
-# ---------------------------------------------------------------------------
-
-
 def test_fails_when_score_is_1(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 1}')
@@ -61,11 +55,6 @@ def test_fails_when_score_is_1(validator):
     assert isinstance(result, FailResult)
     assert "outside the allowed topic scope" in result.error_message
     assert result.metadata["scope_score"] == 1
-
-
-# ---------------------------------------------------------------------------
-# Custom threshold
-# ---------------------------------------------------------------------------
 
 
 def test_custom_threshold_of_3_fails_on_score_2():
@@ -95,11 +84,6 @@ def test_custom_threshold_of_1_passes_on_score_1():
         result = lenient_validator._validate("Cricket scores")
 
     assert isinstance(result, PassResult)
-
-
-# ---------------------------------------------------------------------------
-# Guard inputs
-# ---------------------------------------------------------------------------
 
 
 def test_fails_when_value_is_empty(validator):
@@ -140,11 +124,6 @@ def test_fails_when_system_prompt_is_whitespace_only():
 
     assert isinstance(result, FailResult)
     assert "blank" in result.error_message
-
-
-# ---------------------------------------------------------------------------
-# LLM error handling
-# ---------------------------------------------------------------------------
 
 
 def test_fails_gracefully_when_llm_raises(validator):
@@ -226,10 +205,6 @@ def test_passes_when_response_has_surrounding_prose(validator):
     assert result.metadata["scope_score"] == 2
 
 
-# ---------------------------------------------------------------------------
-# Richer 4-field response format
-# ---------------------------------------------------------------------------
-
 _RICH_PASS = (
     '{"interpreted_meaning": "How to cook pasta",'
     ' "reasoning": "Directly about cooking.",'
@@ -302,11 +277,6 @@ def test_fails_when_score_is_boolean(validator):
     assert "unparseable" in result.error_message
 
 
-# ---------------------------------------------------------------------------
-# User message construction
-# ---------------------------------------------------------------------------
-
-
 def test_user_message_is_exactly_the_query(validator):
     query = "How do I make pasta?"
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
@@ -316,11 +286,6 @@ def test_user_message_is_exactly_the_query(validator):
     _, kwargs = mock_llm.call_args
     user_message = kwargs["messages"][1]["content"]
     assert user_message == query
-
-
-# ---------------------------------------------------------------------------
-# response_format forwarding
-# ---------------------------------------------------------------------------
 
 
 def test_response_format_passed_when_supported():
@@ -372,11 +337,6 @@ def test_response_format_omitted_when_litellm_check_fails():
 
     _, kwargs = mock_llm.call_args
     assert "response_format" not in kwargs
-
-
-# ---------------------------------------------------------------------------
-# Prompt template content
-# ---------------------------------------------------------------------------
 
 
 def test_system_prompt_contains_topic_config():
@@ -438,3 +398,84 @@ def test_invalid_prompt_schema_version_returns_fail():
 
     assert isinstance(result, FailResult)
     assert "not found" in result.error_message
+
+
+def test_config_defaults_to_forbidden_topics_schema():
+    config = TopicRelevanceLLMSafetyValidatorConfig(type="topic_relevance_llm")
+    assert config.prompt_schema_version == 2
+
+
+def test_config_rephrase_without_fallback_uses_generic_text():
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        type="topic_relevance_llm", on_fail="rephrase"
+    )
+    on_fail = config.resolve_on_fail()
+    assert on_fail("Who won?", FailResult(error_message="out of scope")).startswith(
+        REPHRASE_ON_FAIL_PREFIX
+    )
+
+
+FALLBACK = "I can only help with cooking questions."
+
+
+def _fallback_validator(**kwargs):
+    with patch(
+        "app.core.validators.llm_utils.get_supported_openai_params",
+        return_value=["response_format"],
+    ):
+        return TopicRelevanceLLM(
+            system_prompt=TOPIC_CONFIG, fallback_message=FALLBACK, **kwargs
+        )
+
+
+def test_fallback_instructions_added_to_system_prompt():
+    validator = _fallback_validator()
+    assert "localized_fallback" in validator._system_prompt
+    assert FALLBACK in validator._system_prompt
+
+
+def test_fallback_raises_max_tokens():
+    validator = _fallback_validator()
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate("How do I make pasta?")
+
+    assert mock_llm.call_args.kwargs["max_tokens"] == 600
+
+
+def test_localized_fallback_exposed_in_fail_metadata():
+    validator = _fallback_validator()
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(
+            '{"scope_violation": 1, "localized_fallback": "मैं केवल खाना पकाने में मदद कर सकता हूँ।"}'
+        )
+        result = validator._validate("क्रिकेट मैच किसने जीता?")
+
+    assert isinstance(result, FailResult)
+    assert (
+        result.metadata["localized_fallback"]
+        == "मैं केवल खाना पकाने में मदद कर सकता हूँ।"
+    )
+
+
+def test_config_rephrase_prefers_localized_fallback():
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        type="topic_relevance_llm", on_fail="rephrase", fallback_message=FALLBACK
+    )
+    on_fail = config.resolve_on_fail()
+    fail = FailResult(
+        error_message="out of scope", metadata={"localized_fallback": " नमस्ते "}
+    )
+    assert on_fail("x", fail) == "नमस्ते"
+
+
+@pytest.mark.parametrize("localized", [None, "", "   ", 123, {"text": "hi"}])
+def test_config_rephrase_ignores_invalid_localized_fallback(localized):
+    config = TopicRelevanceLLMSafetyValidatorConfig(
+        type="topic_relevance_llm", on_fail="rephrase", fallback_message=FALLBACK
+    )
+    on_fail = config.resolve_on_fail()
+    fail = FailResult(
+        error_message="out of scope", metadata={"localized_fallback": localized}
+    )
+    assert on_fail("x", fail) == FALLBACK
