@@ -16,7 +16,7 @@ from app.core.constants import (
     LLM_CRITIC_REPHRASE_MESSAGE,
     REPHRASE_ON_FAIL_PREFIX,
 )
-from app.core.enum import LLMValidatorName, Stage, ValidatorType
+from app.core.enum import GuardrailOnFail, LLMValidatorName, Stage, ValidatorType
 from app.core.exception_handlers import _normalize_error_detail, _safe_error_message
 from app.core.guardrail_controller import build_guard, get_validator_config_models
 from app.core.validators.config.answer_relevance_custom_llm_safety_validator_config import (
@@ -138,11 +138,11 @@ def list_validators(_: AuthDep):
                 }
             )
 
-        except (KeyError, TypeError) as e:
+        except (KeyError, TypeError) as error:
             return APIResponse.failure_response(
                 error=(
                     "Failed to retrieve schema for validator "
-                    f"{model.__name__}: {_safe_error_message(e)}"
+                    f"{model.__name__}: {_safe_error_message(error)}"
                 ),
             )
 
@@ -208,9 +208,7 @@ def _resolve_validator_configs(
                         f"'{config.validator_name}', not 'topic_relevance'",
                     )
                 validator.configuration = config.llm_prompt
-                # Only the LLMCritic-backed variant carries a prompt schema version.
-                if isinstance(validator, TopicRelevanceSafetyValidatorConfig):
-                    validator.prompt_schema_version = config.prompt_schema_version
+                validator.prompt_schema_version = config.prompt_schema_version
 
         elif isinstance(validator, AnswerRelevanceCustomLLMSafetyValidatorConfig):
             validator.input = payload.input
@@ -295,14 +293,24 @@ def _validate_with_guard(
                     request_log_id,
                 )
 
+        validator_results = (
+            _summarize_validator_results(guard, validators) if guard is not None else []
+        )
+
         rephrase_needed = validated_output is not None and (
             validated_output == LLM_CRITIC_REPHRASE_MESSAGE
             or validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
+            or any(
+                validator_result.outcome == ValidatorOutcome.FAIL.value
+                and (
+                    validator_config := _validator_config_at(
+                        validators, validator_result.order - 1
+                    )
+                )
+                and validator_config.on_fail == GuardrailOnFail.Rephrase
+                for validator_result in validator_results
+            )
         )
-
-        validator_results = []
-        if guard is not None:
-            validator_results = _summarize_validator_results(guard, validators)
 
         response_model = GuardrailResponse(
             response_id=response_id,
@@ -313,7 +321,11 @@ def _validate_with_guard(
 
         if status == RequestStatus.SUCCESS:
             meta = next(
-                (v._validator_metadata for v in validators if v._validator_metadata),
+                (
+                    validator._validator_metadata
+                    for validator in validators
+                    if validator._validator_metadata
+                ),
                 None,
             )
             return APIResponse.success_response(data=response_model, metadata=meta)
@@ -328,7 +340,7 @@ def _validate_with_guard(
         exec_logger.info(
             "request=%s starting guardrails execution (validators=%s) input=%r",
             request_log_id,
-            [v.type for v in validators],
+            [validator.type for validator in validators],
             _strip_for_log(data),
         )
         # The only manual span in business code; per-validator detail lives
@@ -337,7 +349,7 @@ def _validate_with_guard(
             "guardrails.validate",
             attributes={
                 "kaapi.request_log_id": str(request_log_id),
-                "kaapi.validator_types": [v.type for v in validators],
+                "kaapi.validator_types": [validator.type for validator in validators],
             },
         ) as span:
             result = guard.validate(data)
