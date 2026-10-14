@@ -358,11 +358,9 @@ def _validate_with_guard(
             "request=%s guardrails execution finished (passed=%s) output=%r",
             request_log_id,
             result.validated_output is not None,
-            (
-                _strip_for_log(result.validated_output)
-                if result.validated_output is not None
-                else None
-            ),
+            _strip_for_log(result.validated_output)
+            if result.validated_output is not None
+            else None,
         )
 
         # Case 1: validation passed OR failed-with-fix (on_fail=FIX)
@@ -566,11 +564,9 @@ def add_validator_logs(
             end_time.isoformat() if end_time else None,
             duration_ms,
             _strip_for_log(log.value_before_validation),
-            (
-                _strip_for_log(log.value_after_validation)
-                if log.value_after_validation is not None
-                else None
-            ),
+            _strip_for_log(log.value_after_validation)
+            if log.value_after_validation is not None
+            else None,
         )
 
         if suppress_pass_logs and isinstance(result, PassResult):
