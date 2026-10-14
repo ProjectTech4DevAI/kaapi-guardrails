@@ -42,7 +42,7 @@ _OPTIONAL_FIELDS = (
     "classification_confidence_score",
     "localized_fallback",
 )
-# Budget for the richer 4-field JSON response.
+# Budget for the 4-field JSON response; doubled when localized_fallback is requested.
 _MAX_TOKENS = 300
 
 
