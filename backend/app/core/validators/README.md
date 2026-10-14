@@ -175,8 +175,9 @@ Recommendation:
 
 Parameters / customization:
 
-- `entity_types: list[str] | None` (default: all supported types)
-- `threshold: float` (default: `0.5` for spaCy, `0.7` for transformers)
+- `entity_types: list[PIIEntityType]` (default: all pattern-based types; NER-based `PERSON`, `LOCATION`, `NRP` are opt-in). Unknown values are rejected.
+- `threshold`, `nlp_engine_type`, `model_name` are `PIIRemover` constructor params only (used by evals); not accepted via the API.
+- `threshold: float` (default: `0.5` for spaCy, `0.7` for transformers). Only effective in transformers mode — spaCy scores every NER hit `0.85`, and pattern recognizers are not thresholded.
 - `nlp_engine_type: str` (default: `"spacy"`) — NLP backend to use. `"spacy"` uses a spaCy model for both tokenization and NER; `"transformers"` uses a spaCy model for tokenization only and a HuggingFace token-classification model for NER.
 - `model_name: str | None` (default: `None`) — Override the NLP model. For `"spacy"`, a spaCy model name (resolved to `en_core_web_lg`); for `"transformers"`, a HuggingFace model ID (resolved to `dslim/bert-base-NER-uncased`).
 - `on_fail`
@@ -190,7 +191,7 @@ Threshold guidance:
 - Tune using real conversation samples by reviewing both missed PII and unnecessary masking.
 - If the product is privacy-critical, prefer a slightly lower threshold and tighter `entity_types`; if readability is primary, prefer a slightly higher threshold.
 
-Supported default entity types:
+Supported entity types (default excludes `LOCATION`, `NRP`, `PERSON`):
 
 - `CREDIT_CARD`, `EMAIL_ADDRESS`, `IBAN_CODE`, `IP_ADDRESS`, `LOCATION`, `MEDICAL_LICENSE`, `NRP`, `PERSON`, `PHONE_NUMBER`, `URL`, `IN_AADHAAR`, `IN_PAN`, `IN_PASSPORT`, `IN_VEHICLE_REGISTRATION`, `IN_VOTER`
 
@@ -539,7 +540,7 @@ Notes / limitations:
 
 ## Example Config Payloads
 
-Example: create validator config (stored shape) — spaCy mode (default)
+Example: create validator config (stored shape)
 
 ```json
 {
@@ -547,23 +548,7 @@ Example: create validator config (stored shape) — spaCy mode (default)
   "stage": "input",
   "on_fail_action": "fix",
   "is_enabled": true,
-  "entity_types": ["PERSON", "PHONE_NUMBER", "IN_AADHAAR"],
-  "threshold": 0.6
-}
-```
-
-Example: create validator config — transformers mode with a custom HuggingFace model
-
-```json
-{
-  "type": "pii_remover",
-  "stage": "input",
-  "on_fail_action": "fix",
-  "is_enabled": true,
-  "entity_types": ["PERSON", "PHONE_NUMBER", "LOCATION"],
-  "nlp_engine_type": "transformers",
-  "model_name": "dslim/bert-base-NER-uncased",
-  "threshold": 0.7
+  "entity_types": ["PERSON", "PHONE_NUMBER", "IN_AADHAAR"]
 }
 ```
 
@@ -573,9 +558,7 @@ Example: runtime guardrail validator object (execution shape)
 {
   "type": "pii_remover",
   "on_fail": "fix",
-  "entity_types": ["PERSON", "PHONE_NUMBER", "IN_AADHAAR"],
-  "nlp_engine_type": "spacy",
-  "threshold": 0.6
+  "entity_types": ["PERSON", "PHONE_NUMBER", "IN_AADHAAR"]
 }
 ```
 

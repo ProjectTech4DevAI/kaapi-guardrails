@@ -1,10 +1,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.validators import pii_remover
 from app.core.validators.pii_remover import (
-    ALL_ENTITY_TYPES,
+    DEFAULT_ENTITY_TYPES,
     DEFAULT_TRANSFORMERS_MODEL,
     DEFAULT_TRANSFORMERS_THRESHOLD,
     PIIRemover,
@@ -78,7 +79,23 @@ def test_analyzer_called_with_correct_arguments(validator):
 
 
 def test_default_entity_types_applied(validator):
-    assert validator.entity_types == ALL_ENTITY_TYPES
+    assert validator.entity_types == DEFAULT_ENTITY_TYPES
+    assert not {"PERSON", "LOCATION", "NRP"} & set(DEFAULT_ENTITY_TYPES)
+
+
+def test_config_default_entity_types_passed_as_strings(mock_presidio):
+    v = PIIRemoverSafetyValidatorConfig(type="pii_remover").build()
+    assert v.entity_types == DEFAULT_ENTITY_TYPES
+
+
+def test_config_rejects_unknown_entity_type():
+    with pytest.raises(ValidationError):
+        PIIRemoverSafetyValidatorConfig(type="pii_remover", entity_types=["AADHAR"])
+
+
+def test_config_rejects_backend_params():
+    with pytest.raises(ValidationError):
+        PIIRemoverSafetyValidatorConfig(type="pii_remover", threshold=0.5)
 
 
 def test_custom_entity_types_override(mock_presidio):
@@ -103,17 +120,6 @@ def test_transformers_engine_accepts_custom_model(mock_presidio):
     v = PIIRemover(
         nlp_engine_type="transformers", model_name="dslim/bert-base-NER-uncased"
     )
-    assert v.model_name == "dslim/bert-base-NER-uncased"
-
-
-def test_config_builds_validator_with_nlp_engine_params(mock_presidio):
-    config = PIIRemoverSafetyValidatorConfig(
-        type="pii_remover",
-        nlp_engine_type="transformers",
-        model_name="dslim/bert-base-NER-uncased",
-    )
-    v = config.build()
-    assert v.nlp_engine_type == "transformers"
     assert v.model_name == "dslim/bert-base-NER-uncased"
 
 
