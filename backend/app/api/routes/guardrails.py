@@ -138,11 +138,11 @@ def list_validators(_: AuthDep):
                 }
             )
 
-        except (KeyError, TypeError) as e:
+        except (KeyError, TypeError) as error:
             return APIResponse.failure_response(
                 error=(
                     "Failed to retrieve schema for validator "
-                    f"{model.__name__}: {_safe_error_message(e)}"
+                    f"{model.__name__}: {_safe_error_message(error)}"
                 ),
             )
 
@@ -301,10 +301,14 @@ def _validate_with_guard(
             validated_output == LLM_CRITIC_REPHRASE_MESSAGE
             or validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
             or any(
-                r.outcome == ValidatorOutcome.FAIL.value
-                and (c := _validator_config_at(validators, r.order - 1))
-                and c.on_fail == GuardrailOnFail.Rephrase
-                for r in validator_results
+                validator_result.outcome == ValidatorOutcome.FAIL.value
+                and (
+                    validator_config := _validator_config_at(
+                        validators, validator_result.order - 1
+                    )
+                )
+                and validator_config.on_fail == GuardrailOnFail.Rephrase
+                for validator_result in validator_results
             )
         )
 
@@ -317,7 +321,11 @@ def _validate_with_guard(
 
         if status == RequestStatus.SUCCESS:
             meta = next(
-                (v._validator_metadata for v in validators if v._validator_metadata),
+                (
+                    validator._validator_metadata
+                    for validator in validators
+                    if validator._validator_metadata
+                ),
                 None,
             )
             return APIResponse.success_response(data=response_model, metadata=meta)
@@ -332,7 +340,7 @@ def _validate_with_guard(
         exec_logger.info(
             "request=%s starting guardrails execution (validators=%s) input=%r",
             request_log_id,
-            [v.type for v in validators],
+            [validator.type for validator in validators],
             _strip_for_log(data),
         )
         # The only manual span in business code; per-validator detail lives
@@ -341,7 +349,7 @@ def _validate_with_guard(
             "guardrails.validate",
             attributes={
                 "kaapi.request_log_id": str(request_log_id),
-                "kaapi.validator_types": [v.type for v in validators],
+                "kaapi.validator_types": [validator.type for validator in validators],
             },
         ) as span:
             result = guard.validate(data)
@@ -350,9 +358,11 @@ def _validate_with_guard(
             "request=%s guardrails execution finished (passed=%s) output=%r",
             request_log_id,
             result.validated_output is not None,
-            _strip_for_log(result.validated_output)
-            if result.validated_output is not None
-            else None,
+            (
+                _strip_for_log(result.validated_output)
+                if result.validated_output is not None
+                else None
+            ),
         )
 
         # Case 1: validation passed OR failed-with-fix (on_fail=FIX)
@@ -556,9 +566,11 @@ def add_validator_logs(
             end_time.isoformat() if end_time else None,
             duration_ms,
             _strip_for_log(log.value_before_validation),
-            _strip_for_log(log.value_after_validation)
-            if log.value_after_validation is not None
-            else None,
+            (
+                _strip_for_log(log.value_after_validation)
+                if log.value_after_validation is not None
+                else None
+            ),
         )
 
         if suppress_pass_logs and isinstance(result, PassResult):

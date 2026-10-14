@@ -29,11 +29,6 @@ def validator():
         return TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
 
-# ---------------------------------------------------------------------------
-# PassResult — score >= threshold (2)
-# ---------------------------------------------------------------------------
-
-
 def test_passes_when_score_is_3(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
@@ -52,11 +47,6 @@ def test_passes_when_score_equals_threshold(validator):
     assert result.metadata["scope_score"] == 2
 
 
-# ---------------------------------------------------------------------------
-# FailResult — score < threshold (1)
-# ---------------------------------------------------------------------------
-
-
 def test_fails_when_score_is_1(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 1}')
@@ -65,11 +55,6 @@ def test_fails_when_score_is_1(validator):
     assert isinstance(result, FailResult)
     assert "outside the allowed topic scope" in result.error_message
     assert result.metadata["scope_score"] == 1
-
-
-# ---------------------------------------------------------------------------
-# Custom threshold
-# ---------------------------------------------------------------------------
 
 
 def test_custom_threshold_of_3_fails_on_score_2():
@@ -99,11 +84,6 @@ def test_custom_threshold_of_1_passes_on_score_1():
         result = lenient_validator._validate("Cricket scores")
 
     assert isinstance(result, PassResult)
-
-
-# ---------------------------------------------------------------------------
-# Guard inputs
-# ---------------------------------------------------------------------------
 
 
 def test_fails_when_value_is_empty(validator):
@@ -144,11 +124,6 @@ def test_fails_when_system_prompt_is_whitespace_only():
 
     assert isinstance(result, FailResult)
     assert "blank" in result.error_message
-
-
-# ---------------------------------------------------------------------------
-# LLM error handling
-# ---------------------------------------------------------------------------
 
 
 def test_fails_gracefully_when_llm_raises(validator):
@@ -230,10 +205,6 @@ def test_passes_when_response_has_surrounding_prose(validator):
     assert result.metadata["scope_score"] == 2
 
 
-# ---------------------------------------------------------------------------
-# Richer 4-field response format
-# ---------------------------------------------------------------------------
-
 _RICH_PASS = (
     '{"interpreted_meaning": "How to cook pasta",'
     ' "reasoning": "Directly about cooking.",'
@@ -306,11 +277,6 @@ def test_fails_when_score_is_boolean(validator):
     assert "unparseable" in result.error_message
 
 
-# ---------------------------------------------------------------------------
-# User message construction
-# ---------------------------------------------------------------------------
-
-
 def test_user_message_is_exactly_the_query(validator):
     query = "How do I make pasta?"
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
@@ -320,11 +286,6 @@ def test_user_message_is_exactly_the_query(validator):
     _, kwargs = mock_llm.call_args
     user_message = kwargs["messages"][1]["content"]
     assert user_message == query
-
-
-# ---------------------------------------------------------------------------
-# response_format forwarding
-# ---------------------------------------------------------------------------
 
 
 def test_response_format_passed_when_supported():
@@ -376,11 +337,6 @@ def test_response_format_omitted_when_litellm_check_fails():
 
     _, kwargs = mock_llm.call_args
     assert "response_format" not in kwargs
-
-
-# ---------------------------------------------------------------------------
-# Prompt template content
-# ---------------------------------------------------------------------------
 
 
 def test_system_prompt_contains_topic_config():
@@ -444,11 +400,6 @@ def test_invalid_prompt_schema_version_returns_fail():
     assert "not found" in result.error_message
 
 
-# ---------------------------------------------------------------------------
-# Config — defaults and fallback_message
-# ---------------------------------------------------------------------------
-
-
 def test_config_defaults_to_forbidden_topics_schema():
     config = TopicRelevanceLLMSafetyValidatorConfig(type="topic_relevance_llm")
     assert config.prompt_schema_version == 2
@@ -463,10 +414,6 @@ def test_config_rephrase_without_fallback_uses_generic_text():
         REPHRASE_ON_FAIL_PREFIX
     )
 
-
-# ---------------------------------------------------------------------------
-# Fallback translation
-# ---------------------------------------------------------------------------
 
 FALLBACK = "I can only help with cooking questions."
 
