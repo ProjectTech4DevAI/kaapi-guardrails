@@ -293,22 +293,17 @@ def _validate_with_guard(
                     request_log_id,
                 )
 
-        validator_results = []
-        if guard is not None:
-            validator_results = _summarize_validator_results(guard, validators)
+        validator_results = (
+            _summarize_validator_results(guard, validators) if guard is not None else []
+        )
 
         rephrase_needed = validated_output is not None and (
             validated_output == LLM_CRITIC_REPHRASE_MESSAGE
             or validated_output.startswith(REPHRASE_ON_FAIL_PREFIX)
             or any(
-                validated_output == getattr(v, "fallback_message", None)
-                for v in validators
-            )
-            or any(
                 r.outcome == ValidatorOutcome.FAIL.value
-                and _fallback_reply_enabled(
-                    _validator_config_at(validators, r.order - 1)
-                )
+                and (c := _validator_config_at(validators, r.order - 1))
+                and c.on_fail == GuardrailOnFail.Rephrase
                 for r in validator_results
             )
         )
@@ -438,13 +433,6 @@ def _validator_config_at(
     if index >= len(validator_configs):
         return None
     return validator_configs[index]
-
-
-def _fallback_reply_enabled(config: ValidatorConfigItem | None) -> bool:
-    return (
-        getattr(config, "fallback_message", None) is not None
-        and config.on_fail == GuardrailOnFail.Rephrase
-    )
 
 
 def _summarize_validator_results(

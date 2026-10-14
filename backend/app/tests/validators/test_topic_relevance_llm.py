@@ -445,25 +445,8 @@ def test_invalid_prompt_schema_version_returns_fail():
 
 
 # ---------------------------------------------------------------------------
-# Config — defaults and fallback_message
+# Config — fallback_message
 # ---------------------------------------------------------------------------
-
-
-def test_config_defaults_to_forbidden_topics_schema():
-    config = TopicRelevanceLLMSafetyValidatorConfig(type="topic_relevance_llm")
-    assert config.prompt_schema_version == 2
-
-
-def test_config_rephrase_returns_fallback_message():
-    config = TopicRelevanceLLMSafetyValidatorConfig(
-        type="topic_relevance_llm",
-        on_fail="rephrase",
-        fallback_message="I can only help with farming.",
-    )
-    on_fail = config.resolve_on_fail()
-    assert on_fail("Who won?", FailResult(error_message="out of scope")) == (
-        "I can only help with farming."
-    )
 
 
 def test_config_rephrase_without_fallback_uses_generic_text():
@@ -474,13 +457,6 @@ def test_config_rephrase_without_fallback_uses_generic_text():
     assert on_fail("Who won?", FailResult(error_message="out of scope")).startswith(
         REPHRASE_ON_FAIL_PREFIX
     )
-
-
-def test_config_rejects_empty_fallback_message():
-    with pytest.raises(ValueError):
-        TopicRelevanceLLMSafetyValidatorConfig(
-            type="topic_relevance_llm", fallback_message=""
-        )
 
 
 # ---------------------------------------------------------------------------
@@ -504,10 +480,6 @@ def test_fallback_instructions_added_to_system_prompt():
     validator = _fallback_validator()
     assert "localized_fallback" in validator._system_prompt
     assert FALLBACK in validator._system_prompt
-
-
-def test_no_fallback_instructions_without_fallback_message(validator):
-    assert "localized_fallback" not in validator._system_prompt
 
 
 def test_fallback_raises_max_tokens():

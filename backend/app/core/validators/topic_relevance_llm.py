@@ -40,11 +40,10 @@ _OPTIONAL_FIELDS = (
     "interpreted_meaning",
     "reasoning",
     "classification_confidence_score",
+    "localized_fallback",
 )
 # Budget for the richer 4-field JSON response.
 _MAX_TOKENS = 300
-_FALLBACK_MAX_TOKENS = 300
-_FALLBACK_FIELD = "localized_fallback"
 
 
 @lru_cache(maxsize=8)
@@ -91,7 +90,8 @@ class TopicRelevanceLLM(Validator):
         self._invalid_config_reason: Optional[str] = None
         self._system_prompt: Optional[str] = None
         self._supports_response_format: bool = False
-        self._max_tokens = _MAX_TOKENS
+        # Fallback translation roughly doubles the response.
+        self._max_tokens = _MAX_TOKENS * 2 if fallback_message else _MAX_TOKENS
 
         if not system_prompt or not system_prompt.strip():
             self._invalid_config_reason = "system_prompt is blank or missing"
@@ -109,7 +109,6 @@ class TopicRelevanceLLM(Validator):
                 "{{FALLBACK_MESSAGE}}", fallback_message
             )
             self._system_prompt = f"{self._system_prompt}\n\n{fallback_rules}"
-            self._max_tokens += _FALLBACK_MAX_TOKENS
         self._supports_response_format = supports_response_format(llm_callable)
 
     def _validate(
@@ -151,7 +150,7 @@ class TopicRelevanceLLM(Validator):
             )
 
         meta: dict = {"scope_score": score}
-        for field in (*_OPTIONAL_FIELDS, _FALLBACK_FIELD):
+        for field in _OPTIONAL_FIELDS:
             if field in data:
                 meta[field] = data[field]
 

@@ -23,9 +23,9 @@ class TopicRelevanceLLMSafetyValidatorConfig(BaseValidatorConfig):
 
             def _reply(value, fail_result):
                 localized = (fail_result.metadata or {}).get("localized_fallback")
-                if isinstance(localized, str) and localized.strip():
-                    return localized.strip()
-                return self.fallback_message
+                return (
+                    localized.strip() if isinstance(localized, str) else ""
+                ) or self.fallback_message
 
             return _reply
         return super().resolve_on_fail()

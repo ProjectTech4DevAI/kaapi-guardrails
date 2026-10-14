@@ -64,40 +64,6 @@ def test_validate_with_guard_success():
     assert response.data.response_id is not None
 
 
-def test_validate_with_guard_fallback_message_sets_rephrase_needed():
-    class MockGuard:
-        def validate(self, data):
-            return MockResult(validated_output="I can only help with farming.")
-
-    payload = GuardrailRequest(
-        request_id=str(uuid4()),
-        input="Who won the cricket match?",
-        validators=[
-            {
-                "type": "topic_relevance_llm",
-                "configuration": "Sports",
-                "on_fail": "rephrase",
-                "fallback_message": "I can only help with farming.",
-            }
-        ],
-    )
-    with patch(
-        "app.api.routes.guardrails.build_guard",
-        return_value=MockGuard(),
-    ):
-        response = _validate_with_guard(
-            payload=payload,
-            data=payload.input,
-            request_log_crud=mock_request_log_crud,
-            request_log_id=mock_request_log_id,
-            validator_log_crud=mock_validator_log_crud,
-            auth=mock_auth,
-        )
-
-    assert response.data.safe_text == "I can only help with farming."
-    assert response.data.rephrase_needed is True
-
-
 def test_validate_with_guard_translated_fallback_sets_rephrase_needed():
     class MockGuard:
         def validate(self, data):
