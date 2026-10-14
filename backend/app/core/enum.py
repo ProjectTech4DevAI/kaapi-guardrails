@@ -43,3 +43,4 @@ class ValidatorType(Enum):
     ProfanityFree = "profanity_free"
     NSFWText = "nsfw_text"
     AnswerRelevanceCustomLLM = "answer_relevance_custom_llm"
+    ContentSafety = "content_safety"
