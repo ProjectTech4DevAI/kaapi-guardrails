@@ -90,7 +90,6 @@ class TopicRelevanceLLM(Validator):
         self._invalid_config_reason: Optional[str] = None
         self._system_prompt: Optional[str] = None
         self._supports_response_format: bool = False
-        # Fallback translation roughly doubles the response.
         self._max_tokens = _MAX_TOKENS * 2 if fallback_message else _MAX_TOKENS
 
         if not system_prompt or not system_prompt.strip():
