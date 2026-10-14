@@ -11,6 +11,7 @@ from app.core.validators.pii_remover import (
     NER_ENTITY_TYPES,
     PIIRemover,
 )
+from app.schemas.validator_config import ValidatorCreate
 from app.core.validators.config.pii_remover_safety_validator_config import (
     PIIRemoverSafetyValidatorConfig,
 )
@@ -97,6 +98,13 @@ def test_config_rejects_unknown_entity_type():
 def test_config_rejects_backend_params():
     with pytest.raises(ValidationError):
         PIIRemoverSafetyValidatorConfig(type="pii_remover", threshold=0.5)
+
+
+def test_create_payload_rejects_unknown_entity_type():
+    base = {"name": "pii-check", "type": "pii_remover", "stage": "input"}
+    ValidatorCreate(**base, entity_types=["PERSON", "IN_AADHAAR"])
+    with pytest.raises(ValidationError):
+        ValidatorCreate(**base, entity_types=["AADHAR"])
 
 
 def test_custom_entity_types_override(mock_presidio):
