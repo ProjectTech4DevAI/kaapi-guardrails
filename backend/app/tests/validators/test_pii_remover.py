@@ -90,6 +90,17 @@ def test_config_default_entity_types_passed_as_strings(mock_presidio):
     assert v.entity_types == DEFAULT_ENTITY_TYPES
 
 
+@pytest.mark.parametrize("on_fail", ["fix", "exception", "rephrase"])
+def test_config_explicit_on_fail_resolves(mock_presidio, on_fail):
+    # Regression: use_enum_values on this config coerced on_fail to a str and
+    # resolve_on_fail() raised "Invalid on_fail value" for every stored config.
+    cfg = PIIRemoverSafetyValidatorConfig(type="pii_remover", on_fail=on_fail)
+    assert cfg.resolve_on_fail() is not None
+    v = cfg.build()
+    assert v.entity_types == DEFAULT_ENTITY_TYPES
+    assert all(type(e) is str for e in v.entity_types)
+
+
 def test_config_rejects_unknown_entity_type():
     with pytest.raises(ValidationError):
         PIIRemoverSafetyValidatorConfig(type="pii_remover", entity_types=["AADHAR"])
