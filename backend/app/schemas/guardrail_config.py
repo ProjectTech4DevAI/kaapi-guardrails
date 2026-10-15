@@ -14,6 +14,9 @@ from app.core.validators.config.answer_relevance_custom_llm_safety_validator_con
 from app.core.validators.config.ban_list_safety_validator_config import (
     BanListSafetyValidatorConfig,
 )
+from app.core.validators.config.content_safety_safety_validator_config import (
+    ContentSafetySafetyValidatorConfig,
+)
 from app.core.validators.config.gender_assumption_bias_safety_validator_config import (
     GenderAssumptionBiasSafetyValidatorConfig,
 )
@@ -46,6 +49,7 @@ ValidatorConfigItem = Annotated[
     Union[
         AnswerRelevanceCustomLLMSafetyValidatorConfig,
         BanListSafetyValidatorConfig,
+        ContentSafetySafetyValidatorConfig,
         GenderAssumptionBiasSafetyValidatorConfig,
         LexicalSlurSafetyValidatorConfig,
         LLMCriticSafetyValidatorConfig,
