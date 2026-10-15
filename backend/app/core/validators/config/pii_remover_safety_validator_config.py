@@ -7,8 +7,7 @@ from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 
 class PIIRemoverSafetyValidatorConfig(BaseValidatorConfig):
-    # No use_enum_values here: it would also coerce the inherited on_fail to a
-    # plain string, which resolve_on_fail() compares against GuardrailOnFail.
+    # use_enum_values would also stringify the inherited on_fail/stage enums.
     type: Literal["pii_remover"]
     entity_types: List[PIIEntityType] = DEFAULT_ENTITY_TYPES
 
