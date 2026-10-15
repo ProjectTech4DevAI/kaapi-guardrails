@@ -51,6 +51,11 @@
             "source": "pypi://guardrails-ai-nsfw-text"
         },
         {
+            "type": "answer_relevance_custom_llm",
+            "version": "0.1.0",
+            "source": "local"
+        },
+        {
             "type": "content_safety",
             "version": "0.1.0",
             "source": "local"
