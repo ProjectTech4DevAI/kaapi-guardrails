@@ -13,6 +13,8 @@ class PIIRemoverSafetyValidatorConfig(BaseValidatorConfig):
 
     def build(self):
         return PIIRemover(
-            entity_types=[PIIEntityType(e).value for e in self.entity_types],
+            entity_types=[
+                PIIEntityType(entity_type).value for entity_type in self.entity_types
+            ],
             on_fail=self.resolve_on_fail(),
         )
