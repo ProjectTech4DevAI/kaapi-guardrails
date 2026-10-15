@@ -90,6 +90,15 @@ def test_config_default_entity_types_passed_as_strings(mock_presidio):
     assert v.entity_types == DEFAULT_ENTITY_TYPES
 
 
+@pytest.mark.parametrize("on_fail", ["fix", "exception", "rephrase"])
+def test_config_explicit_on_fail_resolves(mock_presidio, on_fail):
+    config = PIIRemoverSafetyValidatorConfig(type="pii_remover", on_fail=on_fail)
+    assert config.resolve_on_fail() is not None
+    validator = config.build()
+    assert validator.entity_types == DEFAULT_ENTITY_TYPES
+    assert all(type(entity) is str for entity in validator.entity_types)
+
+
 def test_config_rejects_unknown_entity_type():
     with pytest.raises(ValidationError):
         PIIRemoverSafetyValidatorConfig(type="pii_remover", entity_types=["AADHAR"])
