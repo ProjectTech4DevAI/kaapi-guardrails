@@ -4,6 +4,7 @@ import pytest
 from guardrails.validators import FailResult, PassResult
 
 from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.enum import GuardrailOnFail
 from app.core.validators.config.topic_relevance_llm_safety_validator_config import (
     TopicRelevanceLLMSafetyValidatorConfig,
 )
@@ -403,6 +404,7 @@ def test_invalid_prompt_schema_version_returns_fail():
 def test_config_defaults_to_forbidden_topics_schema():
     config = TopicRelevanceLLMSafetyValidatorConfig(type="topic_relevance_llm")
     assert config.prompt_schema_version == 2
+    assert config.on_fail == GuardrailOnFail.Rephrase
 
 
 def test_config_rephrase_without_fallback_uses_generic_text():

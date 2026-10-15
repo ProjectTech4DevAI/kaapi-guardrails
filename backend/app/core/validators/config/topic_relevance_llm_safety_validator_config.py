@@ -11,6 +11,7 @@ from app.core.validators.topic_relevance_llm import TopicRelevanceLLM
 
 class TopicRelevanceLLMSafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["topic_relevance_llm"]
+    on_fail: GuardrailOnFail = GuardrailOnFail.Rephrase
     configuration: Optional[str] = None
     llm_callable: str = settings.DEFAULT_LLM_CALLABLE
     threshold: int = Field(default=settings.TOPIC_RELEVANCE_LLM_THRESHOLD, ge=1, le=3)
