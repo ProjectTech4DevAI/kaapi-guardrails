@@ -49,6 +49,11 @@
             "type": "nsfw_text",
             "version": "0.1.0",
             "source": "pypi://guardrails-ai-nsfw-text"
+        },
+        {
+            "type": "content_safety",
+            "version": "0.1.0",
+            "source": "local"
         }
     ]
 }

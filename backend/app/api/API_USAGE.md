@@ -522,6 +522,7 @@ From `validators.json`:
 - `profanity_free`
 - `nsfw_text`
 - `answer_relevance_custom_llm`
+- `content_safety`
 
 Source of truth:
 - `backend/app/core/validators/validators.json`

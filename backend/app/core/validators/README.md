@@ -16,6 +16,7 @@ Current validator manifest:
 - `profanity_free` (source: `hub://guardrails/profanity_free`)
 - `nsfw_text` (source: `hub://guardrails/nsfw_text`)
 - `answer_relevance_custom_llm` (source: `local`)
+- `content_safety` (source: `local`) - wraps `uli_slur_match` and the `profanity_free` model
 
 ## Configuration Model
 
@@ -559,6 +560,60 @@ Notes / limitations:
 - `on_fail=fix` has no programmatic fix for irrelevant answers — `safe_text` will be `""` and `metadata.reason` will identify this validator.
 - If `custom_prompt_id` is deleted after being referenced, the guardrail will return a 404 at resolution time.
 
+### 11) Content Safety Validator (`content_safety`)
+
+Code:
+
+- Config: `backend/app/core/validators/config/content_safety_safety_validator_config.py`
+- Runtime validator: `backend/app/core/validators/content_safety.py`
+
+What it does:
+
+- Runs the lexical slur check (`uli_slur_match`) and a profanity check as a single validator, so one config replaces stacking both.
+- Step 1: redacts slurs from the curated list with `[REDACTED_SLUR]`.
+- Step 2: scores the redacted text with `alt-profanity-check` (the model behind `profanity_free`) and fails it if the score is at or above `profanity_threshold`.
+- Returns one pass/fail with both errors joined, e.g. `Mentioned toxic words: randi; Text contains profanity`.
+
+Why this is used:
+
+- One validator config for content safety instead of separate `uli_slur_match` and `profanity_free` configs.
+- Slur-first ordering keeps the message when a listed slur is the only problem: `"That guy is a faggot, ignore him"` becomes `"that guy is a [REDACTED_SLUR], ignore him"`, whereas `profanity_free` alone would return `""`.
+- A configurable profanity threshold avoids `profanity_free`'s Hinglish false positives (see limitations).
+
+Recommendation:
+
+- `input` and `output`
+  - Why `input`: catches slurs and profanity in user messages.
+  - Why `output`: prevents model-generated slurs or profanity from reaching users.
+
+Parameters / customization:
+
+- `slur_severity: "low" | "medium" | "high" | "all"` (default: `all`) — minimum slur severity to redact; same meaning as `severity` on `uli_slur_match`
+- `profanity_threshold: float` (0–1, default: `0.9`) — profanity probability at or above which the text fails
+- `on_fail`
+
+Example stored config:
+
+```json
+{
+  "name": "content safety input",
+  "type": "content_safety",
+  "stage": "input",
+  "on_fail_action": "fix",
+  "slur_severity": "all",
+  "profanity_threshold": 0.9
+}
+```
+
+Notes / limitations:
+
+- **Why 0.9, not `profanity_free`'s 0.5:** the profanity model is English-only. It reads `ho` as the slur "hoe" (score 0.883) and `tu` as 0.535, so at 0.5 common Hinglish such as `namaste, kaise ho`, `kya ho raha hai` and `tu kahan hai` is blanked. English profanity scores 0.95–1.0, so it is still caught at 0.9. Trade-off: `screw you` (0.893) passes. Lower the threshold for stricter English filtering.
+- Hindi slurs are caught only by the slur list; the profanity model doesn't know them.
+- If profanity remains after slur redaction, there is no programmatic fix: with `on_fail=fix`, `safe_text` is `""` and `metadata.reason` identifies this validator.
+- Slur redaction lowercases the whole text and strips emoji (inherited from `uli_slur_match`).
+- `languages` is not accepted: `uli_slur_match` stores it but never uses it.
+- Error messages never include the user's text, so they are safe to show with `on_fail=rephrase` and to store in validator logs.
+
 ## Example Config Payloads
 
 Example: create validator config (stored shape)
@@ -589,6 +644,7 @@ Default stage strategy:
 
 - Input guardrails: `pii_remover`, `uli_slur_match`, `ban_list`, `topic_relevance` (when scope enforcement is needed), `profanity_free`, `llamaguard_7b`
 - Output guardrails: `pii_remover`, `uli_slur_match`, `gender_assumption_bias`, `ban_list`, `profanity_free`, `llamaguard_7b`, `answer_relevance_custom_llm` (when answer quality must be verified)
+- `content_safety` can replace `uli_slur_match` + `profanity_free` at either stage; don't configure it alongside them.
 
 Tuning strategy:
 
@@ -626,7 +682,7 @@ here don't even accept it. `BanList`'s `__init__` has no `**kwargs` at all and r
 `has_guardrails_endpoint=True`, so it's a no-op either way. Check the constructor and the
 decorator before adding the kwarg to a new validator's `build()`. The fully custom in-repo
 validators (`pii_remover`, `gender_assumption_bias`, `uli_slur_match`, `topic_relevance`,
-`topic_relevance_llm`, `answer_relevance_custom_llm`) have no hub/remote code path at all and
+`topic_relevance_llm`, `answer_relevance_custom_llm`, `content_safety`) have no hub/remote code path at all and
 don't need it.
 
 ## Related Files
@@ -643,6 +699,8 @@ don't need it.
 - `backend/app/core/validators/config/profanity_free_safety_validator_config.py`
 - `backend/app/core/validators/config/answer_relevance_custom_llm_safety_validator_config.py`
 - `backend/app/core/validators/answer_relevance_custom_llm.py`
+- `backend/app/core/validators/config/content_safety_safety_validator_config.py`
+- `backend/app/core/validators/content_safety.py`
 - `backend/app/models/config/llm_prompt_config.py`
 - `backend/app/crud/llm_prompt_config.py`
 - `backend/app/schemas/guardrail_config.py`
