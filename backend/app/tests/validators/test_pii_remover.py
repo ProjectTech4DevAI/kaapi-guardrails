@@ -141,11 +141,11 @@ def test_transformers_engine_accepts_custom_model(mock_presidio):
     assert v.model_name == "dslim/bert-base-NER-uncased"
 
 
-def test_config_defaults_to_spacy_engine(mock_presidio):
+def test_config_defaults_to_transformers_engine(mock_presidio):
     config = PIIRemoverSafetyValidatorConfig(type="pii_remover")
     v = config.build()
-    assert v.nlp_engine_type == "spacy"
-    assert v.model_name == "en_core_web_lg"
+    assert v.nlp_engine_type == "transformers"
+    assert v.model_name == DEFAULT_TRANSFORMERS_MODEL
 
 
 def test_cached_analyzer_registers_only_requested_indian_recognizers():
