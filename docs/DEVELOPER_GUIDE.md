@@ -471,7 +471,7 @@ Detects and anonymizes Personally Identifiable Information using [Microsoft Pres
 | Property | Value |
 |----------|-------|
 | Type | `pii_remover` |
-| Implementation | Local (Presidio + spaCy `en_core_web_lg`) |
+| Implementation | Local (Presidio + IndicBERTv2 NER `neuronsbyisshu/indicbert-hi-ner-naamapadam`) |
 | Speed | Fast–Medium (50–200ms depending on text length) |
 | Languages | English (NLP engine); India-specific patterns via regex |
 | `fix_value` | Yes — returns redacted text |
@@ -523,7 +523,7 @@ Output: "[REDACTED_PERSON_1] and [REDACTED_PERSON_2] called [REDACTED_PHONE_NUMB
 
 #### How It Works Internally
 
-1. **Analyzer initialization** — On first use, a spaCy `en_core_web_lg` NLP engine is built and cached globally. A Presidio `AnalyzerEngine` is constructed with this engine. India-specific recognizers are registered based on the configured `entity_types`.
+1. **Analyzer initialization** — On first use, a Presidio `AnalyzerEngine` with a HuggingFace NER recognizer (`neuronsbyisshu/indicbert-hi-ner-naamapadam`) is built and cached globally; spaCy `en_core_web_sm` handles tokenization. A Presidio `AnalyzerEngine` is constructed with this engine. India-specific recognizers are registered based on the configured `entity_types`.
 2. **Analyzer caching** — Analyzer instances are cached by the set of India-specific recognizers in use.
 3. **Analysis** — Presidio analyzes the text for the requested entity types. Each detection returns an entity type, position, and confidence score.
 4. **Threshold filtering** — Entities with confidence below the threshold are not redacted.
