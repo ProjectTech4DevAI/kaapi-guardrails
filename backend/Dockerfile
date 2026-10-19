@@ -64,8 +64,8 @@ AutoModelForSequenceClassification.from_pretrained('michellejieli/NSFW_text_clas
 RUN --mount=type=secret,id=HF_TOKEN \
     HF_TOKEN="$(cat /run/secrets/HF_TOKEN 2>/dev/null || true)" \
     /app/.venv/bin/python -c "from transformers import AutoTokenizer, AutoModelForTokenClassification; \
-AutoTokenizer.from_pretrained('dslim/bert-base-NER-uncased', cache_dir='/app/hf_cache'); \
-AutoModelForTokenClassification.from_pretrained('dslim/bert-base-NER-uncased', cache_dir='/app/hf_cache')"
+AutoTokenizer.from_pretrained('neuronsbyisshu/indicbert-hi-ner-naamapadam', cache_dir='/app/hf_cache'); \
+AutoModelForTokenClassification.from_pretrained('neuronsbyisshu/indicbert-hi-ner-naamapadam', cache_dir='/app/hf_cache')"
 
 # -------------------------------
 # Entrypoint (runtime setup)

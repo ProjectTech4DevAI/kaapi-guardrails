@@ -9,9 +9,9 @@ Detects and anonymizes Personally Identifiable Information using [Microsoft Pres
 | Property | Value |
 |----------|-------|
 | Type | `pii_remover` |
-| Implementation | Local (Presidio + spaCy `en_core_web_lg`) |
+| Implementation | Local (Presidio + IndicBERTv2 NER `neuronsbyisshu/indicbert-hi-ner-naamapadam`) |
 | Speed | Fast–Medium (50–200ms depending on text length) |
-| Languages | English (NLP engine); India-specific patterns via regex |
+| Languages | English, Hinglish, Hindi, Marathi, Kannada, Telugu + other Indic scripts (NER); India-specific patterns via regex |
 | `fix_value` | Yes — returns redacted text |
 | Requires API key | No |
 
@@ -76,7 +76,7 @@ This format is:
 
 ## How It Works Internally
 
-1. **Analyzer initialization** — On first use, a spaCy `en_core_web_lg` NLP engine is built and cached globally. A Presidio `AnalyzerEngine` is constructed with this engine. India-specific recognizers (`InAadhaarRecognizer`, `InPanRecognizer`, etc.) are registered based on the configured `entity_types`.
+1. **Analyzer initialization** — On first use, a Presidio `AnalyzerEngine` is built and cached globally. NER runs through a HuggingFace token-classification model (`neuronsbyisshu/indicbert-hi-ner-naamapadam`, IndicBERTv2 fine-tuned on Naamapadam); spaCy `en_core_web_sm` is used only for tokenization. Set `nlp_engine_type="spacy"` on `PIIRemover` to fall back to spaCy `en_core_web_lg` NER. India-specific recognizers (`InAadhaarRecognizer`, `InPanRecognizer`, etc.) are registered based on the configured `entity_types`.
 
 2. **Analyzer caching** — Analyzer instances are cached by the set of India-specific recognizers in use. This means different `entity_types` combinations that share the same India recognizer set reuse the same analyzer.
 
@@ -140,13 +140,13 @@ Output: "What is the weather in Mumbai today?" (PassResult, no change)
 "Mumbai" or "India" may be detected as `LOCATION` and redacted, even in benign context. If you don't need location protection, omit `LOCATION` from `entity_types`.
 
 ### Short names and ambiguous tokens
-Very short or common names (e.g., "Ali", "Sam") may not be detected by spaCy NER with high confidence. They'll pass through if their score is below threshold.
+Lone Latin-script first names inside Indic text (e.g. "डॉ Aiswarya") are the weakest case for the NER model (~0.45 recall in eval). Multi-token names and native-script names do better.
 
 ### Non-English text
-The NLP engine is `en_core_web_lg` — English only. Hindi or other language names will not be detected by the NER component. India-specific regex recognizers (`IN_AADHAAR`, `IN_PAN`, etc.) work independently of language.
+The NER model is IndicBERTv2 fine-tuned on Hindi Naamapadam. In eval it detects names and locations in Hindi, Marathi, Kannada, Telugu, Bengali and Tamil scripts, plus English and Hinglish. `NRP` (nationality / religion / political group) is not a label in this model and will not be detected. India-specific regex recognizers (`IN_AADHAAR`, `IN_PAN`, etc.) work independently of language.
 
 ### First-run latency
-The first request loads the spaCy model into memory. This can take 2–5 seconds. Subsequent requests use the cached model and are fast.
+The first request loads the NER model into memory. This can take 5–15 seconds. Subsequent requests use the cached model and are fast.
 
 ---
 

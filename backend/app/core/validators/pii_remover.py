@@ -34,8 +34,9 @@ from app.core.enum import PIIEntityType
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# NER-based types (PERSON, LOCATION, NRP) are opt-in: the NER model is English-only
-# and noisy on Indic names. Everything else is pattern/regex based.
+# NER-based types (PERSON, LOCATION, NRP) stay opt-in. The default NER model now
+# handles Indic scripts, but NRP has no equivalent label in it. Everything else is
+# pattern/regex based.
 NER_ENTITY_TYPES = {"PERSON", "LOCATION", "NRP"}
 DEFAULT_ENTITY_TYPES = [
     e.value for e in PIIEntityType if e.value not in NER_ENTITY_TYPES
@@ -53,7 +54,7 @@ SPACY_TOKENIZER_CONFIGURATION = {
 }
 
 # Shared label mapping for models using CoNLL-style PER/ORG/LOC/MISC labels
-# (e.g. dslim/bert-base-NER, Davlan/xlm-roberta-base-ner-hrl)
+# (IndicBERTv2 Naamapadam finetune, dslim/bert-base-NER, Davlan/xlm-roberta-*-ner-hrl)
 CONLL_NER_LABEL_MAPPING = {
     "PER": "PERSON",
     "ORG": "ORGANIZATION",
@@ -61,7 +62,9 @@ CONLL_NER_LABEL_MAPPING = {
     "MISC": "MISC",
 }
 
-DEFAULT_TRANSFORMERS_MODEL = "dslim/bert-base-NER-uncased"
+# IndicBERTv2 fine-tuned on Hindi Naamapadam NER; transfers to other Indic scripts and
+# Latin-script names. Eval vs spaCy en_core_web_lg: docs/validators/pii-remover.md.
+DEFAULT_TRANSFORMERS_MODEL = "neuronsbyisshu/indicbert-hi-ner-naamapadam"
 DEFAULT_TRANSFORMERS_THRESHOLD = 0.7
 
 _NLP_ENGINE_CACHE: dict = {}
@@ -187,7 +190,7 @@ class PIIRemover(Validator):
         self,
         entity_types=None,
         threshold: float | None = None,
-        nlp_engine_type: str = "spacy",
+        nlp_engine_type: str = "transformers",
         model_name: str | None = None,
         on_fail: Optional[Callable] = OnFailAction.FIX,
     ):

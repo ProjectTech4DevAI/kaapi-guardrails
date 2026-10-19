@@ -126,7 +126,7 @@ Each request carries a list of `ValidatorConfigItem` objects (a Pydantic discrim
 | Validator | Type key | Source | Description |
 |---|---|---|---|
 | **Lexical Slur** | `uli_slur_match` | Local (custom) | Detects slurs from a curated bilingual (Hindi/English) CSV. Normalises text (emoji removal, unicode NFKC, `ftfy` encoding fix) before matching. Supports severity filtering: `low`/`medium`/`high`/`all`. Redacts matches with `[REDACTED_SLUR]`. |
-| **PII Remover** | `pii_remover` | Local (custom) | Uses Microsoft Presidio (`presidio_analyzer` + `presidio_anonymizer`) with a spaCy NLP engine (`en_core_web_lg`). Detects and redacts 15 entity types including India-specific identifiers (Aadhaar, PAN, Passport, Vehicle Registration, Voter ID). Replaces entities with labelled placeholders, e.g. `[REDACTED_PERSON_1]`. |
+| **PII Remover** | `pii_remover` | Local (custom) | Uses Microsoft Presidio (`presidio_analyzer` + `presidio_anonymizer`) with a HuggingFace NER recognizer (`neuronsbyisshu/indicbert-hi-ner-naamapadam`, IndicBERTv2 fine-tuned on Naamapadam) and spaCy `en_core_web_sm` for tokenization. Detects and redacts 15 entity types including India-specific identifiers (Aadhaar, PAN, Passport, Vehicle Registration, Voter ID). Replaces entities with labelled placeholders, e.g. `[REDACTED_PERSON_1]`. |
 | **Ban List** | `ban_list` | Hub (`guardrails/ban_list`) | Blocks exact words from a caller-supplied list or a stored `BanList` DB record (referenced by UUID). Words are fetched from the database in `_resolve_validator_configs()` before the guard runs. |
 | **Topic Relevance** | `topic_relevance` | Local (custom) | Wraps the Hub's `LLMCritic` validator. Given a freeform topic-scope description (stored as a `TopicRelevance` DB record or supplied inline), constructs a scoring prompt and calls an LLM (default: `gpt-4o-mini`) via LiteLLM. Scores 1–3; score ≤ 1 is a fail. Supports versioned prompt templates (`v1.md`–`v3.md`). |
 | **Profanity Free** | `profanity_free` | Hub (`guardrails/profanity_free`) | Detects general profanity in text. |
@@ -212,7 +212,7 @@ Tenant scope is never read from the query string or request body, so the depende
 | Database | PostgreSQL (psycopg3) |
 | Migrations | Alembic |
 | Validation engine | guardrails-ai (pinned to v0.10.0) |
-| NLP (PII) | spaCy `en_core_web_lg` via Presidio |
+| NLP (PII) | IndicBERTv2 NER `neuronsbyisshu/indicbert-hi-ner-naamapadam` via Presidio (spaCy `en_core_web_sm` tokenizer) |
 | ML (toxicity) | PyTorch CPU, `textdetox/xlmr-large-toxicity-classifier` via Transformers |
 | LLM calls | LiteLLM (used internally by `LLMCritic` / `TopicRelevance`) |
 | Package manager | uv |
