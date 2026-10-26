@@ -348,6 +348,15 @@ def test_system_prompt_contains_topic_config():
         validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
     assert TOPIC_CONFIG in validator._system_prompt
+    # The config must be labelled, not just concatenated: a bare keyword list
+    # gave the model no way to know it was reading a topic list.
+    assert validator._system_prompt.index(
+        "Allowed topics:"
+    ) < validator._system_prompt.index(TOPIC_CONFIG)
+    assert validator._system_prompt.index(
+        TOPIC_CONFIG
+    ) < validator._system_prompt.index("Rules:")
+    assert "{{TOPIC_CONFIGURATION}}" not in validator._system_prompt
 
 
 def test_system_prompt_contains_json_instruction():

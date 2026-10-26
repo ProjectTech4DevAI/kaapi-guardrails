@@ -22,6 +22,7 @@ from app.core.validators.llm_utils import (
 )
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
+_CONFIG_PLACEHOLDER = "{{TOPIC_CONFIGURATION}}"
 
 
 def _extract_first_json_object(text: str) -> dict:
@@ -58,7 +59,13 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
             f"Topic relevance (LLM) prompt template for version {prompt_schema_version} not found"
         )
 
-    return prompt_file.read_text(encoding="utf-8")
+    template = prompt_file.read_text(encoding="utf-8")
+    if _CONFIG_PLACEHOLDER not in template:
+        raise ValueError(
+            f"Topic relevance (LLM) prompt template v{prompt_schema_version} "
+            f"is missing the {_CONFIG_PLACEHOLDER} placeholder"
+        )
+    return template
 
 
 @lru_cache(maxsize=1)
@@ -102,7 +109,9 @@ class TopicRelevanceLLM(Validator):
             self._invalid_config_reason = str(e)
             return
 
-        self._system_prompt = f"{system_prompt.strip()}\n\n{scoring_rules}"
+        self._system_prompt = scoring_rules.replace(
+            _CONFIG_PLACEHOLDER, system_prompt.strip()
+        )
         if fallback_message:
             fallback_rules = _load_fallback_template().replace(
                 "{{FALLBACK_MESSAGE}}", fallback_message
