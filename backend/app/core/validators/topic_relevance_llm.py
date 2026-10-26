@@ -13,6 +13,8 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
+from litellm import supports_reasoning as _litellm_supports_reasoning
+
 from app.core.config import settings
 from app.core.constants import EMPTY_MESSAGE_ERROR, TOPIC_OUT_OF_SCOPE_ERROR
 from app.core.validators.llm_utils import (
@@ -22,6 +24,7 @@ from app.core.validators.llm_utils import (
 )
 
 _PROMPTS_DIR = Path(__file__).parent / "prompts" / "topic_relevance_llm"
+_CONFIG_PLACEHOLDER = "{{TOPIC_CONFIGURATION}}"
 
 
 def _extract_first_json_object(text: str) -> dict:
@@ -42,8 +45,15 @@ _OPTIONAL_FIELDS = (
     "classification_confidence_score",
     "localized_fallback",
 )
-# Budget for the 4-field JSON response; doubled when localized_fallback is requested.
-_MAX_TOKENS = 300
+# Reasoning models (e.g. gpt-5.6-sol) accept reasoning_effort; non-reasoning models reject it.
+_REASONING_EFFORT = "medium"
+
+
+def supports_reasoning(model: str) -> bool:
+    try:
+        return bool(_litellm_supports_reasoning(model=model))
+    except Exception:
+        return False
 
 
 @lru_cache(maxsize=8)
@@ -58,7 +68,13 @@ def _load_prompt_template(prompt_schema_version: int) -> str:
             f"Topic relevance (LLM) prompt template for version {prompt_schema_version} not found"
         )
 
-    return prompt_file.read_text(encoding="utf-8")
+    template = prompt_file.read_text(encoding="utf-8")
+    if _CONFIG_PLACEHOLDER not in template:
+        raise ValueError(
+            f"Topic relevance (LLM) prompt template v{prompt_schema_version} "
+            f"is missing the {_CONFIG_PLACEHOLDER} placeholder"
+        )
+    return template
 
 
 @lru_cache(maxsize=1)
@@ -90,7 +106,6 @@ class TopicRelevanceLLM(Validator):
         self._invalid_config_reason: Optional[str] = None
         self._system_prompt: Optional[str] = None
         self._supports_response_format: bool = False
-        self._max_tokens = _MAX_TOKENS * 2 if fallback_message else _MAX_TOKENS
 
         if not system_prompt or not system_prompt.strip():
             self._invalid_config_reason = "system_prompt is blank or missing"
@@ -102,7 +117,9 @@ class TopicRelevanceLLM(Validator):
             self._invalid_config_reason = str(e)
             return
 
-        self._system_prompt = f"{system_prompt.strip()}\n\n{scoring_rules}"
+        self._system_prompt = scoring_rules.replace(
+            _CONFIG_PLACEHOLDER, system_prompt.strip()
+        )
         if fallback_message:
             fallback_rules = _load_fallback_template().replace(
                 "{{FALLBACK_MESSAGE}}", fallback_message
@@ -126,13 +143,14 @@ class TopicRelevanceLLM(Validator):
                     {"role": "system", "content": self._system_prompt},
                     {"role": "user", "content": value},
                 ],
-                "max_tokens": self._max_tokens,
             }
+            if supports_reasoning(self.llm_callable):
+                kwargs["reasoning_effort"] = _REASONING_EFFORT
             if self._supports_response_format:
                 kwargs["response_format"] = JSON_OBJECT_RESPONSE_FORMAT
 
             response = completion(**kwargs)
-            content = response.choices[0].message.content.strip()
+            content = (response.choices[0].message.content or "").strip()
         except Exception as e:
             return FailResult(error_message=f"LLM call failed: {e}")
 
