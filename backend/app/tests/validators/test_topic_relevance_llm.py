@@ -457,13 +457,31 @@ def test_fallback_instructions_added_to_system_prompt():
     assert FALLBACK in validator._system_prompt
 
 
-def test_fallback_raises_max_tokens():
+def test_no_max_tokens_cap_is_sent():
     validator = _fallback_validator()
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         validator._validate("How do I make pasta?")
 
-    assert mock_llm.call_args.kwargs["max_tokens"] == 600
+    assert "max_tokens" not in mock_llm.call_args.kwargs
+
+
+def test_reasoning_model_gets_medium_effort():
+    validator = _fallback_validator(llm_callable="gpt-5.6-sol")
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate("How do I make pasta?")
+
+    assert mock_llm.call_args.kwargs["reasoning_effort"] == "medium"
+
+
+def test_non_reasoning_model_omits_reasoning_effort():
+    validator = _fallback_validator(llm_callable="gpt-4o-mini")
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate("How do I make pasta?")
+
+    assert "reasoning_effort" not in mock_llm.call_args.kwargs
 
 
 def test_localized_fallback_exposed_in_fail_metadata():
