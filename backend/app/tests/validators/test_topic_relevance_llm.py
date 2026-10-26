@@ -139,6 +139,17 @@ def test_fails_gracefully_when_llm_raises(validator):
     assert "network timeout" in result.error_message
 
 
+def test_fails_gracefully_when_content_is_none(validator):
+    # Reasoning models (gpt-5.6-sol) return content=None when the budget is
+    # spent on hidden reasoning; must surface as unparseable, not a crash.
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(None)
+        result = validator._validate("How do I bake bread?")
+
+    assert isinstance(result, FailResult)
+    assert "unparseable" in result.error_message
+
+
 def test_fails_gracefully_when_response_is_not_json(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response("Sure, this looks great!")

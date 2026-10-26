@@ -141,7 +141,7 @@ class TopicRelevanceLLM(Validator):
                 kwargs["response_format"] = JSON_OBJECT_RESPONSE_FORMAT
 
             response = completion(**kwargs)
-            content = response.choices[0].message.content.strip()
+            content = (response.choices[0].message.content or "").strip()
         except Exception as e:
             return FailResult(error_message=f"LLM call failed: {e}")
 
