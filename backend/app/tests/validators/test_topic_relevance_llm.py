@@ -139,6 +139,17 @@ def test_fails_gracefully_when_llm_raises(validator):
     assert "network timeout" in result.error_message
 
 
+def test_fails_gracefully_when_content_is_none(validator):
+    # Reasoning models (gpt-5.6-sol) return content=None when the budget is
+    # spent on hidden reasoning; must surface as unparseable, not a crash.
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response(None)
+        result = validator._validate("How do I bake bread?")
+
+    assert isinstance(result, FailResult)
+    assert "unparseable" in result.error_message
+
+
 def test_fails_gracefully_when_response_is_not_json(validator):
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response("Sure, this looks great!")
@@ -348,6 +359,16 @@ def test_system_prompt_contains_topic_config():
         validator = TopicRelevanceLLM(system_prompt=TOPIC_CONFIG)
 
     assert TOPIC_CONFIG in validator._system_prompt
+    # The config must be labelled and sit below the instructions: a bare
+    # keyword list gave the model no way to know it was reading a topic list.
+    prompt = validator._system_prompt
+    assert prompt.index("# Instructions") < prompt.index(
+        "<allowed_topics>\n" + TOPIC_CONFIG
+    )
+    assert prompt.index(TOPIC_CONFIG + "\n</allowed_topics>") > prompt.index(
+        "# Examples"
+    )
+    assert "{{TOPIC_CONFIGURATION}}" not in validator._system_prompt
 
 
 def test_system_prompt_contains_json_instruction():
@@ -436,13 +457,31 @@ def test_fallback_instructions_added_to_system_prompt():
     assert FALLBACK in validator._system_prompt
 
 
-def test_fallback_raises_max_tokens():
+def test_no_max_tokens_cap_is_sent():
     validator = _fallback_validator()
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         validator._validate("How do I make pasta?")
 
-    assert mock_llm.call_args.kwargs["max_tokens"] == 600
+    assert "max_tokens" not in mock_llm.call_args.kwargs
+
+
+def test_reasoning_model_gets_medium_effort():
+    validator = _fallback_validator(llm_callable="gpt-5.6-sol")
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate("How do I make pasta?")
+
+    assert mock_llm.call_args.kwargs["reasoning_effort"] == "medium"
+
+
+def test_non_reasoning_model_omits_reasoning_effort():
+    validator = _fallback_validator(llm_callable="gpt-4o-mini")
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate("How do I make pasta?")
+
+    assert "reasoning_effort" not in mock_llm.call_args.kwargs
 
 
 def test_localized_fallback_exposed_in_fail_metadata():
