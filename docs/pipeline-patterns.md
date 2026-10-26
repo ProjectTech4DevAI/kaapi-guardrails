@@ -105,7 +105,7 @@ Copy-paste pipelines for common deployment scenarios.
       "type": "topic_relevance",
       "on_fail": "rephrase",
       "topic_relevance_config_id": "your-domain-config-uuid",
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }
@@ -140,7 +140,7 @@ Copy-paste pipelines for common deployment scenarios.
       "type": "topic_relevance",
       "on_fail": "rephrase",
       "topic_relevance_config_id": "healthcare-scope-uuid",
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }
@@ -168,7 +168,7 @@ Copy-paste pipelines for common deployment scenarios.
         "groundedness": "The response should not make claims beyond what is generally known. No fabricated statistics or citations."
       },
       "max_score": 3,
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }

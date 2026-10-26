@@ -22,14 +22,14 @@ Validates whether an LLM-generated answer is actually relevant to the user's que
 {
   "type": "answer_relevance_custom_llm",
   "on_fail": "exception",
-  "llm_callable": "gpt-4o-mini",
+  "llm_callable": "gpt-5.6-sol",
   "custom_prompt_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 }
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `llm_callable` | `string` | `"gpt-4o-mini"` | LLM model for evaluation |
+| `llm_callable` | `string` | `"gpt-5.6-sol"` | LLM model for evaluation |
 | `prompt_template` | `string` | Default template | Inline prompt template with `{query}` and `{answer}` placeholders |
 | `custom_prompt_id` | `UUID` | — | ID of a stored custom prompt. Resolved to `prompt_template` before validation. |
 | `on_fail` | `string` | `"fix"` | `"fix"`, `"exception"`, or `"rephrase"` |

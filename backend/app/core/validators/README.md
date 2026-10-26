@@ -319,7 +319,7 @@ Parameters / customization:
 
 - `metrics: dict` (required) — metric name-to-description mapping passed to the LLM judge
 - `max_score: int` (required) — maximum score per metric; used to define the scoring scale
-- `llm_callable: str` (required) — model identifier passed to LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`)
+- `llm_callable: str` (required) — model identifier passed to LiteLLM (e.g. `gpt-5.6-sol`)
 - `on_fail`
 
 Notes / limitations:
@@ -359,7 +359,7 @@ Parameters / customization:
 
 - `topic_relevance_config_id: UUID` (required at runtime; resolves configuration and prompt version from tenant config)
 - `prompt_schema_version: int` (optional; defaults to `1`)
-- `llm_callable: str` (default: `gpt-4o-mini`) — the model identifier passed to Guardrails' LLMCritic to perform the scope evaluation. This must be a model string supported by LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`). It controls which LLM is used to score whether the input is within the allowed topic scope; changing it affects cost, latency, and scoring quality.
+- `llm_callable: str` (default: `gpt-5.6-sol`) — the model identifier passed to Guardrails' LLMCritic to perform the scope evaluation. This must be a model string supported by LiteLLM (e.g. `gpt-5.6-sol`). It controls which LLM is used to score whether the input is within the allowed topic scope; changing it affects cost, latency, and scoring quality.
 - `on_fail`
 
 Notes / limitations:
@@ -387,7 +387,7 @@ Parameters / customization:
 - `configuration: str` — topic text. Inline, or resolved from `topic_relevance_config_id`.
 - `prompt_schema_version: int` (default `2`) — `1` = `configuration` lists allowed topics, `2` = forbidden topics, `3` = both (forbidden checked first). Resolved from the stored config when `topic_relevance_config_id` is used.
 - `threshold: int` (1–3, default `2`) — `3` also fails ambiguous messages.
-- `llm_callable: str` (default `gpt-4o-mini`)
+- `llm_callable: str` (default `gpt-5.6-sol`)
 - `fallback_message: str` (optional) — with `on_fail=rephrase`, returned as `safe_text` instead of the generic rephrase text; `rephrase_needed` stays `true`. The same LLM call translates it into the user's language (`prompts/topic_relevance_llm/fallback_translation.md`); if no translation comes back, the original text is used. Adds ~30–60 output tokens per call when set.
 - `on_fail` — use `rephrase`. `fix` returns an empty string, since this validator has no fix value.
 
@@ -538,7 +538,7 @@ Recommendation:
 
 Parameters / customization:
 
-- `llm_callable: str` (default: `gpt-4o-mini`) — model identifier passed to LiteLLM for the YES/NO evaluation
+- `llm_callable: str` (default: `gpt-5.6-sol`) — model identifier passed to LiteLLM for the YES/NO evaluation
 - `prompt_template: str` (optional) — inline prompt with `{query}` and `{answer}` placeholders
 - `custom_prompt_id: UUID` (optional) — reference to a tenant-stored prompt config; resolved to `prompt_template` before execution
 - `on_fail`

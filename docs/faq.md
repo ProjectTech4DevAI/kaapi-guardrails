@@ -56,7 +56,7 @@ Don't use them when:
 
 **2. Only validate what you need.** Don't run `llamaguard_7b` on every request if most of your traffic is safe. Consider running it only when faster validators pass a borderline score.
 
-**3. Use `gpt-4o-mini` over `gpt-4o`** for LLM validators. It's 10x cheaper and about 2x faster for most moderation tasks.
+**3. Use the default `gpt-5.6-sol`** for LLM validators rather than a larger custom model.
 
 **4. Use `"validation_method": "full"` for `nsfw_text`** if per-sentence granularity isn't needed. It's faster than `"sentence"` mode.
 

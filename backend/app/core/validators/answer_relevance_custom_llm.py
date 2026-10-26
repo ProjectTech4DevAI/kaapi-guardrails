@@ -18,7 +18,10 @@ from app.core.constants import (
     ANSWER_RELEVANCE_NOT_RELEVANT_ERROR,
     ANSWER_RELEVANCE_UNEXPECTED_RESPONSE_TEMPLATE,
 )
-from app.core.validators.llm_utils import traced_completion as completion
+from app.core.validators.llm_utils import (
+    supports_reasoning,
+    traced_completion as completion,
+)
 
 DEFAULT_PROMPT_TEMPLATE = (
     "Query: {query}\n"
@@ -26,6 +29,11 @@ DEFAULT_PROMPT_TEMPLATE = (
     "Does the answer fully satisfy the query and constraints?\n"
     "Answer only YES or NO."
 )
+
+# Room for a one-word YES/NO plus the hidden reasoning tokens that reasoning
+# models (e.g. gpt-5.6-sol) count against the same completion budget.
+_MAX_TOKENS = 512
+_REASONING_EFFORT = "low"
 
 
 @register_validator(name="answer-relevance-custom-llm", data_type="string")
@@ -62,13 +70,17 @@ class AnswerRelevanceCustomLLM(Validator):
                 )
             )
 
+        completion_kwargs = {
+            "model": self.llm_callable,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": _MAX_TOKENS,
+        }
+        if supports_reasoning(self.llm_callable):
+            completion_kwargs["reasoning_effort"] = _REASONING_EFFORT
+
         try:
-            response = completion(
-                model=self.llm_callable,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=10,
-            )
-            response_text = response.choices[0].message.content.strip().upper()
+            response = completion(**completion_kwargs)
+            response_text = (response.choices[0].message.content or "").strip().upper()
         except Exception as e:
             return FailResult(
                 error_message=ANSWER_RELEVANCE_LLM_CALL_FAILED_TEMPLATE.format(error=e)

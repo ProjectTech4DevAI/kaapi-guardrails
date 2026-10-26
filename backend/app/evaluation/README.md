@@ -234,7 +234,7 @@ python3 app/evaluation/topic_relevance/run.py --backend topic_relevance_llm
 
 `topic_relevance` (the `LLMCritic`-based validator) is only imported when that backend actually runs, so `--backend topic_relevance_llm` works without installing the `llm_critic` hub validator.
 
-> **Note:** Requires `OPENAI_API_KEY` to be set. Uses `gpt-4o-mini` by default (`DEFAULT_CONFIG` in the script).
+> **Note:** Requires `OPENAI_API_KEY` to be set. Uses `gpt-5.6-sol` by default (`settings.DEFAULT_LLM_CALLABLE`).
 
 ---
 

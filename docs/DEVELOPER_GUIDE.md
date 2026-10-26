@@ -962,14 +962,14 @@ Validates whether a user message falls within the configured topic scope, using 
   "type": "topic_relevance",
   "on_fail": "rephrase",
   "topic_relevance_config_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "llm_callable": "gpt-4o-mini"
+  "llm_callable": "gpt-5.6-sol"
 }
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `topic_relevance_config_id` | `UUID` | required | ID of a stored topic relevance config |
-| `llm_callable` | `string` | `"gpt-4o-mini"` | LLM model for evaluation |
+| `llm_callable` | `string` | `"gpt-5.6-sol"` | LLM model for evaluation |
 | `prompt_schema_version` | `int` | `1` | Prompt template version |
 | `on_fail` | `string` | `"fix"` | Use `"rephrase"` or `"exception"` — no fix available |
 
@@ -1068,7 +1068,7 @@ A general-purpose LLM-as-judge. Define custom metrics with plain-language descri
     "another_metric": "Description of another dimension"
   },
   "max_score": 3,
-  "llm_callable": "gpt-4o-mini"
+  "llm_callable": "gpt-5.6-sol"
 }
 ```
 
@@ -1168,14 +1168,14 @@ Validates whether an LLM-generated answer is actually relevant to the user's que
 {
   "type": "answer_relevance_custom_llm",
   "on_fail": "exception",
-  "llm_callable": "gpt-4o-mini",
+  "llm_callable": "gpt-5.6-sol",
   "custom_prompt_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 }
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `llm_callable` | `string` | `"gpt-4o-mini"` | LLM model for evaluation |
+| `llm_callable` | `string` | `"gpt-5.6-sol"` | LLM model for evaluation |
 | `prompt_template` | `string` | Default template | Inline template with `{query}` and `{answer}` placeholders |
 | `custom_prompt_id` | `UUID` | — | ID of a stored custom prompt |
 | `on_fail` | `string` | `"fix"` | Always use `"exception"` or `"rephrase"` — no fix available |
@@ -1370,7 +1370,7 @@ Copy-paste pipelines for common deployment scenarios.
         "groundedness": "No fabricated statistics or citations."
       },
       "max_score": 3,
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }
@@ -1560,7 +1560,7 @@ from guardrails.validator_base import FailResult, PassResult, ValidationResult, 
 class PolicyCheckValidator(Validator):
     PROMPT = "Does the following text violate our policy of {policy}?\n\nText: {text}\n\nAnswer YES or NO only."
 
-    def __init__(self, policy: str, llm_callable: str = "gpt-4o-mini", **kwargs):
+    def __init__(self, policy: str, llm_callable: str = "gpt-5.6-sol", **kwargs):
         self.policy = policy
         self.client = OpenAI()
         self.model = llm_callable
@@ -1584,7 +1584,7 @@ from app.core.validators.config.base_validator_config import BaseValidatorConfig
 
 class PolicyCheckConfig(BaseValidatorConfig):
     policy: str
-    llm_callable: str = "gpt-4o-mini"
+    llm_callable: str = "gpt-5.6-sol"
 
     def build(self):
         return PolicyCheckValidator(
@@ -1628,7 +1628,7 @@ Then register in `validators.json` and add the type to the `ValidatorType` enum.
 ### LLM Validators
 
 - **Put LLM validators at the end of the chain** — Slowest and most expensive
-- **Use `gpt-4o-mini` as default** — Fast and cheap; use `gpt-4o` only for critical nuanced evaluation
+- **Use `gpt-5.6-sol` as default** — The standard model for LLM validators
 - **Test topic configs with diverse examples** — Too narrow frustrates users; too broad defeats the purpose
 
 ### Operations
@@ -1789,7 +1789,7 @@ LLM critics catch what rules can't. A slur filter doesn't understand sarcasm. A 
 ### "How do I reduce latency?"
 
 1. Put cheap validators first (lexical < 10ms, ML 100–300ms, LLM 500ms–2s)
-2. Use `gpt-4o-mini` over `gpt-4o` for LLM validators
+2. Keep LLM validators on the default `gpt-5.6-sol` model
 3. Use `"validation_method": "full"` for `nsfw_text` if per-sentence isn't needed
 4. Set `"device": "cuda"` for `nsfw_text` on GPU infrastructure
 5. Narrow `entity_types` for `pii_remover` — detecting 3 types is faster than 15

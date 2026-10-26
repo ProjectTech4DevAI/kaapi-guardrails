@@ -1,4 +1,5 @@
 from litellm import completion, get_supported_openai_params
+from litellm import supports_reasoning as _litellm_supports_reasoning
 
 # Passed to litellm/OpenAI to force a strict JSON object response.
 JSON_OBJECT_RESPONSE_FORMAT = {"type": "json_object"}
@@ -19,8 +20,7 @@ def traced_completion(**kwargs):
 # Models known to support JSON-object response_format that litellm may not list yet.
 _KNOWN_JSON_CAPABLE_MODELS = frozenset(
     {
-        "gpt-4o-mini",
-        "gpt-4o",
+        "gpt-5.6-sol",
         "gpt-5-mini",
         "gpt-5.4-mini",
         "gpt-5.4-nano",
@@ -40,5 +40,17 @@ def supports_response_format(model: str) -> bool:
         return True
     try:
         return "response_format" in (get_supported_openai_params(model=model) or [])
+    except Exception:
+        return False
+
+
+def supports_reasoning(model: str) -> bool:
+    """Return True if the given model is a reasoning model (accepts ``reasoning_effort``).
+
+    Reasoning models count hidden reasoning tokens against the completion budget,
+    so callers use this to set a low effort and leave room for the visible answer.
+    """
+    try:
+        return bool(_litellm_supports_reasoning(model=model))
     except Exception:
         return False

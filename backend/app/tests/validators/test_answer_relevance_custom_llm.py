@@ -220,7 +220,7 @@ def test_fails_on_unexpected_llm_response(validator):
 
 def test_llm_callable_is_forwarded():
     v = AnswerRelevanceCustomLLM(
-        llm_callable="gpt-4o",
+        llm_callable="openai/gpt-5.6-sol",
         input=QUERY,
         output=ANSWER_RELEVANT,
     )
@@ -231,4 +231,48 @@ def test_llm_callable_is_forwarded():
         mock_llm.return_value = _make_llm_response("YES")
         v._validate(ANSWER_RELEVANT)
 
-        assert mock_llm.call_args.kwargs["model"] == "gpt-4o"
+        assert mock_llm.call_args.kwargs["model"] == "openai/gpt-5.6-sol"
+
+
+# ---------------------------------------------------------------------------
+# Completion budget / reasoning effort
+# ---------------------------------------------------------------------------
+
+
+def test_reasoning_model_gets_budget_and_low_effort(validator):
+    with patch(
+        "app.core.validators.answer_relevance_custom_llm.completion"
+    ) as mock_llm:
+        mock_llm.return_value = _make_llm_response("YES")
+        validator._validate(ANSWER_RELEVANT)
+
+        kwargs = mock_llm.call_args.kwargs
+        assert kwargs["model"] == "gpt-5.6-sol"
+        assert kwargs["max_tokens"] == 512
+        assert kwargs["reasoning_effort"] == "low"
+
+
+def test_non_reasoning_model_omits_reasoning_effort():
+    v = AnswerRelevanceCustomLLM(
+        llm_callable="gpt-4o", input=QUERY, output=ANSWER_RELEVANT
+    )
+
+    with patch(
+        "app.core.validators.answer_relevance_custom_llm.completion"
+    ) as mock_llm:
+        mock_llm.return_value = _make_llm_response("YES")
+        v._validate(ANSWER_RELEVANT)
+
+        kwargs = mock_llm.call_args.kwargs
+        assert kwargs["max_tokens"] == 512
+        assert "reasoning_effort" not in kwargs
+
+
+def test_empty_content_returns_unexpected_response_fail(validator):
+    with patch(
+        "app.core.validators.answer_relevance_custom_llm.completion"
+    ) as mock_llm:
+        mock_llm.return_value = _make_llm_response(None)
+        result = validator._validate(ANSWER_RELEVANT)
+
+    assert isinstance(result, FailResult)
