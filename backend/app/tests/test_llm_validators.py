@@ -20,7 +20,7 @@ from app.api.routes.guardrails import _normalize_llm_critic_error
 _SAMPLE_TOPIC_CONFIG = dict(
     type="topic_relevance",
     configuration="Only answer about cooking.",
-    llm_callable="gpt-4o-mini",
+    llm_callable="gpt-5.6-sol",
 )
 
 _TOPIC_RELEVANCE_SETTINGS_PATH = (
@@ -70,7 +70,7 @@ def test_topic_relevance_blank_config_returns_fail_result():
 _SAMPLE_LLM_TOPIC_CONFIG = dict(
     type="topic_relevance_llm",
     configuration="Only answer about cooking.",
-    llm_callable="gpt-4o-mini",
+    llm_callable="gpt-5.6-sol",
 )
 
 _TOPIC_RELEVANCE_LLM_SETTINGS_PATH = (
@@ -146,7 +146,7 @@ _SAMPLE_CONFIG = dict(
         "quality": {"description": "Is the response high quality?", "threshold": 2}
     },
     max_score=3,
-    llm_callable="gpt-4o-mini",
+    llm_callable="gpt-5.6-sol",
 )
 
 
@@ -273,7 +273,7 @@ def test_answer_relevance_build_passes_inline_prompt_template():
 
 def test_answer_relevance_build_passes_llm_callable():
     config = AnswerRelevanceCustomLLMSafetyValidatorConfig(
-        **{**_SAMPLE_ANSWER_RELEVANCE_CONFIG, "llm_callable": "gpt-4o"}
+        **{**_SAMPLE_ANSWER_RELEVANCE_CONFIG, "llm_callable": "openai/gpt-5.6-sol"}
     )
 
     with patch(_ANSWER_RELEVANCE_SETTINGS_PATH) as mock_settings, patch(
@@ -284,4 +284,4 @@ def test_answer_relevance_build_passes_llm_callable():
         config.build()
 
     _, kwargs = mock_validator.call_args
-    assert kwargs["llm_callable"] == "gpt-4o"
+    assert kwargs["llm_callable"] == "openai/gpt-5.6-sol"

@@ -23,14 +23,14 @@ Validates whether a user message falls within the configured topic scope, using 
   "type": "topic_relevance",
   "on_fail": "rephrase",
   "topic_relevance_config_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "llm_callable": "gpt-4o-mini"
+  "llm_callable": "gpt-5.6-sol"
 }
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `topic_relevance_config_id` | `UUID` | required | ID of a stored topic relevance config |
-| `llm_callable` | `string` | `"gpt-4o-mini"` | LLM model for evaluation |
+| `llm_callable` | `string` | `"gpt-5.6-sol"` | LLM model for evaluation |
 | `prompt_schema_version` | `int` | `1` | Prompt template version to use |
 | `on_fail` | `string` | `"fix"` | `"fix"`, `"exception"`, or `"rephrase"` |
 

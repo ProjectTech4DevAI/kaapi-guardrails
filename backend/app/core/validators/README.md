@@ -319,7 +319,7 @@ Parameters / customization:
 
 - `metrics: dict` (required) — metric name-to-description mapping passed to the LLM judge
 - `max_score: int` (required) — maximum score per metric; used to define the scoring scale
-- `llm_callable: str` (required) — model identifier passed to LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`)
+- `llm_callable: str` (required) — model identifier passed to LiteLLM (e.g. `gpt-5.6-sol`)
 - `on_fail`
 
 Notes / limitations:
@@ -359,7 +359,7 @@ Parameters / customization:
 
 - `topic_relevance_config_id: UUID` (required at runtime; resolves configuration and prompt version from tenant config)
 - `prompt_schema_version: int` (optional; defaults to `1`)
-- `llm_callable: str` (default: `gpt-4o-mini`) — the model identifier passed to Guardrails' LLMCritic to perform the scope evaluation. This must be a model string supported by LiteLLM (e.g. `gpt-4o-mini`, `gpt-4o`). It controls which LLM is used to score whether the input is within the allowed topic scope; changing it affects cost, latency, and scoring quality.
+- `llm_callable: str` (default: `gpt-5.6-sol`) — the model identifier passed to Guardrails' LLMCritic to perform the scope evaluation. This must be a model string supported by LiteLLM (e.g. `gpt-5.6-sol`). It controls which LLM is used to score whether the input is within the allowed topic scope; changing it affects cost, latency, and scoring quality.
 - `on_fail`
 
 Notes / limitations:
@@ -387,9 +387,27 @@ Parameters / customization:
 - `configuration: str` — topic text. Inline, or resolved from `topic_relevance_config_id`.
 - `prompt_schema_version: int` (default `2`) — `1` = `configuration` lists allowed topics, `2` = forbidden topics, `3` = both (forbidden checked first). Resolved from the stored config when `topic_relevance_config_id` is used.
 - `threshold: int` (1–3, default `2`) — `3` also fails ambiguous messages.
-- `llm_callable: str` (default `gpt-4o-mini`)
+- `llm_callable: str` (default `gpt-5.6-sol`)
 - `fallback_message: str` (optional) — with `on_fail=rephrase`, returned as `safe_text` instead of the generic rephrase text; `rephrase_needed` stays `true`. The same LLM call translates it into the user's language (`prompts/topic_relevance_llm/fallback_translation.md`); if no translation comes back, the original text is used. Adds ~30–60 output tokens per call when set.
 - `on_fail` — use `rephrase`. `fix` returns an empty string, since this validator has no fix value.
+
+LLM call:
+
+- `max_tokens=1024` (2048 when `fallback_message` is set). Reasoning models count hidden reasoning tokens against this limit, so it's sized well above observed use and only stops runaway calls.
+- `reasoning_effort="medium"` is sent when the model supports reasoning; other models don't receive it.
+
+Evaluation (live run, October 2026):
+
+- 100 rows sampled from the education and healthcare topic relevance datasets (`backend/app/evaluation/datasets/topic_relevance/`): 50 per domain, 32 out of scope. Prompt schema v2, threshold 2, `max_tokens=1024`.
+
+| Model | Accuracy | Out-of-scope caught | In-scope wrongly blocked | F1 | Latency (typical / slowest 5%) |
+|---|---|---|---|---|---|
+| `gpt-5.6-sol` (`reasoning_effort="medium"`) | 0.89 | 25 / 32 | 4 / 68 | 0.82 | 2.7s / 4.1s |
+| `gpt-4o-mini` | 0.89 | 21 / 32 | 0 / 68 | 0.79 | 1.3s / 1.6s |
+
+- `gpt-5.6-sol` catches more out-of-scope messages but blocks some in-scope ones. One example is "where can I get my baby's vaccination near my village?" on the healthcare config.
+- No empty, cut-off or unparseable replies in 300 `gpt-5.6-sol` calls. The highest usage was 263 output tokens.
+- `gpt-5.6-sol` is about 2x slower per call, and lowering `reasoning_effort` barely changes that. Expect roughly 2.5–4s per call.
 
 ### 7) LlamaGuard 7B Validator (`llamaguard_7b`)
 
@@ -538,7 +556,7 @@ Recommendation:
 
 Parameters / customization:
 
-- `llm_callable: str` (default: `gpt-4o-mini`) — model identifier passed to LiteLLM for the YES/NO evaluation
+- `llm_callable: str` (default: `gpt-5.6-sol`) — model identifier passed to LiteLLM for the YES/NO evaluation
 - `prompt_template: str` (optional) — inline prompt with `{query}` and `{answer}` placeholders
 - `custom_prompt_id: UUID` (optional) — reference to a tenant-stored prompt config; resolved to `prompt_template` before execution
 - `on_fail`
@@ -557,6 +575,8 @@ Notes / limitations:
 - **Requires `OPENAI_API_KEY` to be set in environment variables.**
 - `input` to the guardrail endpoint must be a JSON string: `{"query": "...", "answer": "..."}`. Both fields must be non-empty.
 - LLM-judge responses can vary; YES/NO parsing uses prefix matching.
+- The LLM call uses `max_tokens=512` so reasoning models (e.g. `gpt-5.6-sol`) have room for hidden reasoning tokens, and sends `reasoning_effort="medium"` when the model supports reasoning. An empty reply fails as an unexpected response.
+- Evaluation (live run, October 2026, 100 query/answer pairs): `gpt-5.6-sol` scored 0.91–0.92 accuracy against 0.84 for `gpt-4o-mini`. It's about 2x slower (1.2–1.4s typical, 2.7–2.8s for the slowest 5%). Neither model passed a wrong answer; every error was a correct answer rejected by the strict default prompt. Full results: `docs/validators/answer-relevance.md#evaluation-results`.
 - `on_fail=fix` has no programmatic fix for irrelevant answers — `safe_text` will be `""` and `metadata.reason` will identify this validator.
 - If `custom_prompt_id` is deleted after being referenced, the guardrail will return a 404 at resolution time.
 

@@ -60,8 +60,8 @@ class Settings(BaseSettings):
     ALLOWED_IPS: Annotated[list[str] | str, BeforeValidator(parse_ip_list)] = []
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
     OPENAI_API_KEY: str | None = None
-    ANSWER_RELEVANCE_LLM_MODEL: str = "gpt-4o-mini"
-    DEFAULT_LLM_CALLABLE: str = "gpt-4o-mini"
+    ANSWER_RELEVANCE_LLM_MODEL: str = "gpt-5.6-sol"
+    DEFAULT_LLM_CALLABLE: str = "gpt-5.6-sol"
     TOPIC_RELEVANCE_LLM_THRESHOLD: int = 2
 
     SLUR_LIST_FILENAME: ClassVar[str] = "curated_slurlist_hi_en.csv"

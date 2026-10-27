@@ -27,7 +27,7 @@ jobs:
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
               },
               body: JSON.stringify({
-                model: 'gpt-4o-mini',
+                model: 'gpt-5.6-luna',
                 messages: [{
                   role: 'user',
                   content: `Rewrite this GitHub issue body using the exact format below. Keep it short, crisp and easy to understand. Do NOT add any information that wasn't in the original. Output ONLY the formatted markdown, nothing else.
@@ -79,7 +79,7 @@ jobs:
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
               },
               body: JSON.stringify({
-                model: 'gpt-4o-mini',
+                model: 'gpt-5.6-sol',
                 messages: [{
                   role: 'user',
                   content: `Based on the issue body below, generate a short title in this exact format:

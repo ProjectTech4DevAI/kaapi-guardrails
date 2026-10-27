@@ -27,7 +27,7 @@ A general-purpose LLM-as-judge validator. You define custom metrics with plain-l
     "another_metric": "Description of another dimension"
   },
   "max_score": 3,
-  "llm_callable": "gpt-4o-mini"
+  "llm_callable": "gpt-5.6-sol"
 }
 ```
 
@@ -90,7 +90,7 @@ The metric description is the full instruction the LLM receives. Write it as a c
     "relevance": "Score how well the answer addresses the user's question. 0=not relevant, 1=partially relevant, 2=mostly relevant, 3=fully relevant and complete."
   },
   "max_score": 3,
-  "llm_callable": "gpt-4o-mini",
+  "llm_callable": "gpt-5.6-sol",
   "on_fail": "exception"
 }
 

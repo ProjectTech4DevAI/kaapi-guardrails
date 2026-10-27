@@ -78,9 +78,9 @@ Use `POST /api/v1/guardrails/ban_lists/` to create and manage ban lists. This le
 
 They're the slowest and most expensive. Only run them if cheaper validators haven't already blocked the content.
 
-### Use `gpt-4o-mini` as your default LLM callable
+### Use `gpt-5.6-sol` as your default LLM callable
 
-It's fast and cheap for most moderation tasks. Use `gpt-4o` only for complex, nuanced evaluation where accuracy is critical.
+It is the standard model for moderation tasks across all LLM validators.
 
 ### Test your topic relevance configs with diverse examples
 

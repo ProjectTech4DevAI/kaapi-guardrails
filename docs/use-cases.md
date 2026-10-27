@@ -27,7 +27,7 @@ Recommended validator pipelines for specific deployment scenarios.
       "type": "topic_relevance",
       "on_fail": "rephrase",
       "topic_relevance_config_id": "support-scope-uuid",
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }
@@ -127,7 +127,7 @@ Recommended validator pipelines for specific deployment scenarios.
       "type": "topic_relevance",
       "on_fail": "rephrase",
       "topic_relevance_config_id": "edu-scope-uuid",
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }
@@ -157,7 +157,7 @@ Recommended validator pipelines for specific deployment scenarios.
       "type": "topic_relevance",
       "on_fail": "rephrase",
       "topic_relevance_config_id": "health-scope-uuid",
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }
@@ -184,7 +184,7 @@ Recommended validator pipelines for specific deployment scenarios.
         "medical_safety": "The response must not provide specific diagnoses, recommend specific medications, or substitute for professional medical advice. It should always recommend consulting a qualified doctor."
       },
       "max_score": 3,
-      "llm_callable": "gpt-4o-mini"
+      "llm_callable": "gpt-5.6-sol"
     }
   ]
 }
@@ -224,6 +224,6 @@ For code generation output, consider `llm_critic` with a security-focused metric
     "security": "The generated code must not include hardcoded credentials, SQL injection vulnerabilities, command injection, or insecure deserialization patterns."
   },
   "max_score": 3,
-  "llm_callable": "gpt-4o-mini"
+  "llm_callable": "gpt-5.6-sol"
 }
 ```

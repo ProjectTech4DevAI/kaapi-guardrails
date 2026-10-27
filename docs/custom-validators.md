@@ -137,7 +137,7 @@ class PolicyCheckValidator(Validator):
     Answer with YES or NO only.
     """
 
-    def __init__(self, policy: str, llm_callable: str = "gpt-4o-mini", **kwargs):
+    def __init__(self, policy: str, llm_callable: str = "gpt-5.6-sol", **kwargs):
         self.policy = policy
         self.client = OpenAI()
         self.model = llm_callable
@@ -172,7 +172,7 @@ from guardrails import Validator
 
 class PolicyCheckConfig(BaseValidatorConfig):
     policy: str
-    llm_callable: str = "gpt-4o-mini"
+    llm_callable: str = "gpt-5.6-sol"
 
     def build(self) -> Validator:
         return PolicyCheckValidator(
