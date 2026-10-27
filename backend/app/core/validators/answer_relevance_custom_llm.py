@@ -33,7 +33,7 @@ DEFAULT_PROMPT_TEMPLATE = (
 # Room for a one-word YES/NO plus the hidden reasoning tokens that reasoning
 # models (e.g. gpt-5.6-sol) count against the same completion budget.
 _MAX_TOKENS = 512
-_REASONING_EFFORT = "low"
+_REASONING_EFFORT = "medium"
 
 
 @register_validator(name="answer-relevance-custom-llm", data_type="string")

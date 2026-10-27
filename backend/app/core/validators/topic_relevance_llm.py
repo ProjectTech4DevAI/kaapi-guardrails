@@ -13,12 +13,12 @@ from guardrails.validators import (
     Validator,
     register_validator,
 )
-from litellm import supports_reasoning as _litellm_supports_reasoning
 
 from app.core.config import settings
 from app.core.constants import EMPTY_MESSAGE_ERROR, TOPIC_OUT_OF_SCOPE_ERROR
 from app.core.validators.llm_utils import (
     JSON_OBJECT_RESPONSE_FORMAT,
+    supports_reasoning,
     supports_response_format,
     traced_completion as completion,
 )
@@ -47,13 +47,6 @@ _OPTIONAL_FIELDS = (
 )
 # Reasoning models (e.g. gpt-5.6-sol) accept reasoning_effort; non-reasoning models reject it.
 _REASONING_EFFORT = "medium"
-
-
-def supports_reasoning(model: str) -> bool:
-    try:
-        return bool(_litellm_supports_reasoning(model=model))
-    except Exception:
-        return False
 
 
 @lru_cache(maxsize=8)
