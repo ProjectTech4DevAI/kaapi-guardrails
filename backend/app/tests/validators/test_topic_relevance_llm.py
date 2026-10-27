@@ -457,13 +457,21 @@ def test_fallback_instructions_added_to_system_prompt():
     assert FALLBACK in validator._system_prompt
 
 
-def test_no_max_tokens_cap_is_sent():
+def test_max_tokens_cap_is_sent(validator):
+    with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
+        mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
+        validator._validate("How do I make pasta?")
+
+    assert mock_llm.call_args.kwargs["max_tokens"] == 1024
+
+
+def test_fallback_doubles_max_tokens_cap():
     validator = _fallback_validator()
     with patch("app.core.validators.topic_relevance_llm.completion") as mock_llm:
         mock_llm.return_value = _make_llm_response('{"scope_violation": 3}')
         validator._validate("How do I make pasta?")
 
-    assert "max_tokens" not in mock_llm.call_args.kwargs
+    assert mock_llm.call_args.kwargs["max_tokens"] == 2048
 
 
 def test_reasoning_model_gets_medium_effort():
