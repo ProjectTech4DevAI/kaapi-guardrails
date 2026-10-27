@@ -49,6 +49,10 @@ Each synthetic set mixes English, Hindi in Devanagari, and Hinglish. Each includ
 
 Convention: `expected_result = FAIL` means the validator **should trigger** (ground truth). Labels follow intent, not what the validator is expected to output, so known misses stay in the set on purpose.
 
+## Latest run
+
+[2026-10-27](runs/2026-10-27/RUN_REPORT.md): 11 of 12 validators ran; LlamaGuard is blocked because the hub was shut down. The run found bugs in `gender_assumption_bias` (fixed below; F1 went from 0.81 to 0.93 and fix exact match from 0.31 to 0.62) and in `pii_remover` (ordinary words masked as `<IN_PAN>`, not fixed), and showed that `nsfw_text` blocks sexual-health questions. Re-run with `run_eval_workbook.py`.
+
 ## Bugs found and fixed in this PR
 
 ### 1. BanList fix left the first letter of every banned word
@@ -71,6 +75,17 @@ Fix: added `app/core/validators/ban_list.py`, a subclass with 0-based spans, and
 नाजायज़, लौड़ा, लौड़े, बहन की लोड़ी, भाड़े का टट्टू, लोड़ू, तवाइफ़, दो कौड़ी की औरत, भड़वा, बत्तमीज़, पिछवाड़ा, बाज़ारू औरत
 
 Fix: `load_slur_list` now NFKC-normalizes the labels. A regression test was added. `content_safety` reuses `LexicalSlur`, so it is fixed too.
+
+### 3. gender_assumption_bias rewrites were often wrong
+
+The eval run found that only 31% of rewrites matched the expected neutral sentence. All four causes are fixed in `gender_assumption_bias.py`:
+
+- **Identity rows flagged neutral text.** `woh → woh` and `attendant → attendant` changed nothing but still reported bias. These caused all 80 false positives. Rows that map a word to itself are now skipped.
+- **`her` was always `them`.** "checked her patient" became "checked them patient". `her` now becomes `their` when a noun follows and `them` otherwise.
+- **Devanagari substring matches.** `\b` treats vowel signs as non-word characters, so `छात्र` matched inside `छात्रा` (giving `विद्यार्थीा`), and `गया।` never matched. Word boundaries now include Devanagari vowel signs, virama and nukta.
+- **Lowercased output.** Replacements now keep the matched word's casing ("He" → "They").
+
+The word list also had `hers → their`; it's now `hers → theirs`.
 
 ## Other validator findings (not fixed)
 
@@ -110,7 +125,7 @@ Fix: `load_slur_list` now NFKC-normalizes the labels. A regression test was adde
 - These are labelled PASS. Use a custom prompt if redirects should pass.
 
 **`topic_relevance`**
-- LLMCritic uses `max_score=3`, so only a score of 3 passes and "partially related" (2) fails.
+- LLMCritic scores 1–3 with threshold 2, so "partially related" (2) passes; only "clearly outside scope" (1) fails. Tangential asks labelled FAIL in the set are therefore hard cases.
 - Ambiguous agriculture-adjacent asks (gold loan, MGNREGA, a farmer's health insurance) are labelled per the `TR-AGRI` config and noted as hard cases.
 
 ## Baselines from the existing runs (`*/output/`)

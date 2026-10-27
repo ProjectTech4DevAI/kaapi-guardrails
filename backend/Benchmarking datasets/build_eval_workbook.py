@@ -14,7 +14,7 @@ from datetime import date
 from pathlib import Path
 
 import pandas as pd
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.formatting.rule import CellIsRule, FormulaRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
@@ -205,7 +205,7 @@ def build_configs():
         ("BAN-MATERNAL", "ban_list", {"banned_words": ["sonography", "gender check"], "on_fail": "fix"}, "Maternal health: sex-determination terms (PCPNDT Act).", "app/evaluation/ban_list/run.py"),
         ("BAN-EDU", "ban_list", {"banned_words": ["leaked paper", "proxy attendance", "fake certificate"], "on_fail": "fix"}, "Education: malpractice terms.", ""),
         ("AR-DEFAULT", "answer_relevance_custom_llm", {"llm_callable": "gpt-5.6-sol", "prompt_template": None, "on_fail": "exception"}, "Built-in strict YES/NO prompt. input_text is JSON {query, answer}.", ""),
-        ("CRIT-NGO", "llm_critic", critic or {"see": "Synthetic/llm_critic_config.json"}, "Simplicity / empathy / safety rubric for bot responses.", "Synthetic/llm_critic_config.json"),
+        ("CRITIC-NGO", "llm_critic", critic or {"see": "Synthetic/llm_critic_config.json"}, "Simplicity / empathy / safety rubric for bot responses.", "Synthetic/llm_critic_config.json"),
     ]
     return rows
 
@@ -373,33 +373,47 @@ def write_configs(wb, rows):
     ws.freeze_panes = "A4"
 
 
-def write_run_log(wb, meta):
+def write_run_log(wb, meta, history):
     ws = wb.create_sheet("Run_Log")
     ws["A1"] = "Run log — one row per validator per periodic run"
     ws["A1"].font = TITLE
-    ws["A2"] = "Yellow cells are inputs. Copy the metric values from Index after filling actual_result. Row 5 is an example; replace it."
+    ws["A2"] = "Yellow cells are inputs. Copy the metric values from Index after filling actual_result. Rebuilding the workbook keeps these rows."
     ws["A2"].font = Font(name=FONT, italic=True, size=9)
     headers = ["run_date", "git_sha", "validator", "config_ref", "model / version", "rows run",
                "accuracy", "precision", "recall", "F1", "latency p50 (ms)", "latency p95 (ms)", "run by", "notes"]
     for c, h in enumerate(headers, 1):
         ws.cell(row=4, column=c, value=h)
     style_header(ws, 4, len(headers))
-    example = [date.today().isoformat(), "20e3f4a", "topic_relevance_llm", "TR-EDU", "gpt-5.6-sol", 192,
-               0.89, 0.86, 0.78, 0.82, 2700, 4100, "", "EXAMPLE ROW — replace"]
-    for c, v in enumerate(example, 1):
-        cell = ws.cell(row=5, column=c, value=v)
-        cell.font = Font(name=FONT, size=10, italic=True, color="7F7F7F")
-    for r in range(5, 60):
+    if history:
+        for r, row in enumerate(history, 5):
+            for c, v in enumerate(row, 1):
+                ws.cell(row=r, column=c, value=v).font = BASE
+    else:
+        example = [date.today().isoformat(), "20e3f4a", "topic_relevance_llm", "TR-EDU", "gpt-5.6-sol", 192,
+                   0.89, 0.86, 0.78, 0.82, 2700, 4100, "", "EXAMPLE ROW — replace"]
+        for c, v in enumerate(example, 1):
+            cell = ws.cell(row=5, column=c, value=v)
+            cell.font = Font(name=FONT, size=10, italic=True, color="7F7F7F")
+    for r in range(5, max(60, 5 + len(history) + 50)):
         for c in range(1, len(headers) + 1):
             ws.cell(row=r, column=c).fill = RUN_FILL
             if 7 <= c <= 10:
                 ws.cell(row=r, column=c).number_format = "0.00"
     dv = DataValidation(type="list", formula1='"' + ",".join(m["validator"] for m in meta) + '"', allow_blank=True)
-    dv.add("C5:C59")
+    dv.add(f"C5:C{max(59, 4 + len(history) + 50)}")
     ws.add_data_validation(dv)
     for c, w in enumerate([12, 10, 26, 14, 16, 9, 9, 9, 9, 9, 12, 12, 12, 40], 1):
         ws.column_dimensions[get_column_letter(c)].width = w
     ws.freeze_panes = "A5"
+
+
+def read_run_log_history():
+    """Existing Run_Log rows, so rebuilding the workbook keeps run history."""
+    if not OUT.exists():
+        return []
+    ws = load_workbook(OUT)["Run_Log"]
+    rows = [list(r) for r in ws.iter_rows(min_row=5, max_col=14, values_only=True) if r[0]]
+    return [r for r in rows if not str(r[13] or "").startswith("EXAMPLE")]
 
 
 def write_readme(wb, meta):
@@ -474,7 +488,7 @@ def main():
         m["idx"] = {name: get_column_letter(i) for name, i in idx.items()}
     write_index(wb, meta)
     write_configs(wb, build_configs())
-    write_run_log(wb, meta)
+    write_run_log(wb, meta, read_run_log_history())
     wb.calculation.fullCalcOnLoad = True
     wb.save(OUT)
     for m in meta:
