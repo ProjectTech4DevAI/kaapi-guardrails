@@ -1158,7 +1158,7 @@ Validates whether an LLM-generated answer is actually relevant to the user's que
 |----------|-------|
 | Type | `answer_relevance_custom_llm` |
 | Implementation | Local (LiteLLM-based) |
-| Speed | Slow (500ms–2s, LLM API call) |
+| Speed | Slow (about 1–3s with `gpt-5.6-sol`, LLM API call). See [evaluation results](validators/answer-relevance.md#evaluation-results). |
 | `fix_value` | No |
 | Requires API key | OpenAI API key |
 
@@ -1234,7 +1234,7 @@ GET /api/v1/guardrails/answer_relevance_prompts/?organization_id=1&project_id=10
 
 1. Parses the JSON string to extract `query` and `answer`. Returns `FailResult` immediately if malformed or either field is empty.
 2. Formats the `prompt_template` with the values. Returns `FailResult` if a placeholder is missing.
-3. Sends to the LLM via LiteLLM with `max_tokens=10`.
+3. Sends to the LLM via LiteLLM with `max_tokens=512` (room for hidden reasoning tokens), plus `reasoning_effort="medium"` when the model supports reasoning.
 4. Strips and uppercases the response. Checks `.startswith("YES")` or `.startswith("NO")`.
 5. Catches LLM API exceptions and returns them as `FailResult`.
 

@@ -10,7 +10,7 @@ Validates whether an LLM-generated answer is actually relevant to the user's que
 |----------|-------|
 | Type | `answer_relevance_custom_llm` |
 | Implementation | Local (LiteLLM-based) |
-| Speed | Slow (500ms–2s, LLM API call) |
+| Speed | Slow (about 1–3s with `gpt-5.6-sol`, LLM API call) |
 | `fix_value` | No |
 | Requires API key | OpenAI API key |
 
@@ -124,7 +124,9 @@ DELETE /api/v1/guardrails/answer_relevance_prompts/{id}
 
 2. **Prompt construction** — The `prompt_template` is formatted with `{query}` and `{answer}` substituted. Returns a `FailResult` if a required placeholder is missing from the template.
 
-3. **LLM call** — Sends the constructed prompt to the configured LLM via LiteLLM. Sets `max_tokens=10` since only a YES/NO response is needed.
+3. **LLM call** — Sends the constructed prompt to the configured LLM via LiteLLM with `max_tokens=512`. Reasoning models such as `gpt-5.6-sol` count hidden reasoning tokens against this limit, so it leaves room for reasoning as well as the one-word answer. If the model supports reasoning, `reasoning_effort="medium"` is also sent; other models don't receive it.
+
+   An empty reply is treated as an unexpected response (see step 4) rather than an LLM error.
 
 4. **Response parsing** — The LLM response is stripped and uppercased. The validator looks for a `YES` or `NO` prefix. Unexpected responses are treated as failures.
 
@@ -174,6 +176,26 @@ Result: FAIL
 
 Result: FAIL — "Input must be a JSON string with 'query' and 'answer' fields."
 ```
+
+---
+
+## Evaluation Results
+
+Live run against the OpenAI API (October 2026), default prompt template, comparing the default `gpt-5.6-sol` with the previous default `gpt-4o-mini`.
+
+**Dataset:** 100 query/answer pairs on healthcare and education topics, in English and Hinglish. 50 pair each question with its correct answer (expected `YES`); 50 pair each question with a different question's answer, mostly from the same domain (expected `NO`).
+
+| Model | Accuracy | F1 | Wrong results | Latency (typical / slowest 5%) | Output tokens, highest |
+|---|---|---|---|---|---|
+| `gpt-5.6-sol` (`reasoning_effort="medium"`) | 0.91–0.92 | 0.92–0.93 | 8–9 | 1.2–1.4s / 2.7–2.8s | 296 (286 reasoning) |
+| `gpt-4o-mini` | 0.84 | 0.86 | 16 | 0.7s / 0.9s | 1 |
+
+`gpt-5.6-sol` ranges are across two identical runs.
+
+- **No wrong answers passed.** Both models failed all 50 mismatched answers. Every wrong result was a correct answer being rejected.
+- **The default prompt is strict.** Rejected correct answers included "Is TB treatment free in India?" answered with "Yes. TB diagnosis and treatment are free at government facilities…". The "fully satisfy the query and constraints" wording appears to make the judge reject answers it considers incomplete. Use a custom prompt if that's too strict for your domain.
+- **No empty or cut-off replies** in 300 `gpt-5.6-sol` calls. The highest usage was 296 of the 512-token limit.
+- **`gpt-5.6-sol` is about 2x slower per call.** Lowering `reasoning_effort` to `low` or `none` didn't change typical latency (about 1.1s even with no reasoning), so expect roughly 1–3s per call.
 
 ---
 
