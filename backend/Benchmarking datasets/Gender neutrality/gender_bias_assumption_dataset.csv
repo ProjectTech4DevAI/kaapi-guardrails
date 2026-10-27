@@ -1,0 +1,301 @@
+bias type,domain,language tag,transformation type,biased input,neutral output
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,Hindi,pronoun-neutralization,वह अपनी रिपोर्ट जमा कर गया।,वे अपनी रिपोर्ट जमा कर गए।
+profession,school,Hindi,profession-neutralization,पुलिसवाला तुरंत मौके पर पहुंचा।,पुलिस अधिकारी तुरंत मौके पर पहुंचे।
+education,jobs,Hindi,role-neutralization,स्कूलगर्ल ने प्रतियोगिता जीती।,विद्यार्थी ने प्रतियोगिता जीती।
+healthcare,parenting,Hindi,role-neutralization,दाई ने कहा बच्चा स्वस्थ है।,प्रसव सहायक ने कहा बच्चा स्वस्थ है।
+mixed,administrative,Hindi,mixed-neutralization,छात्रा ने कहा कि वह तैयार है।,विद्यार्थी ने कहा कि वे तैयार हैं।
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,English,pronoun-neutralization,He completed his assignment on time.,They completed their assignment on time.
+profession,school,English,profession-neutralization,The fireman responded quickly to the call.,The firefighter responded quickly to the call.
+education,jobs,English,role-neutralization,Every schoolboy must bring his notebook.,Every student must bring their notebook.
+healthcare,parenting,English,role-neutralization,The midwife checked her patient carefully.,The birth attendant checked their patient carefully.
+mixed,administrative,English,mixed-neutralization,The saleswoman said she would assist.,The sales representative said they would assist.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.
+pronoun,healthcare,Hinglish,pronoun-neutralization,Woh apni file submit kar gaya.,Woh apni file submit kar gaye.
+profession,school,Hinglish,profession-neutralization,Policewala turant aaya aur madad ki.,Police officer turant aaye aur madad ki.
+education,jobs,Hinglish,role-neutralization,Schoolgirl ko award mila.,Student ko award mila.
+healthcare,parenting,Hinglish,role-neutralization,Daai ne bola sab theek hai.,Birth attendant ne kaha sab theek hai.
+mixed,administrative,Hinglish,mixed-neutralization,Ladki ne kaha woh ready hai.,Student ne kaha woh ready hain.

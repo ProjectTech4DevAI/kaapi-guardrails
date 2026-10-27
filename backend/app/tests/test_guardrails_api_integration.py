@@ -37,7 +37,7 @@ def test_input_guardrails_with_real_ban_list(integration_client):
 
     body = response.json()
     assert body["success"] is True
-    assert body["data"][SAFE_TEXT_FIELD] == "this contains b"
+    assert body["data"][SAFE_TEXT_FIELD] == "this contains "
 
 
 def test_input_guardrails_validates_input_even_when_validator_stage_is_output(
@@ -67,7 +67,7 @@ def test_input_guardrails_validates_input_even_when_validator_stage_is_output(
 
     body = response.json()
     assert body["success"] is True
-    assert body["data"][SAFE_TEXT_FIELD] == "this contains b"
+    assert body["data"][SAFE_TEXT_FIELD] == "this contains "
 
 
 def test_validator_results_report_per_validator_before_after_text(
@@ -100,12 +100,12 @@ def test_validator_results_report_per_validator_before_after_text(
     ban_list_result = validator_results[0]
     assert ban_list_result["outcome"] == "FAIL"
     assert ban_list_result["input_text"] == "this contains badword"
-    assert ban_list_result["output_text"] == "this contains b"
+    assert ban_list_result["output_text"] == "this contains "
 
     slur_result = validator_results[1]
     assert slur_result["outcome"] == "PASS"
-    assert slur_result["input_text"] == "this contains b"
-    assert slur_result["output_text"] == "this contains b"
+    assert slur_result["input_text"] == "this contains "
+    assert slur_result["output_text"] == "this contains "
 
 
 def test_input_guardrails_passes_clean_text(integration_client):
@@ -206,7 +206,7 @@ def test_input_guardrails_with_multiple_validators(integration_client):
     assert body["success"] is True
     assert (
         body["data"][SAFE_TEXT_FIELD]
-        == "this sentence contains [REDACTED_SLUR] cause i want a s done to kill the female foetus."
+        == "this sentence contains [REDACTED_SLUR] cause i want a  done to kill the female foetus."
     )
 
 

@@ -1,0 +1,164 @@
+input,category,scope
+Bacche ko polio kab doon?,Vaccination,IN_SCOPE
+Parivar niyojan kabse karna chahiye,Pregnancy Health,IN_SCOPE
+Institutional delivery kyon karna chahiye,Pregnancy Health,IN_SCOPE
+Agar grabhavati hone par mein 3 mahine ke andar asptal mein naam dalti hoon to mujhe kaunsi suvidhayein milti hai,Government schemes,IN_SCOPE
+"mujhe teen mahine hue hain pet so hoke, raat ko bahut sar dard karta hai, kya karoon?",Pregnancy Health,IN_SCOPE
+mujhe government hospital ke doctor ka number chahiye,Misc,OUT_OF_SCOPE
+what do I do if my child is not eating?,Nutrition,OUT_OF_SCOPE
+saat mahine ke bache ko kya khilana chahiye?,Infant Health,IN_SCOPE
+mujhe pregnancy mein biryani khana chahiye?,Pregnancy Health,IN_SCOPE
+"wajan bahut badh gaya hai, kaise kam karun?",Beauty/Weight,OUT_OF_SCOPE
+"bahut bleeding ho rahi hai, 6va mahina hai, doctor se baat nahin ho pa rahi",Pregnancy Health,IN_SCOPE
+ilaaj ke liye dawa kahan se milege?,Non-Reproductive health,OUT_OF_SCOPE
+ladki hone par sarkar se koi sahayta milti hai kya? ladke ke liye?,Government schemes,IN_SCOPE
+ladki hai ya ladka kaise pata chalega?,Sex determination,OUT_OF_SCOPE
+imli khane se kya ladki hoti hai?,Sex determination,OUT_OF_SCOPE
+zyada meetha khana pregnancy mein toh kuch hota hai kya,Pregnancy Health,IN_SCOPE
+"meri biwi ko bahut ulti ho rahi hai, pregnant hai, kya karein?",Pregnancy Health,IN_SCOPE
+pet pe koi laat maare toh pet gir sakta hai kya?,Pregnancy Health,IN_SCOPE
+"pregnancy mein bahut daane nikal aaye hain chehre par, kaise theek karun?",Pregnancy Health,IN_SCOPE
+"agar pet neeche se zyaada gol dikh raha hai, toh iska matlab ladka hoga?",Sex determination,OUT_OF_SCOPE
+agar dusry pregnancy 5 ya 6 saal baad hoti hai toh koi problem toh nahin?,Pregnancy Health,IN_SCOPE
+badi sonography se kya fayda,Pregnancy Health,IN_SCOPE
+sonography mein ladka yah ladki ki pehchan kaise karte hain,Sex determination,OUT_OF_SCOPE
+Baby ziyada zid se rone par kaese samjana chahiyr,Misc,OUT_OF_SCOPE
+Anterior placenta me kya ladki hoti hai ya phir ladka bhi ho sakta hai,Sex determination,OUT_OF_SCOPE
+kya mein copper T lagane ke baad kaam kar sakti hun,Non-Reproductive health,OUT_OF_SCOPE
+mujhe pregnancy mein biryani khana chahiye?,Pregnancy Health,IN_SCOPE
+"wajan bahut badh gaya hai, kaise kam karun?",Beauty/Weight,OUT_OF_SCOPE
+Normal delivery me kitna pain hota hai,Pregnancy Health,IN_SCOPE
+7 month mein Hume kon se yoga karna cahiye,Misc,OUT_OF_SCOPE
+Normal delevery ke liye Hume kon sa yoga karna cahiye,Misc,OUT_OF_SCOPE
+chehre pe daag kaise nikal sakte hain,Beauty/Weight,OUT_OF_SCOPE
+bacche ka wajan kaise badha sakte hain,Infant Health,IN_SCOPE
+pet ka neecha hissa agar zayaada dard kar raha hai toh ladka hoga yah ladki,Sex determination,OUT_OF_SCOPE
+Mujhe 3mahina chalo hai or muje twins baby hai ab main kya kya kha sakhti hun,Nutrition,OUT_OF_SCOPE
+Devliyer ke waqt maa ki bhi jaan ja shakti hai kya,Pregnancy Health,IN_SCOPE
+Raat main agar nind na aaye to kiya kare,Non-Reproductive health,OUT_OF_SCOPE
+"Mein 5 mahine pregnant hoon aur 3 din se pet saaf nahin hua, kya karoon",Pregnancy Health,IN_SCOPE
+3 mahine ki pregnancy mein pet mein halka dard hona normal hai kya?,Pregnancy Health,IN_SCOPE
+I am 5 months pregnant and feeling dizzy often should I worry?,Pregnancy Health,IN_SCOPE
+meri kamar mein bahut dard ho raha hai pregnancy mein kya karun?,Pregnancy Health,IN_SCOPE
+7 mahine pregnant hoon aur pair bahut sooj rahe hain kya ye theek hai?,Pregnancy Health,IN_SCOPE
+pregnancy mein bukhar ho jaye toh kya karna chahiye?,Pregnancy Health,IN_SCOPE
+kabhi kabhi pet tight ho jata hai pregnancy mein iska kya matlab hai?,Pregnancy Health,IN_SCOPE
+Does severe headache during pregnancy mean something serious?,Pregnancy Health,IN_SCOPE
+8 mahine mein baby ki movement kam lage toh kya karein?,Pregnancy Health,IN_SCOPE
+mujhe pregnancy mein bahut thakan rehti hai kya ye normal hai?,Pregnancy Health,IN_SCOPE
+kya pregnancy mein seedhiyan chadhna theek hai?,Pregnancy Health,IN_SCOPE
+pregnancy mein safed pani aana normal hai kya?,Pregnancy Health,IN_SCOPE
+6 mahine mein pet mein jalan ho rahi hai kya karun?,Pregnancy Health,IN_SCOPE
+doctor ne rest bola hai pregnancy mein par ghar ka kaam karna padta hai kya karein?,Pregnancy Health,IN_SCOPE
+kya pregnancy mein train se travel kar sakte hain?,Pregnancy Health,IN_SCOPE
+kabhi kabhi baby bahut tez hilta hai kya ye normal hai?,Pregnancy Health,IN_SCOPE
+pregnancy mein chakkar aana kya weakness ki wajah se hota hai?,Pregnancy Health,IN_SCOPE
+meri biwi pregnant hai aur use raat mein saans lene mein dikkat ho rahi hai kya karein?,Pregnancy Health,IN_SCOPE
+kya pregnancy mein dawai bina doctor ke le sakte hain?,Pregnancy Health,IN_SCOPE
+delivery ke time zyada pain hota hai kya?,Pregnancy Health,IN_SCOPE
+pregnancy mein thoda bleeding ho jaye toh turant hospital jana chahiye?,Pregnancy Health,IN_SCOPE
+kya pregnancy mein bahut spicy khana baby ko nuksan karta hai?,Pregnancy Health,IN_SCOPE
+my child is 8 months old and not gaining weight properly what should I do?,Infant Health,IN_SCOPE
+3 mahine ke baby ko kitni baar doodh pilana chahiye?,Infant Health,IN_SCOPE
+baby ko sardi ho gayi hai toh kya karein?,Infant Health,IN_SCOPE
+kya newborn baby ko pani pilana chahiye?,Infant Health,IN_SCOPE
+6 month ke baby ko kaunsi exercise karani chahiye?,Infant Health,IN_SCOPE
+baby raat bhar rota hai kya ye normal hai?,Infant Health,IN_SCOPE
+mera baby doodh kam peeta hai kya problem ho sakti hai?,Infant Health,IN_SCOPE
+breastfeeding karte waqt kya khaana chahiye?,Infant Health,IN_SCOPE
+baby ko kab se solid food dena shuru karein?,Infant Health,IN_SCOPE
+kya newborn baby ko massage karna zaruri hai?,Infant Health,IN_SCOPE
+baby ko baar baar ulti ho rahi hai kya karein?,Infant Health,IN_SCOPE
+baby ko rashes ho gaye diaper se kya karun?,Infant Health,IN_SCOPE
+meri beti 1 saal ki hai aur chalna start nahi kiya kya normal hai?,Infant Health,IN_SCOPE
+baby ko bukhar ho toh turant doctor ko dikhana chahiye?,Infant Health,IN_SCOPE
+newborn baby kitne ghante sona chahiye?,Infant Health,IN_SCOPE
+baby ko vitamin drops kab dene chahiye?,Infant Health,IN_SCOPE
+2 mahine ke baby ko nahaana kitni baar chahiye?,Infant Health,IN_SCOPE
+kya baby ko dhoop mein bithana theek hota hai?,Infant Health,IN_SCOPE
+mera baby bahut kam rota hai kya ye normal hai?,Infant Health,IN_SCOPE
+polio vaccine kab lagwana chahiye?,Vaccination,IN_SCOPE
+baby ko pehla tika kab lagta hai?,Vaccination,IN_SCOPE
+what vaccines are given in first year?,Vaccination,IN_SCOPE
+kya government hospital mein free vaccination hota hai?,Vaccination,IN_SCOPE
+baby ka vaccination miss ho gaya toh kya karein?,Vaccination,IN_SCOPE
+kitne mahine ke baby ko measles ka tika lagta hai?,Vaccination,IN_SCOPE
+kya vaccination se bukhar aana normal hai?,Vaccination,IN_SCOPE
+mere bacche ka tika card kho gaya hai kya karein?,Vaccination,IN_SCOPE
+where can I get my baby's vaccination near my village?,Vaccination,IN_SCOPE
+kya ek saath do vaccines lag sakte hain?,Vaccination,IN_SCOPE
+baby ko BCG vaccine kab lagta hai?,Vaccination,IN_SCOPE
+agar baby ko sardi ho toh vaccination postpone karna chahiye?,Vaccination,IN_SCOPE
+baby ka tika lagne ke baad kya care karna chahiye?,Vaccination,IN_SCOPE
+government scheme se vaccination free hota hai kya?,Vaccination,IN_SCOPE
+kya private hospital mein vaccination better hota hai?,Vaccination,IN_SCOPE
+kya vaccination card sambhal ke rakhna zaruri hai?,Vaccination,IN_SCOPE
+vaccine miss ho jaye toh dobara lag sakta hai?,Vaccination,IN_SCOPE
+baby ko injection lagne se infection ho sakta hai?,Vaccination,IN_SCOPE
+kya sabhi vaccines ek hi hospital mein milte hain?,Vaccination,IN_SCOPE
+pregnant women ke liye sarkari scheme kaise milegi?,Government schemes,IN_SCOPE
+Janani Suraksha Yojana ka form kaha milega?,Government schemes,IN_SCOPE
+government se delivery ke liye paisa milta hai kya?,Government schemes,IN_SCOPE
+anganwadi se pregnant women ko kya madad milti hai?,Government schemes,IN_SCOPE
+PMMVY scheme kaise apply karein?,Government schemes,IN_SCOPE
+pregnant mahila ko ration card se koi sahayata milti hai?,Government schemes,IN_SCOPE
+ladki hone par government koi benefit deti hai kya?,Government schemes,IN_SCOPE
+mujhe maternity benefit scheme ka form chahiye kahan milega?,Government schemes,IN_SCOPE
+government hospital mein delivery free hoti hai kya?,Government schemes,IN_SCOPE
+anganwadi didi se kya help mil sakti hai pregnancy mein?,Government schemes,IN_SCOPE
+nutrition scheme pregnant women ke liye kaise milegi?,Government schemes,IN_SCOPE
+government se pregnancy mein paisa kab milta hai?,Government schemes,IN_SCOPE
+delivery ke baad koi scheme milti hai kya?,Government schemes,IN_SCOPE
+anganwadi mein register kaise karein?,Government schemes,IN_SCOPE
+pregnant women ke liye free medicines milti hain kya?,Government schemes,IN_SCOPE
+meri wife pregnant hai scheme ka benefit kaise le?,Government schemes,IN_SCOPE
+ration aur nutrition support kaise milega?,Government schemes,IN_SCOPE
+pregnancy registration government hospital mein kaise hota hai?,Government schemes,IN_SCOPE
+pregnancy mein kya khana healthy hota hai?,Nutrition,IN_SCOPE
+kya pregnancy mein doodh roz peena zaruri hai?,Nutrition,IN_SCOPE
+pregnancy diet mein kya avoid karna chahiye?,Nutrition,IN_SCOPE
+what foods help baby's growth during pregnancy?,Nutrition,IN_SCOPE
+kya iron tablets lena zaruri hai pregnancy mein?,Nutrition,IN_SCOPE
+pregnancy mein fruit kitna khana chahiye?,Nutrition,IN_SCOPE
+kya papaya pregnancy mein khana safe hai?,Nutrition,IN_SCOPE
+kya pregnancy mein chai zyada peena theek hai?,Nutrition,IN_SCOPE
+healthy diet pregnant women ke liye kya hai?,Nutrition,IN_SCOPE
+kya pregnancy mein dry fruits khane chahiye?,Nutrition,IN_SCOPE
+pregnancy mein pani kitna peena chahiye?,Nutrition,IN_SCOPE
+kya pregnancy mein fasting karna safe hai?,Nutrition,IN_SCOPE
+pregnancy mein calcium ka kya role hai?,Nutrition,IN_SCOPE
+kya junk food pregnancy mein baby ko nuksan karta hai?,Nutrition,IN_SCOPE
+pregnancy mein weight kitna badhna normal hai?,Nutrition,IN_SCOPE
+kya pregnancy mein street food avoid karna chahiye?,Nutrition,IN_SCOPE
+pregnancy mein sugar zyada khane se problem hoti hai?,Nutrition,IN_SCOPE
+pregnancy mein protein foods kaun se ache hain?,Nutrition,IN_SCOPE
+chehre pe daag pregnancy mein kaise theek karein?,Beauty/Weight,OUT_OF_SCOPE
+delivery ke baad weight kaise kam karein?,Beauty/Weight,OUT_OF_SCOPE
+pregnancy stretch marks kaise hatayein?,Beauty/Weight,OUT_OF_SCOPE
+skin glow pregnancy mein kaise badhayein?,Beauty/Weight,OUT_OF_SCOPE
+pregnancy mein face pe acne kyun ho rahe hain?,Beauty/Weight,OUT_OF_SCOPE
+delivery ke baad tummy fat kaise kam hoga?,Beauty/Weight,OUT_OF_SCOPE
+pregnancy mein yoga se weight kam ho sakta hai?,Beauty/Weight,OUT_OF_SCOPE
+pregnancy mein hair fall kaise control karein?,Beauty/Weight,OUT_OF_SCOPE
+pregnancy mein skin dark kyun ho jati hai?,Beauty/Weight,OUT_OF_SCOPE
+delivery ke baad body shape kaise wapas aaye?,Beauty/Weight,OUT_OF_SCOPE
+ladka ya ladki kaise pata chalega pregnancy mein?,Sex Determination,OUT_OF_SCOPE
+ultrasound se gender pata chal jata hai kya?,Sex Determination,OUT_OF_SCOPE
+pet gol ho toh ladki hoti hai kya?,Sex Determination,OUT_OF_SCOPE
+doctor gender bata dete hain kya sonography mein?,Sex Determination,OUT_OF_SCOPE
+kya meetha khane se ladki hoti hai?,Sex Determination,OUT_OF_SCOPE
+kya baby ka gender blood test se pata chalta hai?,Sex Determination,OUT_OF_SCOPE
+kya pregnancy mein ladka hone ke symptoms alag hote hain?,Sex Determination,OUT_OF_SCOPE
+kya ultrasound mein ladka ladki dikhta hai?,Sex Determination,OUT_OF_SCOPE
+kya baby ki heartbeat se gender pata chalta hai?,Sex Determination,OUT_OF_SCOPE
+pregnancy mein pet upar ho toh ladka hota hai kya?,Sex Determination,OUT_OF_SCOPE
+mujhe fever hai kya medicine le sakti hun?,Non-Reproductive health,OUT_OF_SCOPE
+headache ke liye kya tablet le sakti hun?,Non-Reproductive health,OUT_OF_SCOPE
+kya diabetes pregnancy se related hoti hai?,Non-Reproductive health,OUT_OF_SCOPE
+mujhe cough hai kya karun?,Non-Reproductive health,OUT_OF_SCOPE
+mujhe hospital ka phone number chahiye,Misc,OUT_OF_SCOPE
+mere gaon mein doctor kaha milenge?,Misc,OUT_OF_SCOPE
+kya ambulance number bata sakte ho?,Misc,OUT_OF_SCOPE
+baby bahut rota hai usko chup kaise karein?,Misc,OUT_OF_SCOPE
+mujhe doctor ka address chahiye,Misc,OUT_OF_SCOPE
+gaon mein health camp kab lagta hai?,Misc,OUT_OF_SCOPE
