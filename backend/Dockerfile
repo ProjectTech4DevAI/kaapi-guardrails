@@ -67,6 +67,8 @@ RUN --mount=type=secret,id=HF_TOKEN \
 AutoTokenizer.from_pretrained('neuronsbyisshu/indicbert-hi-ner-naamapadam', cache_dir='/app/hf_cache'); \
 AutoModelForTokenClassification.from_pretrained('neuronsbyisshu/indicbert-hi-ner-naamapadam', cache_dir='/app/hf_cache')"
 
+RUN printf 'enable_metrics=false\n' > /root/.guardrailsrc
+
 # -------------------------------
 # Entrypoint (runtime setup)
 # -------------------------------
