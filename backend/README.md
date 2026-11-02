@@ -200,19 +200,11 @@ Every request (except the health check) must carry:
 
 - `Authorization: Bearer <plain-text-token>`
 - `X-ORGANIZATION-ID: <int>` and `X-PROJECT-ID: <int>` — the tenant, resolved by kaapi-backend
-- and originate from an IP listed in `ALLOWED_IPS`
 
-`ALLOWED_IPS` is a comma-separated list of source IPs allowed to reach this service:
-
-```bash
-ALLOWED_IPS="10.0.3.14"
-```
-
-Leave it empty to disable the check for local development. It is required when
-`ENVIRONMENT=production` — the service will not start without it.
+Network-level access restriction is handled in infrastructure (security groups), not in
+application code.
 
 Rejections:
-- Source IP not whitelisted → `403` (checked before the token)
 - Missing or invalid token → `401`
 - Missing or non-integer tenant headers → `422`
 

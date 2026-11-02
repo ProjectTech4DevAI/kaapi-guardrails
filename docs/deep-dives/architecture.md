@@ -227,10 +227,6 @@ Two auth schemes are used:
 - Send as `Authorization: Bearer <token>`
 - Validated against SHA-256 hash of the plaintext token
 
-**Source IP allowlist** (all endpoints except health check):
-- Caller must appear in `ALLOWED_IPS`; checked before the token
-- Reads the real connection source, not `X-Forwarded-For`
-
 **Tenant headers** (all endpoints except health check):
 - `X-ORGANIZATION-ID` + `X-PROJECT-ID`, resolved by the Kaapi backend
 - Scope every read and write; never taken from the query string or body
@@ -245,7 +241,6 @@ Two auth schemes are used:
 | `OPENAI_API_KEY` | For LLM validators | Used by `topic_relevance` and `llm_critic` |
 | `GUARDRAILS_HUB_API_KEY` | For hub validators | Required for `ban_list`, `llamaguard_7b`, `nsfw_text`, `profanity_free` |
 | `POSTGRES_*` | Yes | Database connection settings |
-| `ALLOWED_IPS` | Yes in production | Comma-separated source IPs allowed to call this service |
 
 ---
 

@@ -2081,7 +2081,7 @@ else:
 
 **Bearer token** (main guardrail endpoints): `Authorization: Bearer <token>`. Validated against SHA-256 hash of the plaintext `AUTH_TOKEN` env var.
 
-**Source IP + tenant headers** (all endpoints except health check): the caller must appear in `ALLOWED_IPS`, and sends `X-ORGANIZATION-ID` / `X-PROJECT-ID` resolved by the Kaapi backend. These scope every read and write; tenant is never taken from the query string or body.
+**Tenant headers** (all endpoints except health check): the caller sends `X-ORGANIZATION-ID` / `X-PROJECT-ID` resolved by the Kaapi backend. These scope every read and write; tenant is never taken from the query string or body. Network-level access restriction is handled by infrastructure (security groups), not application code.
 
 ### Key Environment Variables
 
@@ -2091,7 +2091,6 @@ else:
 | `OPENAI_API_KEY` | For LLM validators | Used by `topic_relevance`, `llm_critic`, `answer_relevance_custom_llm` |
 | `GUARDRAILS_HUB_API_KEY` | For hub validators | Required for `ban_list`, `llamaguard_7b`, `nsfw_text`, `profanity_free` |
 | `POSTGRES_*` | Yes | Database connection settings |
-| `ALLOWED_IPS` | Yes in production | Comma-separated source IPs allowed to call this service |
 
 ### Tech Stack
 

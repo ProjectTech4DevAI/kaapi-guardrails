@@ -195,9 +195,10 @@ Kaapi Guardrails is an **internal microservice with a single caller: the Kaapi b
 
 A single dependency in `app/api/deps.py` (`verify_caller`, exposed as `AuthDep`) enforces all of it and returns the tenant:
 
-1. **Source IP** — must appear in `ALLOWED_IPS`. Read from the real connection peer, ignoring `X-Forwarded-For`. Checked first, so an unexpected origin gets `403` without learning whether the token was valid.
-2. **Static bearer token** — a SHA-256 hex digest configured in `AUTH_TOKEN`, compared with `secrets.compare_digest` to prevent timing attacks.
-3. **Tenant headers** — `X-ORGANIZATION-ID` and `X-PROJECT-ID`, trusted because only a caller passing the first two controls can set them.
+1. **Static bearer token** — a SHA-256 hex digest configured in `AUTH_TOKEN`, compared with `secrets.compare_digest` to prevent timing attacks.
+2. **Tenant headers** — `X-ORGANIZATION-ID` and `X-PROJECT-ID`, trusted because only a caller passing the token check can set them.
+
+Network-level access restriction (which hosts can reach the service at all) is enforced by infrastructure — security groups — not by application code.
 
 Tenant scope is never read from the query string or request body, so the dependency that authenticates a route is also the one that supplies its tenant — a route cannot be written without one. Only `GET /utils/health-check/` is exempt.
 

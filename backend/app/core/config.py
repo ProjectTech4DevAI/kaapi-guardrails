@@ -1,12 +1,10 @@
-import json
 import os
 import re
 import warnings
 from pathlib import Path
-from typing import Annotated, Any, ClassVar, Literal
+from typing import ClassVar, Literal
 
 from pydantic import (
-    BeforeValidator,
     HttpUrl,
     PostgresDsn,
     computed_field,
@@ -14,24 +12,6 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
-
-
-def parse_ip_list(v: Any) -> list[str] | str:
-    """Accepts a comma-separated string or a JSON-encoded array string (some
-    env/deploy tooling JSON-encodes list-valued env vars)."""
-    if isinstance(v, str):
-        if v.lstrip().startswith("["):
-            try:
-                parsed = json.loads(v)
-            except json.JSONDecodeError:
-                return v
-            if isinstance(parsed, list):
-                return [str(item).strip() for item in parsed]
-            return v
-        return [i.strip() for i in v.split(",") if i.strip()]
-    elif isinstance(v, list | str):
-        return v
-    raise ValueError(v)
 
 
 class Settings(BaseSettings):
@@ -55,9 +35,6 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
     GUARDRAILS_HUB_API_KEY: str | None = None
-    # Source IPs allowed to reach this service; empty disables the check.
-    # `| str` stops pydantic-settings from JSON-parsing the value before parse_ip_list does.
-    ALLOWED_IPS: Annotated[list[str] | str, BeforeValidator(parse_ip_list)] = []
     CORE_DIR: ClassVar[Path] = Path(__file__).resolve().parent
     OPENAI_API_KEY: str | None = None
     ANSWER_RELEVANCE_LLM_MODEL: str = "gpt-5.6-sol"
@@ -107,10 +84,6 @@ class Settings(BaseSettings):
     def _enforce_non_default_secrets(self) -> Self:
         self._check_default_secret("POSTGRES_PASSWORD", self.POSTGRES_PASSWORD)
         self._validate_auth_token_hash()
-        if self.ENVIRONMENT == "production" and not self.ALLOWED_IPS:
-            raise ValueError(
-                "ALLOWED_IPS must list the kaapi-backend source IP(s) in production."
-            )
         return self
 
 

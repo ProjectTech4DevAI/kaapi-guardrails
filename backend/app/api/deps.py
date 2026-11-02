@@ -4,7 +4,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, Request, Security, status
+from fastapi import Depends, Header, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session
 
@@ -40,22 +40,7 @@ class TenantContext:
     project_id: int
 
 
-def check_source_ip(request: Request) -> None:
-    """403 for callers whose source IP is not in ALLOWED_IPS."""
-    if settings.ALLOWED_IPS:
-        allowed = settings.ALLOWED_IPS
-        if isinstance(allowed, str):
-            allowed = [allowed]
-        client_ip = request.client.host if request.client else None
-        if client_ip not in allowed:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Source IP '{client_ip}' is not permitted to access this service.",
-            )
-
-
 def check_bearer_token(
-    _ip_ok: Annotated[None, Depends(check_source_ip)],
     credentials: Annotated[
         HTTPAuthorizationCredentials | None,
         Security(security),
