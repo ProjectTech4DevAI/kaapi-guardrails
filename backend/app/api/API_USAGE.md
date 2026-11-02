@@ -25,7 +25,6 @@ Every request must carry:
 
 - `Authorization: Bearer <plain-text-token>` — validated against the SHA-256 digest in `AUTH_TOKEN`
 - `X-ORGANIZATION-ID: <int>` and `X-PROJECT-ID: <int>` — the tenant, resolved by kaapi-backend
-- and must arrive from an IP listed in `ALLOWED_IPS`
 
 Tenant scope is never read from the query string or request body.
 
@@ -496,8 +495,6 @@ Recommended request flow:
   - Add `Authorization: Bearer <token>`.
 - `401 Invalid authorization token`
   - Verify plaintext token matches server-side hash.
-- `403 Forbidden`
-  - Source IP is not in `ALLOWED_IPS`. Checked before the token.
 - `422` on tenant headers
   - Add `X-ORGANIZATION-ID` and `X-PROJECT-ID`; both must be integers.
 - `Invalid request_id`
