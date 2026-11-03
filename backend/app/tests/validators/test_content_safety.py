@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -216,7 +216,7 @@ def test_missing_toxic_label_raises(toxicity_score):
 
 @pytest.mark.usefixtures("patch_slur_load")
 def test_pipeline_loaded_once_per_model(monkeypatch):
-    content_safety._PIPELINE_CACHE.clear()
+    content_safety._load_pipeline.cache_clear()
     loads = []
 
     def fake_hf_pipeline(_task, model, **_kwargs):
@@ -231,7 +231,7 @@ def test_pipeline_loaded_once_per_model(monkeypatch):
         ContentSafety(model_name="m1")
         ContentSafety(model_name="m2")
     finally:
-        content_safety._PIPELINE_CACHE.clear()
+        content_safety._load_pipeline.cache_clear()
 
     assert loads == ["m1", "m2"]
 
@@ -308,42 +308,19 @@ class TestContentSafetySafetyValidatorConfig:
 
         assert result == mock_validator.return_value
         _, kwargs = mock_validator.call_args
-        assert kwargs["slur_severity"] == SlurSeverity.All
-        assert kwargs["threshold"] == DEFAULT_TOXICITY_THRESHOLD
-        assert kwargs["model_name"] == DEFAULT_MODEL_NAME
-        assert kwargs["toxic_label"] == DEFAULT_TOXIC_LABEL
-        assert kwargs["fallback_message"] is None
-
-    def test_slur_severity_forwarded(self):
-        config = ContentSafetySafetyValidatorConfig(
-            type="content_safety", slur_severity="high"
-        )
-
-        with patch(_CONTENT_SAFETY_PATCH) as mock_validator:
-            config.build()
-
-        _, kwargs = mock_validator.call_args
-        assert kwargs["slur_severity"] == SlurSeverity.High
-
-    def test_only_expected_kwargs_forwarded(self):
-        config = ContentSafetySafetyValidatorConfig(type="content_safety")
-
-        with patch(_CONTENT_SAFETY_PATCH) as mock_validator:
-            config.build()
-
-        _, kwargs = mock_validator.call_args
-        assert set(kwargs.keys()) == {
-            "slur_severity",
-            "threshold",
-            "model_name",
-            "toxic_label",
-            "fallback_message",
-            "on_fail",
+        assert kwargs == {
+            "slur_severity": SlurSeverity.All,
+            "threshold": DEFAULT_TOXICITY_THRESHOLD,
+            "model_name": DEFAULT_MODEL_NAME,
+            "toxic_label": DEFAULT_TOXIC_LABEL,
+            "fallback_message": None,
+            "on_fail": ANY,
         }
 
     def test_model_fields_forwarded(self):
         config = ContentSafetySafetyValidatorConfig(
             type="content_safety",
+            slur_severity="high",
             threshold=0.7,
             model_name="textdetox/xlmr-large-toxicity-classifier",
             toxic_label="toxic",
@@ -354,6 +331,7 @@ class TestContentSafetySafetyValidatorConfig:
             config.build()
 
         _, kwargs = mock_validator.call_args
+        assert kwargs["slur_severity"] == SlurSeverity.High
         assert kwargs["threshold"] == 0.7
         assert kwargs["model_name"] == "textdetox/xlmr-large-toxicity-classifier"
         assert kwargs["toxic_label"] == "toxic"

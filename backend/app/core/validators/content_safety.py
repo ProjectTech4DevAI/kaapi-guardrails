@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from functools import lru_cache
 
 from guardrails import OnFailAction
 from guardrails.validators import (
@@ -20,17 +21,12 @@ DEFAULT_MODEL_NAME = "textdetox/bert-multilingual-toxicity-classifier"
 DEFAULT_TOXIC_LABEL = "LABEL_1"
 DEFAULT_TOXICITY_THRESHOLD = 0.5
 
-_PIPELINE_CACHE: dict = {}
 
-
+@lru_cache(maxsize=None)
 def _load_pipeline(model_name: str):
-    if model_name not in _PIPELINE_CACHE:
-        from transformers import pipeline as hf_pipeline
+    from transformers import pipeline as hf_pipeline
 
-        _PIPELINE_CACHE[model_name] = hf_pipeline(
-            "text-classification", model=model_name, top_k=None
-        )
-    return _PIPELINE_CACHE[model_name]
+    return hf_pipeline("text-classification", model=model_name, top_k=None)
 
 
 @register_validator(name="content-safety", data_type="string")
@@ -93,9 +89,9 @@ class ContentSafety(Validator):
             errors.append(slur_result.error_message)
             current = slur_result.fix_value
 
-        # Fixed message: never echo user text into logs or rephrase responses.
         score = self._toxicity_score(value)
         if score >= self.threshold:
+            # Fixed message: never echo user text into logs or rephrase responses.
             errors.append(f"{TOXICITY_ERROR_MESSAGE} (score {score:.2f})")
             current = self.fallback_message or ""
 
