@@ -67,6 +67,12 @@ RUN --mount=type=secret,id=HF_TOKEN \
 AutoTokenizer.from_pretrained('neuronsbyisshu/indicbert-hi-ner-naamapadam', cache_dir='/app/hf_cache'); \
 AutoModelForTokenClassification.from_pretrained('neuronsbyisshu/indicbert-hi-ner-naamapadam', cache_dir='/app/hf_cache')"
 
+RUN --mount=type=secret,id=HF_TOKEN \
+    HF_TOKEN="$(cat /run/secrets/HF_TOKEN 2>/dev/null || true)" \
+    /app/.venv/bin/python -c "from transformers import AutoTokenizer, AutoModelForSequenceClassification; \
+AutoTokenizer.from_pretrained('textdetox/bert-multilingual-toxicity-classifier', cache_dir='/app/hf_cache'); \
+AutoModelForSequenceClassification.from_pretrained('textdetox/bert-multilingual-toxicity-classifier', cache_dir='/app/hf_cache')"
+
 RUN printf 'enable_metrics=false\n' > /root/.guardrailsrc
 
 # -------------------------------

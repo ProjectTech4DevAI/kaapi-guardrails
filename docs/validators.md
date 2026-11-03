@@ -1,6 +1,6 @@
 # All Validators
 
-10 validators across safety, privacy, quality, and compliance categories.
+11 validators across safety, privacy, quality, and compliance categories.
 
 ---
 
@@ -10,6 +10,7 @@
 | Validator | What it catches | Speed |
 |-----------|----------------|-------|
 | [uli_slur_match](validators/uli-slur-match.md) | Slurs and abusive language (English + Hindi) | Fast |
+| [content_safety](validators/content-safety.md) | Slur list + multilingual toxicity classifier, returns a fallback message | Medium |
 | [profanity_free](validators/profanity-free.md) | General profanity | Fast |
 | [nsfw_text](validators/nsfw-text.md) | Sexually explicit / NSFW content | Medium |
 | [llamaguard_7b](validators/llamaguard-7b.md) | Violence, hate, weapons, drugs, self-harm | Medium |
@@ -39,6 +40,7 @@
 | Validator | Type | Requires API key | `fix_value` available | Recommended `on_fail` |
 |-----------|------|-----------------|----------------------|----------------------|
 | `uli_slur_match` | Lexical | No | Yes (redacts slur) | `fix` or `exception` |
+| `content_safety` | Lexical + ML (Transformer) | No | Yes (redacted text or `fallback_message`) | `rephrase` with `fallback_message` |
 | `pii_remover` | NLP model | No | Yes (redacted text) | `fix` |
 | `gender_assumption_bias` | Lexical | No | Yes (neutral text) | `fix` |
 | `ban_list` | Lexical | Hub key | Yes (redacts word) | `exception` or `fix` |
