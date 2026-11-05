@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -6,22 +6,27 @@ from guardrails import Guard, OnFailAction
 from guardrails.validators import FailResult, PassResult
 from pydantic import ValidationError
 
+from app.core.constants import REPHRASE_ON_FAIL_PREFIX
 from app.core.enum import SlurSeverity
 from app.core.on_fail_actions import rephrase_query_on_fail
+from app.core.validators import content_safety
 from app.core.validators.config.content_safety_safety_validator_config import (
     ContentSafetySafetyValidatorConfig,
 )
 from app.core.validators.content_safety import (
-    DEFAULT_PROFANITY_THRESHOLD,
-    PROFANITY_ERROR_MESSAGE,
+    DEFAULT_MODEL_NAME,
+    DEFAULT_TOXIC_LABEL,
+    DEFAULT_TOXICITY_THRESHOLD,
+    TOXICITY_ERROR_MESSAGE,
     ContentSafety,
 )
 from app.core.validators.lexical_slur import LexicalSlur
 
-_PREDICT_PROB_PATCH = "app.core.validators.content_safety.predict_prob"
+_LOAD_PIPELINE_PATCH = "app.core.validators.content_safety._load_pipeline"
 _CONTENT_SAFETY_PATCH = (
     "app.core.validators.config.content_safety_safety_validator_config.ContentSafety"
 )
+FALLBACK = "Please rephrase your message without abusive language."
 
 
 # ---------------------------------------
@@ -39,21 +44,43 @@ def patch_slur_load(monkeypatch):
 
 
 @pytest.fixture
-def profanity_score():
-    """Stub the profanity model so tests don't depend on it. Set
-    `.return_value = [score]`; defaults to a clean score."""
-    with patch(_PREDICT_PROB_PATCH) as mock:
-        mock.return_value = [0.0]
-        yield mock
+def toxicity_score():
+    """Stub the HF pipeline so tests don't load the model. Set `.score = x` to
+    control the toxic-label probability; defaults to clean. `.calls` records the
+    texts scored."""
+    fake = MagicMock()
+    fake.score = 0.0
+    fake.calls = []
+
+    def run(text, **_kwargs):
+        fake.calls.append(text)
+        return [
+            {"label": "LABEL_0", "score": 1 - fake.score},
+            {"label": "LABEL_1", "score": fake.score},
+        ]
+
+    fake.side_effect = run
+    with patch(_LOAD_PIPELINE_PATCH, return_value=fake):
+        yield fake
 
 
-PROFANE = [1.0]
+@pytest.fixture
+def real_validator():
+    """ContentSafety on the real slur list and the real textdetox model; skipped
+    when the model is not available locally (no network / cache)."""
+    try:
+        return ContentSafety()
+    except OSError as exc:  # HF raises OSError when the model can't be fetched
+        pytest.skip(f"model unavailable: {exc}")
+
+
+TOXIC = 0.97
 
 
 # ---------------------------------------
 # ContentSafety validator
 # ---------------------------------------
-@pytest.mark.usefixtures("patch_slur_load", "profanity_score")
+@pytest.mark.usefixtures("patch_slur_load", "toxicity_score")
 def test_passes_clean_text():
     validator = ContentSafety()
 
@@ -62,7 +89,7 @@ def test_passes_clean_text():
     assert isinstance(result, PassResult)
 
 
-@pytest.mark.usefixtures("patch_slur_load", "profanity_score")
+@pytest.mark.usefixtures("patch_slur_load", "toxicity_score")
 def test_slur_only_is_redacted():
     validator = ContentSafety()
 
@@ -74,60 +101,71 @@ def test_slur_only_is_redacted():
 
 
 @pytest.mark.usefixtures("patch_slur_load")
-def test_profanity_only_blanks_text(profanity_score):
-    validator = ContentSafety()
-    profanity_score.return_value = PROFANE
+def test_toxic_text_returns_fallback_message(toxicity_score):
+    validator = ContentSafety(fallback_message=FALLBACK)
+    toxicity_score.score = TOXIC
 
-    result = validator.validate("some profane text", {})
+    result = validator.validate("some abusive text", {})
 
     assert isinstance(result, FailResult)
-    assert result.error_message == PROFANITY_ERROR_MESSAGE
+    assert result.error_message == f"{TOXICITY_ERROR_MESSAGE} (score 0.97)"
+    assert result.fix_value == FALLBACK
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_toxic_text_without_fallback_blanks_text(toxicity_score):
+    validator = ContentSafety()
+    toxicity_score.score = TOXIC
+
+    result = validator.validate("some abusive text", {})
+
+    assert isinstance(result, FailResult)
     assert result.fix_value == ""
 
 
 @pytest.mark.usefixtures("patch_slur_load")
-def test_slur_and_profanity_combines_errors(profanity_score):
-    validator = ContentSafety()
-    profanity_score.return_value = PROFANE
+def test_slur_and_toxicity_combines_errors(toxicity_score):
+    validator = ContentSafety(fallback_message=FALLBACK)
+    toxicity_score.score = TOXIC
 
-    result = validator.validate("you badword, some profane text", {})
+    result = validator.validate("you badword, some abusive text", {})
 
     assert isinstance(result, FailResult)
     assert result.error_message == (
-        f"Mentioned toxic words: badword; {PROFANITY_ERROR_MESSAGE}"
+        f"Mentioned toxic words: badword; {TOXICITY_ERROR_MESSAGE} (score 0.97)"
     )
-    assert result.fix_value == ""
+    assert result.fix_value == FALLBACK
 
 
 @pytest.mark.usefixtures("patch_slur_load")
-def test_profanity_check_runs_on_redacted_text(profanity_score):
+def test_model_scores_original_text(toxicity_score):
+    """Redacting first would hide the signal from the classifier."""
     validator = ContentSafety()
 
     validator.validate("You are a badword", {})
 
-    checked_texts = profanity_score.call_args.args[0]
-    assert checked_texts == ["you are a [REDACTED_SLUR]"]
+    assert toxicity_score.calls == ["You are a badword"]
 
 
 @pytest.mark.usefixtures("patch_slur_load")
-def test_error_message_does_not_echo_input(profanity_score):
-    text = "some profane text"
+def test_error_message_does_not_echo_input(toxicity_score):
+    text = "some abusive text"
     validator = ContentSafety()
-    profanity_score.return_value = PROFANE
+    toxicity_score.score = TOXIC
 
     result = validator.validate(text, {})
 
     assert text not in result.error_message
 
 
-@pytest.mark.usefixtures("patch_slur_load")
+@pytest.mark.usefixtures("patch_slur_load", "toxicity_score")
 def test_slur_severity_forwarded():
     validator = ContentSafety(slur_severity=SlurSeverity.High)
 
     assert validator._slur.severity == SlurSeverity.High
 
 
-@pytest.mark.usefixtures("patch_slur_load")
+@pytest.mark.usefixtures("patch_slur_load", "toxicity_score")
 def test_inner_slur_validator_uses_noop_on_fail():
     validator = ContentSafety()
 
@@ -137,17 +175,17 @@ def test_inner_slur_validator_uses_noop_on_fail():
 @pytest.mark.parametrize(
     ("score", "threshold", "fails"),
     [
-        (0.883, DEFAULT_PROFANITY_THRESHOLD, False),  # "kaise ho" with default
-        (0.9, DEFAULT_PROFANITY_THRESHOLD, True),  # threshold is inclusive
-        (0.95, DEFAULT_PROFANITY_THRESHOLD, True),
-        (0.535, 0.5, True),  # ProfanityFree's old cutoff
+        (0.49, DEFAULT_TOXICITY_THRESHOLD, False),
+        (0.5, DEFAULT_TOXICITY_THRESHOLD, True),  # threshold is inclusive
+        (0.97, DEFAULT_TOXICITY_THRESHOLD, True),
+        (0.6, 0.7, False),
         (0.95, 0.99, False),
     ],
 )
 @pytest.mark.usefixtures("patch_slur_load")
-def test_profanity_threshold(profanity_score, score, threshold, fails):
-    validator = ContentSafety(profanity_threshold=threshold)
-    profanity_score.return_value = [score]
+def test_toxicity_threshold(toxicity_score, score, threshold, fails):
+    validator = ContentSafety(threshold=threshold)
+    toxicity_score.score = score
 
     result = validator.validate("some text", {})
 
@@ -155,82 +193,89 @@ def test_profanity_threshold(profanity_score, score, threshold, fails):
 
 
 @pytest.mark.usefixtures("patch_slur_load")
-def test_rephrase_message_does_not_leak_input(profanity_score):
-    """Profanity runs on lowercased/redacted text, so rephrase's str.replace
-    can't scrub a message that embeds it; ours must not contain user text."""
-    text = "You badword, some profane text"
+def test_custom_toxic_label(toxicity_score):
+    toxicity_score.side_effect = lambda text, **_: [
+        {"label": "neutral", "score": 0.1},
+        {"label": "toxic", "score": 0.9},
+    ]
+    validator = ContentSafety(toxic_label="toxic")
+
+    result = validator.validate("some text", {})
+
+    assert isinstance(result, FailResult)
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_missing_toxic_label_raises(toxicity_score):
+    """A model that never emits `toxic_label` must not silently pass everything."""
+    validator = ContentSafety(toxic_label="toxic")
+
+    with pytest.raises(ValueError, match="toxic_label"):
+        validator.validate("some text", {})
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_pipeline_loaded_once_per_model(monkeypatch):
+    content_safety._load_pipeline.cache_clear()
+    loads = []
+
+    def fake_hf_pipeline(_task, model, **_kwargs):
+        loads.append(model)
+        return MagicMock()
+
+    import transformers
+
+    monkeypatch.setattr(transformers, "pipeline", fake_hf_pipeline)
+    try:
+        ContentSafety(model_name="m1")
+        ContentSafety(model_name="m1")
+        ContentSafety(model_name="m2")
+    finally:
+        content_safety._load_pipeline.cache_clear()
+
+    assert loads == ["m1", "m2"]
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_rephrase_message_does_not_leak_input(toxicity_score):
+    """rephrase's str.replace can only scrub the exact input; our error message
+    must never contain user text in any form."""
+    text = "You badword, some abusive text"
     validator = ContentSafety()
-    profanity_score.return_value = PROFANE
+    toxicity_score.score = TOXIC
 
     result = validator.validate(text, {})
     rephrased = rephrase_query_on_fail(text, result)
 
     assert "badword" in rephrased  # slur name is part of the reason
-    assert "some profane text" not in rephrased
+    assert "some abusive text" not in rephrased
 
 
-@pytest.mark.parametrize(
-    ("text", "expected_fix"),
-    [
-        # Profanity-first would blank all of these (the profanity check has no
-        # partial fix); slur-first redacts the slurs and keeps the rest.
-        ("you are a bitch", "you are a [REDACTED_SLUR]"),
-        (
-            "Stop acting like a stupid cunt",
-            "stop acting like a [REDACTED_SLUR] [REDACTED_SLUR]",
-        ),
-        (
-            "That guy is a faggot, ignore him",
-            "that guy is a [REDACTED_SLUR], ignore him",
-        ),
-        (
-            "What the fuck is this, you bitch",
-            "what the [REDACTED_SLUR] is this, you [REDACTED_SLUR]",
-        ),
-        ("you bhenchod, fuck off", "you [REDACTED_SLUR], [REDACTED_SLUR] off"),
-        # Hindi slurs aren't known to the profanity model; only the slur list
-        # catches them.
-        ("Woh ladki randi hai", "woh ladki [REDACTED_SLUR] hai"),
-    ],
-)
-def test_slur_redacted_before_profanity_with_real_model(text, expected_fix):
-    """Runs against the real curated slur list and the real profanity model."""
-    validator = ContentSafety()
+@pytest.mark.usefixtures("patch_slur_load", "toxicity_score")
+def test_guard_fix_returns_redacted_text():
+    validator = ContentSafety(on_fail=OnFailAction.FIX)
 
-    result = validator.validate(text, {})
+    outcome = Guard().use(validator).validate("You are a badword")
 
-    assert isinstance(result, FailResult)
-    assert PROFANITY_ERROR_MESSAGE not in result.error_message
-    assert result.fix_value == expected_fix
+    assert outcome.validated_output == "you are a [REDACTED_SLUR]"
 
 
+# ---------------------------------------
+# Real model (skipped when the HF model is not available locally)
+# ---------------------------------------
 @pytest.mark.parametrize(
     "text",
     [
-        "this is fucking ridiculous",
-        "you are such an asshole",
-        "piece of shit",
-        "go to hell",
-        "kill yourself",
+        "tu chutiya hai bhag yahan se",  # slur + hostile context
+        "madrachod ki tere ko koi rokta nahin hai",  # variant not in the CSV
+        "purane gano ko kharab mat karo pahle kapde pahne sikh lo nangi aurat",
     ],
 )
-def test_english_profanity_still_blanked_with_real_model(text):
-    validator = ContentSafety()
-
-    result = validator.validate(text, {})
+def test_toxic_text_fails_with_real_model(real_validator, text):
+    result = real_validator.validate(text, {})
 
     assert isinstance(result, FailResult)
-    assert result.fix_value == ""
-
-
-def test_profanity_left_after_redaction_blanks_text_with_real_model():
-    """'shit' isn't on the slur list, so the profanity check still fails it."""
-    validator = ContentSafety()
-
-    result = validator.validate("You are a randi and a piece of shit", {})
-
-    assert isinstance(result, FailResult)
-    assert result.error_message.endswith(PROFANITY_ERROR_MESSAGE)
+    assert TOXICITY_ERROR_MESSAGE in result.error_message
     assert result.fix_value == ""
 
 
@@ -240,28 +285,15 @@ def test_profanity_left_after_redaction_blanks_text_with_real_model():
         "Please share the vaccination schedule for my child",
         "mujhe help chahiye",
         "मुझे स्कूल की फीस के बारे में जानकारी चाहिए",
-        "I live in Scunthorpe",
-        # The English model scores "ho" at 0.883 and "tu" at 0.535; these failed
-        # under ProfanityFree's 0.5 cutoff.
+        # Hinglish that the old English profanity model false-flagged.
         "namaste, kaise ho",
         "aap kaise ho",
         "kya ho raha hai",
         "tu kahan hai",
     ],
 )
-def test_clean_text_passes_with_real_model(text):
-    validator = ContentSafety()
-
-    assert isinstance(validator.validate(text, {}), PassResult)
-
-
-@pytest.mark.usefixtures("patch_slur_load", "profanity_score")
-def test_guard_fix_returns_redacted_text():
-    validator = ContentSafety(on_fail=OnFailAction.FIX)
-
-    outcome = Guard().use(validator).validate("You are a badword")
-
-    assert outcome.validated_output == "you are a [REDACTED_SLUR]"
+def test_clean_text_passes_with_real_model(real_validator, text):
+    assert isinstance(real_validator.validate(text, {}), PassResult)
 
 
 # ---------------------------------------
@@ -276,12 +308,23 @@ class TestContentSafetySafetyValidatorConfig:
 
         assert result == mock_validator.return_value
         _, kwargs = mock_validator.call_args
-        assert kwargs["slur_severity"] == SlurSeverity.All
-        assert kwargs["profanity_threshold"] == DEFAULT_PROFANITY_THRESHOLD
+        assert kwargs == {
+            "slur_severity": SlurSeverity.All,
+            "threshold": DEFAULT_TOXICITY_THRESHOLD,
+            "model_name": DEFAULT_MODEL_NAME,
+            "toxic_label": DEFAULT_TOXIC_LABEL,
+            "fallback_message": None,
+            "on_fail": ANY,
+        }
 
-    def test_slur_severity_forwarded(self):
+    def test_model_fields_forwarded(self):
         config = ContentSafetySafetyValidatorConfig(
-            type="content_safety", slur_severity="high"
+            type="content_safety",
+            slur_severity="high",
+            threshold=0.7,
+            model_name="textdetox/xlmr-large-toxicity-classifier",
+            toxic_label="toxic",
+            fallback_message=FALLBACK,
         )
 
         with patch(_CONTENT_SAFETY_PATCH) as mock_validator:
@@ -289,36 +332,28 @@ class TestContentSafetySafetyValidatorConfig:
 
         _, kwargs = mock_validator.call_args
         assert kwargs["slur_severity"] == SlurSeverity.High
-
-    def test_only_expected_kwargs_forwarded(self):
-        config = ContentSafetySafetyValidatorConfig(type="content_safety")
-
-        with patch(_CONTENT_SAFETY_PATCH) as mock_validator:
-            config.build()
-
-        _, kwargs = mock_validator.call_args
-        assert set(kwargs.keys()) == {
-            "slur_severity",
-            "profanity_threshold",
-            "on_fail",
-        }
-
-    def test_profanity_threshold_forwarded(self):
-        config = ContentSafetySafetyValidatorConfig(
-            type="content_safety", profanity_threshold=0.75
-        )
-
-        with patch(_CONTENT_SAFETY_PATCH) as mock_validator:
-            config.build()
-
-        _, kwargs = mock_validator.call_args
-        assert kwargs["profanity_threshold"] == 0.75
+        assert kwargs["threshold"] == 0.7
+        assert kwargs["model_name"] == "textdetox/xlmr-large-toxicity-classifier"
+        assert kwargs["toxic_label"] == "toxic"
+        assert kwargs["fallback_message"] == FALLBACK
 
     @pytest.mark.parametrize("threshold", [-0.1, 1.5])
-    def test_out_of_range_profanity_threshold_rejected(self, threshold):
+    def test_out_of_range_threshold_rejected(self, threshold):
         with pytest.raises(ValidationError):
             ContentSafetySafetyValidatorConfig(
-                type="content_safety", profanity_threshold=threshold
+                type="content_safety", threshold=threshold
+            )
+
+    def test_profanity_threshold_no_longer_accepted(self):
+        with pytest.raises(ValidationError):
+            ContentSafetySafetyValidatorConfig(
+                type="content_safety", profanity_threshold=0.9
+            )
+
+    def test_empty_fallback_message_rejected(self):
+        with pytest.raises(ValidationError):
+            ContentSafetySafetyValidatorConfig(
+                type="content_safety", fallback_message=""
             )
 
     def test_on_fail_fix_resolves_to_callable(self):
@@ -342,6 +377,25 @@ class TestContentSafetySafetyValidatorConfig:
 
         _, kwargs = mock_validator.call_args
         assert kwargs["on_fail"] == OnFailAction.EXCEPTION
+
+    def test_rephrase_with_fallback_returns_fallback(self):
+        config = ContentSafetySafetyValidatorConfig(
+            type="content_safety", on_fail="rephrase", fallback_message=FALLBACK
+        )
+        fail_result = FailResult(error_message=TOXICITY_ERROR_MESSAGE, fix_value="")
+
+        assert config.resolve_on_fail()("some text", fail_result) == FALLBACK
+
+    def test_rephrase_without_fallback_uses_prefix(self):
+        config = ContentSafetySafetyValidatorConfig(
+            type="content_safety", on_fail="rephrase"
+        )
+        fail_result = FailResult(error_message=TOXICITY_ERROR_MESSAGE, fix_value="")
+
+        reply = config.resolve_on_fail()("some text", fail_result)
+
+        assert reply.startswith(REPHRASE_ON_FAIL_PREFIX)
+        assert TOXICITY_ERROR_MESSAGE in reply
 
     def test_invalid_slur_severity_rejected(self):
         with pytest.raises(ValidationError):
@@ -370,3 +424,13 @@ class TestContentSafetySafetyValidatorConfig:
         assert config._validator_metadata == {
             "reason": "Empty string has been returned since the validation failed for: content_safety"
         }
+
+    def test_on_fix_returns_fallback_when_set(self):
+        config = ContentSafetySafetyValidatorConfig(
+            type="content_safety", on_fail="fix", fallback_message=FALLBACK
+        )
+        fail_result = MagicMock(spec=FailResult)
+        fail_result.fix_value = FALLBACK
+
+        assert config._on_fix("some input", fail_result) == FALLBACK
+        assert config._validator_metadata is None

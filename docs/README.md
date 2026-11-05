@@ -64,6 +64,6 @@ For when you need to go further.
 }
 ```
 
-**Available validators:** `uli_slur_match` · `pii_remover` · `gender_assumption_bias` · `ban_list` · `topic_relevance` · `llm_critic` · `llamaguard_7b` · `nsfw_text` · `profanity_free` · `answer_relevance_custom_llm`
+**Available validators:** `uli_slur_match` · `content_safety` · `pii_remover` · `gender_assumption_bias` · `ban_list` · `topic_relevance` · `llm_critic` · `llamaguard_7b` · `nsfw_text` · `profanity_free` · `answer_relevance_custom_llm`
 
 **on_fail actions:** `fix` (default) · `exception` · `rephrase`

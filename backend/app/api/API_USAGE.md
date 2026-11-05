@@ -243,6 +243,42 @@ Possible success response:
 }
 ```
 
+Toxicity with a fallback message (`content_safety` = slur list + multilingual toxicity classifier):
+
+```json
+{
+  "request_id": "2a6f6d5c-5b9f-4f6b-92e4-cf7d67f87932",
+  "input": "tu chutiya hai bhag yahan se",
+  "validators": [
+    {
+      "type": "content_safety",
+      "on_fail": "rephrase",
+      "threshold": 0.5,
+      "fallback_message": "Please rephrase your message without abusive language."
+    }
+  ]
+}
+```
+
+```json
+{
+  "success": true,
+  "data": {
+    "response_id": "d676f841-4579-4b73-bf8f-fe968af842f1",
+    "rephrase_needed": true,
+    "safe_text": "Please rephrase your message without abusive language.",
+    "validator_results": [
+      { "name": "content-safety", "type": "content_safety", "order": 1, "outcome": "FAIL",
+        "error": "Mentioned toxic words: chutiya; Toxic content detected (score 1.00)" }
+    ]
+  },
+  "error": null,
+  "metadata": null
+}
+```
+
+A message whose only problem is a listed slur is redacted instead (`Woh ladki randi hai` → `woh ladki [REDACTED_SLUR] hai` with `on_fail=fix`). See `docs/validators/content-safety.md`.
+
 When a validator with `on_fail=fix` has no programmatic fix (e.g. `profanity_free`), `safe_text` will be `""` and `metadata` will explain why:
 
 ```json

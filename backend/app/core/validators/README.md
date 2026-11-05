@@ -16,7 +16,7 @@ Current validator manifest:
 - `profanity_free` (source: `hub://guardrails/profanity_free`)
 - `nsfw_text` (source: `hub://guardrails/nsfw_text`)
 - `answer_relevance_custom_llm` (source: `local`)
-- `content_safety` (source: `local`) - wraps `uli_slur_match` and the `profanity_free` model
+- `content_safety` (source: `local`) - wraps `uli_slur_match` and a HuggingFace toxicity classifier (default `textdetox/bert-multilingual-toxicity-classifier`)
 
 ## Configuration Model
 
@@ -589,28 +589,50 @@ Code:
 
 What it does:
 
-- Runs the lexical slur check (`uli_slur_match`) and a profanity check as a single validator, so one config replaces stacking both.
-- Step 1: redacts slurs from the curated list with `[REDACTED_SLUR]`.
-- Step 2: scores the redacted text with `alt-profanity-check` (the model behind `profanity_free`) and fails it if the score is at or above `profanity_threshold`.
-- Returns one pass/fail with both errors joined, e.g. `Mentioned toxic words: randi; Text contains profanity`.
+- Runs the lexical slur check (`uli_slur_match`) and a sentence-level toxicity classifier as a single validator.
+- Step 1: redacts slurs from the curated list with `[REDACTED_SLUR]` (gives spans, keeps the rest of the message).
+- Step 2: scores the **original** text with a HuggingFace text-classification model (default [`textdetox/bert-multilingual-toxicity-classifier`](https://huggingface.co/textdetox/bert-multilingual-toxicity-classifier), 178M, CPU ~30 ms). At or above `threshold` the whole message is replaced by `fallback_message` (or `""` when none is set).
+- Returns one pass/fail with both errors joined, e.g. `Mentioned toxic words: chutiya; Toxic content detected (score 1.00)`.
 
 Why this is used:
 
-- One validator config for content safety instead of separate `uli_slur_match` and `profanity_free` configs.
-- Slur-first ordering keeps the message when a listed slur is the only problem: `"That guy is a faggot, ignore him"` becomes `"that guy is a [REDACTED_SLUR], ignore him"`, whereas `profanity_free` alone would return `""`.
-- A configurable profanity threshold avoids `profanity_free`'s Hinglish false positives (see limitations).
+- The slur list only knows exact strings. It misses spelling variants (`madrachod`, `bhosdike`), abuse with no slur at all, and Devanagari hate speech. The classifier reads context and catches those.
+- The classifier returns one score per message, not spans, so it cannot redact words. Redacting a slur also does not make the message safe (`tu [REDACTED_SLUR] hai, bhag yahan se` is still abusive), so a toxic message is replaced whole by `fallback_message`.
+- Replaces the earlier `alt-profanity-check` step: that model is English-only and false-flagged Hinglish (`ho`, `tu`).
+
+Benchmark (1,801 rows: HASOC 200 + ShareChat 1,000 + lexical 601; en 727 / hi 1,074 incl. Romanised Hinglish; CPU; see issue #181):
+
+| Config | P | R | F1 | Missed toxic |
+|---|---|---|---|---|
+| `uli_slur_match` alone | 0.90 | 0.63 | 0.74 | 416 |
+| `profanity_free` alone | 0.78 | 0.23 | 0.36 | 873 |
+| textdetox bert alone @0.5 | 0.79 | 0.83 | 0.81 | 194 |
+| **`content_safety` (slur OR textdetox @0.5)** | 0.80 | **0.92** | **0.85** | **94** |
 
 Recommendation:
 
 - `input` and `output`
-  - Why `input`: catches slurs and profanity in user messages.
-  - Why `output`: prevents model-generated slurs or profanity from reaching users.
+  - Why `input`: catches slurs and abuse in user messages; `fallback_message` is sent back to the user.
+  - Why `output`: prevents model-generated abuse from reaching users.
 
 Parameters / customization:
 
 - `slur_severity: "low" | "medium" | "high" | "all"` (default: `all`) — minimum slur severity to redact; same meaning as `severity` on `uli_slur_match`
-- `profanity_threshold: float` (0–1, default: `0.9`) — profanity probability at or above which the text fails
+- `threshold: float` (0–1, default: `0.5`) — toxicity probability at or above which the message is replaced. 0.5 is the F1 peak; 0.7 trades ~10% recall for ~50 fewer false alarms per 662 clean rows
+- `model_name: str` (default: `textdetox/bert-multilingual-toxicity-classifier`) — any HuggingFace text-classification model
+- `toxic_label: str` (default: `LABEL_1`) — label the model emits for toxic text; build fails loudly if the model never emits it
+- `fallback_message: str | None` (default: none) — returned in place of a toxic message
 - `on_fail`
+
+Behaviour by `on_fail`:
+
+| Slur hit | Model ≥ threshold | `fix` returns | `rephrase` returns |
+|---|---|---|---|
+| no | no | original text | original text |
+| yes | no | redacted text | `fallback_message`, else rephrase prefix + reason |
+| any | yes | `fallback_message`, else `""` + `metadata.reason` | `fallback_message`, else rephrase prefix + reason |
+
+Use `rephrase` when the caller should see `rephrase_needed: true`; use `fix` when it should just forward `safe_text`.
 
 Example stored config:
 
@@ -619,17 +641,29 @@ Example stored config:
   "name": "content safety input",
   "type": "content_safety",
   "stage": "input",
-  "on_fail_action": "fix",
+  "on_fail_action": "rephrase",
   "slur_severity": "all",
-  "profanity_threshold": 0.9
+  "threshold": 0.5,
+  "fallback_message": "Please rephrase your message without abusive language."
 }
+```
+
+Swapping the model (no code change):
+
+```json
+{ "type": "content_safety", "model_name": "textdetox/xlmr-large-toxicity-classifier", "toxic_label": "toxic" }
+```
+
+```json
+{ "type": "content_safety", "model_name": "Hate-speech-CNERG/indic-abusive-allInOne-MuRIL", "toxic_label": "LABEL_1", "threshold": 0.4 }
 ```
 
 Notes / limitations:
 
-- **Why 0.9, not `profanity_free`'s 0.5:** the profanity model is English-only. It reads `ho` as the slur "hoe" (score 0.883) and `tu` as 0.535, so at 0.5 common Hinglish such as `namaste, kaise ho`, `kya ho raha hai` and `tu kahan hai` is blanked. English profanity scores 0.95–1.0, so it is still caught at 0.9. Trade-off: `screw you` (0.893) passes. Lower the threshold for stricter English filtering.
-- Hindi slurs are caught only by the slur list; the profanity model doesn't know them.
-- If profanity remains after slur redaction, there is no programmatic fix: with `on_fail=fix`, `safe_text` is `""` and `metadata.reason` identifies this validator.
+- The classifier scores the original text, not the redacted one: `tu chutiya hai bhag yahan se` scores 1.00, the redacted form 0.24. Redaction would hide the signal.
+- Default model is trained on en, hi (Devanagari) and Hinglish among Indic languages. It is blind to Tamil, Telugu, Kannada; MuRIL (above) covers Tamil/Kannada/Bengali/Marathi but under-reads Romanised Hindi slurs (F1 0.61 on our set).
+- False alarms are mostly heated political Devanagari and rude-but-harmless chat (~265 of 662 clean benchmark rows at 0.5). Raise `threshold` if that matters more than recall.
+- Model loads once per `model_name` and is cached for the process (~700 MB RAM). The Dockerfile pre-downloads the default model.
 - Slur redaction lowercases the whole text and strips emoji (inherited from `uli_slur_match`).
 - `languages` is not accepted: `uli_slur_match` stores it but never uses it.
 - Error messages never include the user's text, so they are safe to show with `on_fail=rephrase` and to store in validator logs.
@@ -664,7 +698,7 @@ Default stage strategy:
 
 - Input guardrails: `pii_remover`, `uli_slur_match`, `ban_list`, `topic_relevance` (when scope enforcement is needed), `profanity_free`, `llamaguard_7b`
 - Output guardrails: `pii_remover`, `uli_slur_match`, `gender_assumption_bias`, `ban_list`, `profanity_free`, `llamaguard_7b`, `answer_relevance_custom_llm` (when answer quality must be verified)
-- `content_safety` can replace `uli_slur_match` + `profanity_free` at either stage; don't configure it alongside them.
+- `content_safety` is the recommended toxicity guardrail at either stage: slur list + toxicity classifier with a `fallback_message`. Don't configure it alongside `uli_slur_match` or `profanity_free`.
 
 Tuning strategy:
 
