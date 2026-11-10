@@ -17,17 +17,13 @@ from app.core.validators.content_safety import (
 
 class ContentSafetySafetyValidatorConfig(BaseValidatorConfig):
     type: Literal["content_safety"]
-    slur_severity: Literal[
-        "low", "medium", "high", "all"
-    ] = "all"  # minimum slur severity to flag
-    # Toxicity probability at or above which the whole message is replaced.
+    slur_severity: Literal["low", "medium", "high", "all"] = "all"
     threshold: float = Field(default=DEFAULT_TOXICITY_THRESHOLD, ge=0, le=1)
     # Any HuggingFace text-classification model; toxic_label must be one it emits
     # (textdetox bert / MuRIL: "LABEL_1", textdetox xlmr-large: "toxic").
     model_name: str = DEFAULT_MODEL_NAME
     toxic_label: str = DEFAULT_TOXIC_LABEL
-    # Returned in place of a toxic message (fix) or as the rephrase reply,
-    # translated into the query's language. null blanks the text instead.
+    # Translated into the query's language; null blanks the text instead.
     fallback_message: Optional[str] = Field(
         default=CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE, min_length=1
     )

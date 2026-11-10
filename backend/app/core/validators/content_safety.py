@@ -33,16 +33,13 @@ Message:
 <<<
 {message}
 >>>"""
-# Ceiling on output tokens, hidden reasoning included; only stops runaway calls.
+# Counts hidden reasoning too; only stops runaway calls.
 _TRANSLATION_MAX_TOKENS = 1024
 
 
 def localize_fallback(message: str, query: str) -> str:
-    """Translate `message` into the language/script of `query` with one LLM call.
-
-    Returns `message` unchanged when no API key is configured or the call fails,
-    so a translation problem never blocks the fallback.
-    """
+    """Returns `message` unchanged when no API key is set or the call fails,
+    so a translation problem never blocks the fallback."""
     if not settings.OPENAI_API_KEY:
         return message
     kwargs = {
