@@ -23,7 +23,7 @@ class ContentSafetySafetyValidatorConfig(BaseValidatorConfig):
     # (textdetox bert / MuRIL: "LABEL_1", textdetox xlmr-large: "toxic").
     model_name: str = DEFAULT_MODEL_NAME
     toxic_label: str = DEFAULT_TOXIC_LABEL
-    # Translated into the query's language; null blanks the text instead.
+    # Translated into the query's language; null falls back to the rephrase prefix.
     fallback_message: Optional[str] = Field(
         default=CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE, min_length=1
     )

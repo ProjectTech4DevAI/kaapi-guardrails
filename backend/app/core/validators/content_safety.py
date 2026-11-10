@@ -11,7 +11,10 @@ from guardrails.validators import (
 )
 
 from app.core.config import settings
-from app.core.constants import CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE
+from app.core.constants import (
+    CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE,
+    REPHRASE_ON_FAIL_PREFIX,
+)
 from app.core.enum import SlurSeverity
 from app.core.validators.lexical_slur import LexicalSlur
 from app.core.validators.llm_utils import (
@@ -76,7 +79,7 @@ class ContentSafety(Validator):
     whose only problem is a listed slur keeps its redacted form. The classifier
     returns one score per message, not spans; at or above `threshold` the whole
     message is replaced by `fallback_message`, translated into the query's language
-    (English default; blanked when set to None).
+    (English default; the rephrase prefix when set to None).
     The classifier must see the original text: redacting a slur hides the signal
     ("tu chutiya hai bhag yahan se" scores 1.00, the redacted form 0.24).
     """
@@ -135,7 +138,8 @@ class ContentSafety(Validator):
             current = (
                 localize_fallback(self.fallback_message, value)
                 if self.fallback_message
-                else ""
+                # Returned to the user as-is, so it can't be blank.
+                else REPHRASE_ON_FAIL_PREFIX
             )
 
         if not errors:
