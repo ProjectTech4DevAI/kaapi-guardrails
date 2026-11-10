@@ -110,7 +110,11 @@ class LexicalSlur(Validator):
                 f"Slur list CSV missing required columns: {missing_columns}"
             )
 
-        df["label"] = df["label"].str.lower()
+        # Match the NFKC form used by normalize_for_matching, otherwise precomposed
+        # nukta letters in the list (e.g. "ज़") can never match normalized input.
+        df["label"] = (
+            df["label"].map(lambda s: unicodedata.normalize("NFKC", str(s))).str.lower()
+        )
 
         if self.severity == SlurSeverity.Low:
             slurs = df[df["severity"].isin(["L", "M", "H"])]["label"].tolist()

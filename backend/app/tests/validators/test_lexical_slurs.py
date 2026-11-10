@@ -91,6 +91,21 @@ def test_numbers_are_removed(patch_slur_load):
     assert result.outcome == "fail"
 
 
+def test_precomposed_nukta_slur_matches_after_nfkc(monkeypatch, tmp_path):
+    """List entries with precomposed nukta letters must match NFKC-normalized input."""
+    word = "बत्तमीज़"  # precomposed ज़; NFKC decomposes it to ज + nukta
+    file_path = tmp_path / Settings.SLUR_LIST_FILENAME
+    pd.DataFrame({"label": [word], "severity": ["L"]}).to_csv(file_path, index=False)
+    monkeypatch.setattr(Settings, "SLUR_LIST_FILEPATH", file_path)
+    monkeypatch.setattr(LexicalSlur, "_SLUR_CACHE", {})
+
+    validator = LexicalSlur(severity=SlurSeverity.All)
+    result = validator._validate(f"तू {word} है")
+
+    assert result.outcome == "fail"
+    assert "[REDACTED_SLUR]" in result.fix_value
+
+
 def test_severity_low_includes_all(patch_slur_load, monkeypatch, slur_csv):
     """Low severity = L + M + H."""
     df = pd.DataFrame(

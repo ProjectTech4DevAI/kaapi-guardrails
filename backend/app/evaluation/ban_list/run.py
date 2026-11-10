@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import pandas as pd
-from guardrails_ai.ban_list import BanList
 from guardrails.validators import FailResult
 
+from app.core.validators.ban_list import BanList
 from app.evaluation.common.helper import (
     build_evaluation_report,
     build_validator_config,
