@@ -16,6 +16,7 @@ from app.core.constants import (
     LLM_CRITIC_REPHRASE_MESSAGE,
     REPHRASE_ON_FAIL_PREFIX,
 )
+from app.core.validators.content_safety import TOXICITY_ERROR_MESSAGE
 from app.core.enum import GuardrailOnFail, LLMValidatorName, Stage, ValidatorType
 from app.core.exception_handlers import _normalize_error_detail, _safe_error_message
 from app.core.guardrail_controller import build_guard, get_validator_config_models
@@ -303,11 +304,18 @@ def _validate_with_guard(
             or any(
                 validator_result.outcome == ValidatorOutcome.FAIL.value
                 and (
-                    validator_config := _validator_config_at(
-                        validators, validator_result.order - 1
+                    (
+                        (
+                            validator_config := _validator_config_at(
+                                validators, validator_result.order - 1
+                            )
+                        )
+                        and validator_config.on_fail == GuardrailOnFail.Rephrase
                     )
+                    # A toxic hit replaces the whole message with the fallback, which
+                    # must reach the user directly, never the LLM, even under `fix`.
+                    or TOXICITY_ERROR_MESSAGE in (validator_result.error or "")
                 )
-                and validator_config.on_fail == GuardrailOnFail.Rephrase
                 for validator_result in validator_results
             )
         )

@@ -103,6 +103,57 @@ def test_validate_with_guard_translated_fallback_sets_rephrase_needed():
     assert response.data.rephrase_needed is True
 
 
+@pytest.mark.parametrize(
+    ("error", "safe_text", "expected"),
+    [
+        (
+            "Toxic content detected (score 0.94)",
+            "Please rephrase your message without abusive language.",
+            True,
+        ),
+        ("Mentioned toxic words: randi", "woh ladki [REDACTED_SLUR] hai", False),
+    ],
+    ids=["toxic_hit_returns_fallback_directly", "slur_only_forwards_redacted_text"],
+)
+def test_validate_with_guard_content_safety_fix_rephrase_needed(
+    error, safe_text, expected
+):
+    class MockGuard:
+        def validate(self, data):
+            return MockResult(validated_output=safe_text)
+
+    payload = GuardrailRequest(
+        request_id=str(uuid4()),
+        input="some input",
+        validators=[{"type": "content_safety", "on_fail": "fix"}],
+    )
+    failed = ValidatorResult(
+        name="content-safety",
+        type="content_safety",
+        order=1,
+        outcome="FAIL",
+        error=error,
+    )
+    with (
+        patch("app.api.routes.guardrails.build_guard", return_value=MockGuard()),
+        patch(
+            "app.api.routes.guardrails._summarize_validator_results",
+            return_value=[failed],
+        ),
+    ):
+        response = _validate_with_guard(
+            payload=payload,
+            data=payload.input,
+            request_log_crud=mock_request_log_crud,
+            request_log_id=mock_request_log_id,
+            validator_log_crud=mock_validator_log_crud,
+            auth=mock_auth,
+        )
+
+    assert response.data.rephrase_needed is expected
+    assert response.data.safe_text == safe_text
+
+
 def test_validate_with_guard_validation_error():
     class MockGuard:
         def validate(self, data):

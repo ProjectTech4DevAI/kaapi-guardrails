@@ -177,14 +177,14 @@ def test_slur_only_does_not_call_translator(toxicity_score, translator):
 
 
 @pytest.mark.usefixtures("patch_slur_load")
-def test_toxic_text_without_fallback_blanks_text(toxicity_score):
+def test_toxic_text_without_fallback_returns_rephrase_prefix(toxicity_score):
     validator = ContentSafety(fallback_message=None)
     toxicity_score.score = TOXIC
 
     result = validator.validate("some abusive text", {})
 
     assert isinstance(result, FailResult)
-    assert result.fix_value == ""
+    assert result.fix_value == REPHRASE_ON_FAIL_PREFIX
 
 
 @pytest.mark.usefixtures("patch_slur_load")
