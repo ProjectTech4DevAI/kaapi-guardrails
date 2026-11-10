@@ -2,13 +2,16 @@ from typing import Literal, Optional
 
 from pydantic import Field
 
+from app.core.constants import CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE
 from app.core.enum import GuardrailOnFail, SlurSeverity
 from app.core.validators.config.base_validator_config import BaseValidatorConfig
 from app.core.validators.content_safety import (
     DEFAULT_MODEL_NAME,
     DEFAULT_TOXIC_LABEL,
     DEFAULT_TOXICITY_THRESHOLD,
+    TOXICITY_ERROR_MESSAGE,
     ContentSafety,
+    localize_fallback,
 )
 
 
@@ -23,13 +26,22 @@ class ContentSafetySafetyValidatorConfig(BaseValidatorConfig):
     # (textdetox bert / MuRIL: "LABEL_1", textdetox xlmr-large: "toxic").
     model_name: str = DEFAULT_MODEL_NAME
     toxic_label: str = DEFAULT_TOXIC_LABEL
-    # Returned in place of a toxic message (fix) or as the rephrase reply.
-    fallback_message: Optional[str] = Field(default=None, min_length=1)
+    # Returned in place of a toxic message (fix) or as the rephrase reply,
+    # translated into the query's language. null blanks the text instead.
+    fallback_message: Optional[str] = Field(
+        default=CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE, min_length=1
+    )
 
     def resolve_on_fail(self):
         if self.on_fail == GuardrailOnFail.Rephrase and self.fallback_message:
-            return lambda value, fail_result: self.fallback_message
+            return self._rephrase_with_fallback
         return super().resolve_on_fail()
+
+    def _rephrase_with_fallback(self, value: str, fail_result) -> str:
+        # Toxic hit: the validator already put the translated fallback in fix_value.
+        if TOXICITY_ERROR_MESSAGE in (fail_result.error_message or ""):
+            return fail_result.fix_value
+        return localize_fallback(self.fallback_message, value)
 
     def build(self):
         return ContentSafety(

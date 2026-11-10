@@ -591,7 +591,7 @@ What it does:
 
 - Runs the lexical slur check (`uli_slur_match`) and a sentence-level toxicity classifier as a single validator.
 - Step 1: redacts slurs from the curated list with `[REDACTED_SLUR]` (gives spans, keeps the rest of the message).
-- Step 2: scores the **original** text with a HuggingFace text-classification model (default [`textdetox/bert-multilingual-toxicity-classifier`](https://huggingface.co/textdetox/bert-multilingual-toxicity-classifier), 178M, CPU ~30 ms). At or above `threshold` the whole message is replaced by `fallback_message` (or `""` when none is set).
+- Step 2: scores the **original** text with a HuggingFace text-classification model (default [`textdetox/bert-multilingual-toxicity-classifier`](https://huggingface.co/textdetox/bert-multilingual-toxicity-classifier), 178M, CPU ~30 ms). At or above `threshold` the whole message is replaced by `fallback_message`, translated into the language and script of the query (`""` when `fallback_message` is `null`).
 - Returns one pass/fail with both errors joined, e.g. `Mentioned toxic words: chutiya; Toxic content detected (score 1.00)`.
 
 Why this is used:
@@ -621,7 +621,7 @@ Parameters / customization:
 - `threshold: float` (0–1, default: `0.5`) — toxicity probability at or above which the message is replaced. 0.5 is the F1 peak; 0.7 trades ~10% recall for ~50 fewer false alarms per 662 clean rows
 - `model_name: str` (default: `textdetox/bert-multilingual-toxicity-classifier`) — any HuggingFace text-classification model
 - `toxic_label: str` (default: `LABEL_1`) — label the model emits for toxic text; build fails loudly if the model never emits it
-- `fallback_message: str | None` (default: none) — returned in place of a toxic message
+- `fallback_message: str | None` (default: `"Please rephrase the query without unsafe content."`) — returned in place of a toxic message. Default or custom, it is translated into the query's language and script (Hindi → Devanagari, Hinglish → Latin, English unchanged) by one `DEFAULT_LLM_CALLABLE` call, made only when the message fails. With no `OPENAI_API_KEY`, or if the call fails, the untranslated text is returned. Set `null` to blank the text (`fix`) or get the rephrase prefix + reason (`rephrase`)
 - `on_fail`
 
 Behaviour by `on_fail`:
@@ -629,8 +629,8 @@ Behaviour by `on_fail`:
 | Slur hit | Model ≥ threshold | `fix` returns | `rephrase` returns |
 |---|---|---|---|
 | no | no | original text | original text |
-| yes | no | redacted text | `fallback_message`, else rephrase prefix + reason |
-| any | yes | `fallback_message`, else `""` + `metadata.reason` | `fallback_message`, else rephrase prefix + reason |
+| yes | no | redacted text | translated `fallback_message`, else (null) rephrase prefix + reason |
+| any | yes | translated `fallback_message`, else (null) `""` + `metadata.reason` | translated `fallback_message`, else (null) rephrase prefix + reason |
 
 Use `rephrase` when the caller should see `rephrase_needed: true`; use `fix` when it should just forward `safe_text`.
 

@@ -6,7 +6,10 @@ from guardrails import Guard, OnFailAction
 from guardrails.validators import FailResult, PassResult
 from pydantic import ValidationError
 
-from app.core.constants import REPHRASE_ON_FAIL_PREFIX
+from app.core.constants import (
+    CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE,
+    REPHRASE_ON_FAIL_PREFIX,
+)
 from app.core.enum import SlurSeverity
 from app.core.on_fail_actions import rephrase_query_on_fail
 from app.core.validators import content_safety
@@ -27,11 +30,29 @@ _CONTENT_SAFETY_PATCH = (
     "app.core.validators.config.content_safety_safety_validator_config.ContentSafety"
 )
 FALLBACK = "Please rephrase your message without abusive language."
+HINDI_FALLBACK = "कृपया अपना संदेश अपमानजनक भाषा के बिना दोबारा लिखें।"
+_COMPLETION_PATCH = "app.core.validators.content_safety.completion"
 
 
 # ---------------------------------------
 # Fixtures
 # ---------------------------------------
+@pytest.fixture(autouse=True)
+def no_llm_key(monkeypatch):
+    """No API key by default, so localize_fallback returns the English text and no
+    test reaches the network. Translation tests set a key and mock completion."""
+    monkeypatch.setattr(content_safety.settings, "OPENAI_API_KEY", None)
+
+
+@pytest.fixture
+def translator(monkeypatch):
+    monkeypatch.setattr(content_safety.settings, "OPENAI_API_KEY", "test-key")
+    response = MagicMock()
+    response.choices[0].message.content = f"  {HINDI_FALLBACK}\n"
+    with patch(_COMPLETION_PATCH, return_value=response) as mock_completion:
+        yield mock_completion
+
+
 @pytest.fixture
 def patch_slur_load(monkeypatch):
     """Use a tiny fixed slur list instead of the curated CSV."""
@@ -113,8 +134,51 @@ def test_toxic_text_returns_fallback_message(toxicity_score):
 
 
 @pytest.mark.usefixtures("patch_slur_load")
-def test_toxic_text_without_fallback_blanks_text(toxicity_score):
+def test_toxic_text_uses_default_fallback(toxicity_score):
     validator = ContentSafety()
+    toxicity_score.score = TOXIC
+
+    result = validator.validate("some abusive text", {})
+
+    assert result.fix_value == CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_toxic_fallback_is_translated_to_query_language(toxicity_score, translator):
+    validator = ContentSafety(fallback_message=FALLBACK)
+    toxicity_score.score = TOXIC
+
+    result = validator.validate("tu bahut ganda hai", {})
+
+    assert result.fix_value == HINDI_FALLBACK
+    _, kwargs = translator.call_args
+    assert FALLBACK in kwargs["messages"][0]["content"]
+    assert kwargs["messages"][1] == {"role": "user", "content": "tu bahut ganda hai"}
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_translation_failure_returns_english_fallback(toxicity_score, translator):
+    translator.side_effect = RuntimeError("boom")
+    validator = ContentSafety(fallback_message=FALLBACK)
+    toxicity_score.score = TOXIC
+
+    result = validator.validate("tu bahut ganda hai", {})
+
+    assert result.fix_value == FALLBACK
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_slur_only_does_not_call_translator(toxicity_score, translator):
+    validator = ContentSafety(fallback_message=FALLBACK)
+
+    validator.validate("You are a BADWORD", {})
+
+    translator.assert_not_called()
+
+
+@pytest.mark.usefixtures("patch_slur_load")
+def test_toxic_text_without_fallback_blanks_text(toxicity_score):
+    validator = ContentSafety(fallback_message=None)
     toxicity_score.score = TOXIC
 
     result = validator.validate("some abusive text", {})
@@ -276,7 +340,7 @@ def test_toxic_text_fails_with_real_model(real_validator, text):
 
     assert isinstance(result, FailResult)
     assert TOXICITY_ERROR_MESSAGE in result.error_message
-    assert result.fix_value == ""
+    assert result.fix_value == CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE
 
 
 @pytest.mark.parametrize(
@@ -313,7 +377,7 @@ class TestContentSafetySafetyValidatorConfig:
             "threshold": DEFAULT_TOXICITY_THRESHOLD,
             "model_name": DEFAULT_MODEL_NAME,
             "toxic_label": DEFAULT_TOXIC_LABEL,
-            "fallback_message": None,
+            "fallback_message": CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE,
             "on_fail": ANY,
         }
 
@@ -382,13 +446,42 @@ class TestContentSafetySafetyValidatorConfig:
         config = ContentSafetySafetyValidatorConfig(
             type="content_safety", on_fail="rephrase", fallback_message=FALLBACK
         )
-        fail_result = FailResult(error_message=TOXICITY_ERROR_MESSAGE, fix_value="")
+        fail_result = FailResult(
+            error_message="Mentioned toxic words: badword", fix_value="redacted"
+        )
 
         assert config.resolve_on_fail()("some text", fail_result) == FALLBACK
 
-    def test_rephrase_without_fallback_uses_prefix(self):
+    def test_rephrase_toxic_reuses_translated_fix_value(self, translator):
+        config = ContentSafetySafetyValidatorConfig(
+            type="content_safety", on_fail="rephrase", fallback_message=FALLBACK
+        )
+        fail_result = FailResult(
+            error_message=f"{TOXICITY_ERROR_MESSAGE} (score 0.97)",
+            fix_value=HINDI_FALLBACK,
+        )
+
+        assert config.resolve_on_fail()("some text", fail_result) == HINDI_FALLBACK
+        translator.assert_not_called()
+
+    def test_rephrase_slur_only_translates_fallback(self, translator):
         config = ContentSafetySafetyValidatorConfig(
             type="content_safety", on_fail="rephrase"
+        )
+        fail_result = FailResult(
+            error_message="Mentioned toxic words: badword", fix_value="redacted"
+        )
+
+        assert config.resolve_on_fail()("tu badword", fail_result) == HINDI_FALLBACK
+        _, kwargs = translator.call_args
+        assert (
+            CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE
+            in kwargs["messages"][0]["content"]
+        )
+
+    def test_rephrase_without_fallback_uses_prefix(self):
+        config = ContentSafetySafetyValidatorConfig(
+            type="content_safety", on_fail="rephrase", fallback_message=None
         )
         fail_result = FailResult(error_message=TOXICITY_ERROR_MESSAGE, fix_value="")
 
