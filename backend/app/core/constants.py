@@ -6,6 +6,7 @@ LABEL = "label"
 SCORE = "score"
 
 REPHRASE_ON_FAIL_PREFIX = "Please rephrase the query without unsafe content."
+CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE = REPHRASE_ON_FAIL_PREFIX
 LLM_CRITIC_ERROR_MESSAGE = "The query did not meet the required quality criteria."
 LLM_CRITIC_REPHRASE_MESSAGE = (
     f"{LLM_CRITIC_ERROR_MESSAGE} Please rephrase without unsafe content."
