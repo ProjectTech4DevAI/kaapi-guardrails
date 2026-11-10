@@ -475,8 +475,7 @@ class TestContentSafetySafetyValidatorConfig:
         assert config.resolve_on_fail()("tu badword", fail_result) == HINDI_FALLBACK
         _, kwargs = translator.call_args
         assert (
-            CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE
-            in kwargs["messages"][0]["content"]
+            CONTENT_SAFETY_DEFAULT_FALLBACK_MESSAGE in kwargs["messages"][0]["content"]
         )
 
     def test_rephrase_without_fallback_uses_prefix(self):
