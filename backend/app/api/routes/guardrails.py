@@ -346,10 +346,10 @@ def _validate_with_guard(
     try:
         guard = build_guard(validators)
         exec_logger.info(
-            "request=%s starting guardrails execution (validators=%s) input=%r",
+            "request=%s starting guardrails execution (validators=%s) input_chars=%d",
             request_log_id,
             [validator.type for validator in validators],
-            _strip_for_log(data),
+            len(data),
         )
         # The only manual span in business code; per-validator detail lives
         # in validator_log, joinable via kaapi.request_log_id.
@@ -363,10 +363,10 @@ def _validate_with_guard(
             result = guard.validate(data)
             span.set_attribute("guardrails.passed", result.validated_output is not None)
         exec_logger.info(
-            "request=%s guardrails execution finished (passed=%s) output=%r",
+            "request=%s guardrails execution finished (passed=%s) output_chars=%s",
             request_log_id,
             result.validated_output is not None,
-            _strip_for_log(result.validated_output)
+            len(str(result.validated_output))
             if result.validated_output is not None
             else None,
         )
@@ -431,13 +431,6 @@ def _extract_error_from_guard(guard: Guard, data: str) -> str | None:
 def _redact_input(error_message: str, input_text: str) -> str:
     error_message = error_message.split(":\n\n")[0]
     return error_message.replace(input_text, "")
-
-
-def _strip_for_log(value, limit: int = 120) -> str:
-    text = " ".join(str(value).split())
-    if len(text) > limit:
-        return f"{text[:limit]}…"
-    return text
 
 
 def _validator_config_at(
@@ -561,7 +554,7 @@ def add_validator_logs(
 
         exec_logger.info(
             "request=%s step=%d/%d validator=%s stage=%s outcome=%s "
-            "start=%s end=%s duration_ms=%s input=%r output=%r",
+            "start=%s end=%s duration_ms=%s input_chars=%d output_chars=%s",
             request_log_id,
             order,
             total_steps,
@@ -571,8 +564,8 @@ def add_validator_logs(
             start_time.isoformat() if start_time else None,
             end_time.isoformat() if end_time else None,
             duration_ms,
-            _strip_for_log(log.value_before_validation),
-            _strip_for_log(log.value_after_validation)
+            len(str(log.value_before_validation)),
+            len(str(log.value_after_validation))
             if log.value_after_validation is not None
             else None,
         )
